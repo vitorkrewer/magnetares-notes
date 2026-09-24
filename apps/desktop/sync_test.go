@@ -77,3 +77,25 @@ func TestSyncNowPushesPendingNoteAndMarksItClean(t *testing.T) {
 		t.Fatalf("pending note was not acknowledged: state=%s revision=%d", syncState, serverRevision)
 	}
 }
+
+func TestTursoValueMarshaling(t *testing.T) {
+	tests := []struct {
+		val      TursoValue
+		expected string
+	}{
+		{val: TursoValue{Type: "null"}, expected: `{"type":"null"}`},
+		{val: TursoValue{Type: "text", Value: ""}, expected: `{"type":"text","value":""}`},
+		{val: TursoValue{Type: "text", Value: "Hello"}, expected: `{"type":"text","value":"Hello"}`},
+		{val: TursoValue{Type: "integer", Value: "42"}, expected: `{"type":"integer","value":"42"}`},
+	}
+
+	for _, tt := range tests {
+		bytes, err := json.Marshal(tt.val)
+		if err != nil {
+			t.Fatalf("marshal error: %v", err)
+		}
+		if string(bytes) != tt.expected {
+			t.Errorf("expected %s, got %s", tt.expected, string(bytes))
+		}
+	}
+}

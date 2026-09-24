@@ -92,7 +92,7 @@ npm ci
 go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
 
 Set-Location ..
-wails dev
+wails dev -skipbindings
 ```
 
 Comandos úteis:
@@ -107,6 +107,8 @@ npm run lint
 # Desktop
 Set-Location apps/desktop
 go test .
+wails dev -skipbindings
+wails build -skipbindings -clean -trimpath
 
 # API
 Set-Location ../api

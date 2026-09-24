@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	keyring "github.com/zalando/go-keyring"
@@ -49,6 +50,41 @@ func (a *App) SaveSyncConfiguration(databaseURL, authToken string) (SyncConfigur
 		return SyncConfiguration{}, err
 	}
 	return a.GetSyncConfiguration(), nil
+}
+
+func (a *App) TestTursoConnection(databaseURL, authToken string) (string, error) {
+	databaseURL = strings.TrimSpace(databaseURL)
+	authToken = strings.TrimSpace(authToken)
+
+	if databaseURL == "" {
+		cfg := loadAppConfig()
+		databaseURL = cfg.TursoDatabaseURL
+	}
+	if databaseURL == "" {
+		return "", errors.New("informe a URL do banco Turso")
+	}
+
+	if authToken == "" {
+		savedToken, err := keyring.Get(syncKeyringService, syncKeyringUser)
+		if err == nil {
+			authToken = savedToken
+		}
+	}
+	if authToken == "" {
+		return "", errors.New("informe o token de acesso do Turso")
+	}
+
+	client := NewTursoClient(databaseURL, authToken)
+	if client == nil {
+		return "", errors.New("não foi possível inicializar cliente Turso")
+	}
+
+	latency, err := client.Ping()
+	if err != nil {
+		return "", fmt.Errorf("falha ao conectar: %w", err)
+	}
+
+	return fmt.Sprintf("Conexão estabelecida com sucesso! (Latência: %d ms)", latency.Milliseconds()), nil
 }
 
 func (a *App) syncCredentials() (string, string, error) {

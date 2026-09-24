@@ -51,6 +51,20 @@ type TursoValue struct {
 	Value string `json:"value,omitempty"`
 }
 
+func (v TursoValue) MarshalJSON() ([]byte, error) {
+	if v.Type == "null" {
+		return []byte(`{"type":"null"}`), nil
+	}
+	type Alias TursoValue
+	return json.Marshal(&struct {
+		Alias
+		Value string `json:"value"`
+	}{
+		Alias: Alias(v),
+		Value: v.Value,
+	})
+}
+
 type TursoRequest struct {
 	Type string     `json:"type"`
 	Stmt *TursoStmt `json:"stmt,omitempty"`
@@ -156,14 +170,42 @@ func tursoArguments(args []any) ([]TursoValue, error) {
 			typedArgs = append(typedArgs, TursoValue{Type: "null"})
 		case string:
 			typedArgs = append(typedArgs, TursoValue{Type: "text", Value: value})
+		case *string:
+			if value == nil {
+				typedArgs = append(typedArgs, TursoValue{Type: "null"})
+			} else {
+				typedArgs = append(typedArgs, TursoValue{Type: "text", Value: *value})
+			}
 		case int:
 			typedArgs = append(typedArgs, TursoValue{Type: "integer", Value: fmt.Sprintf("%d", value)})
 		case int64:
 			typedArgs = append(typedArgs, TursoValue{Type: "integer", Value: fmt.Sprintf("%d", value)})
+		case *int64:
+			if value == nil {
+				typedArgs = append(typedArgs, TursoValue{Type: "null"})
+			} else {
+				typedArgs = append(typedArgs, TursoValue{Type: "integer", Value: fmt.Sprintf("%d", *value)})
+			}
 		case int32:
+			typedArgs = append(typedArgs, TursoValue{Type: "integer", Value: fmt.Sprintf("%d", value)})
+		case uint, uint64, uint32:
 			typedArgs = append(typedArgs, TursoValue{Type: "integer", Value: fmt.Sprintf("%d", value)})
 		case float64:
 			typedArgs = append(typedArgs, TursoValue{Type: "float", Value: fmt.Sprintf("%g", value)})
+		case bool:
+			intVal := "0"
+			if value {
+				intVal = "1"
+			}
+			typedArgs = append(typedArgs, TursoValue{Type: "integer", Value: intVal})
+		case time.Time:
+			typedArgs = append(typedArgs, TursoValue{Type: "integer", Value: fmt.Sprintf("%d", value.UTC().UnixMilli())})
+		case *time.Time:
+			if value == nil {
+				typedArgs = append(typedArgs, TursoValue{Type: "null"})
+			} else {
+				typedArgs = append(typedArgs, TursoValue{Type: "integer", Value: fmt.Sprintf("%d", value.UTC().UnixMilli())})
+			}
 		default:
 			return nil, fmt.Errorf("unsupported Turso argument type %T", arg)
 		}

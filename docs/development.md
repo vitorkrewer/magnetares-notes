@@ -40,8 +40,8 @@ npm run lint
 ```powershell
 Set-Location apps/desktop
 go test .
-wails dev
-wails build -clean -trimpath
+wails dev -skipbindings
+wails build -skipbindings -clean -trimpath
 ```
 
 O banco padrão é criado no diretório de dados do usuário, nunca no repositório.
@@ -64,10 +64,8 @@ Por padrão, a API escuta em `http://localhost:8080`.
 
 O workspace fornece:
 
-- `Aster: executar desktop`: executa `wails dev` em `apps/desktop`.
-- `Aster: executar API`: executa `go run .` em `apps/api`.
-
-Os rótulos são históricos; o produto foi renomeado para Magnetares Notes.
+- `Magnetares: executar desktop`: executa `wails dev -skipbindings` em `apps/desktop`.
+- `Magnetares: executar API`: executa `go run .` em `apps/api`.
 
 ## Variáveis de ambiente
 

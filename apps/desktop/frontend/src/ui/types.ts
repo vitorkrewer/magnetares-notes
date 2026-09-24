@@ -53,6 +53,8 @@ export type SyncResult = {
   uploaded: number;
   downloaded: number;
   conflicts: number;
+  message?: string;
+  syncedAt?: string;
 };
 
 export type SyncConfiguration = {
@@ -78,6 +80,7 @@ export type DesktopBridge = {
   GetDatabasePath?: () => Promise<string>;
   SetCustomDatabasePath?: (newPath: string) => Promise<string>;
   SyncNow?: (apiURL: string) => Promise<SyncResult>;
+  TestTursoConnection?: (databaseURL: string, authToken: string) => Promise<string>;
   GetSyncProfileID?: () => Promise<string>;
   SetSyncProfileID?: (profileID: string) => Promise<void>;
   GetSyncConfiguration?: () => Promise<SyncConfiguration>;

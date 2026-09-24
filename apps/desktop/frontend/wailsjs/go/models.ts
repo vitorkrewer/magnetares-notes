@@ -185,6 +185,8 @@ export namespace main {
 	    uploaded: number;
 	    downloaded: number;
 	    conflicts: number;
+	    message: string;
+	    syncedAt: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new SyncResult(source);
@@ -195,6 +197,8 @@ export namespace main {
 	        this.uploaded = source["uploaded"];
 	        this.downloaded = source["downloaded"];
 	        this.conflicts = source["conflicts"];
+	        this.message = source["message"];
+	        this.syncedAt = source["syncedAt"];
 	    }
 	}
 

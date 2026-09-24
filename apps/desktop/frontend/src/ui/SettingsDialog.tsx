@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Cloud, Eye, EyeOff, HardDrive, Moon, RefreshCw, Settings, Sun, X } from "lucide-react";
+import { CheckCircle2, Cloud, Eye, EyeOff, HardDrive, Info, Moon, RefreshCw, Settings, ShieldCheck, Sun, X, XCircle } from "lucide-react";
 
 export type ThemeOption = "light" | "dark" | "system";
 
@@ -11,7 +11,7 @@ type SettingsDialogProps = {
   tursoDatabaseURL?: string;
   syncConfigured?: boolean;
   onSaveSyncConfiguration?: (databaseURL: string, authToken: string) => Promise<void>;
-  onSyncNow?: () => Promise<void>;
+  onSyncNow?: () => Promise<any>;
   onClose: () => void;
 };
 
@@ -33,7 +33,12 @@ export function SettingsDialog({
   const [currentTursoToken, setCurrentTursoToken] = useState("");
   const [showToken, setShowToken] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
   const [syncMessage, setSyncMessage] = useState("");
+  const [testing, setTesting] = useState(false);
+  const [testStatus, setTestStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
+  const [testMessage, setTestMessage] = useState("");
+  const [savingConfig, setSavingConfig] = useState(false);
 
   const handleSaveDbPath = async (e: FormEvent) => {
     e.preventDefault();
@@ -46,33 +51,82 @@ export function SettingsDialog({
     }
   };
 
+  const handleTestConnection = async () => {
+    const bridge = window.go?.main?.App;
+    if (!currentTursoURL.trim()) {
+      setTestStatus("error");
+      setTestMessage("Informe a URL do banco Turso para testar a conexão.");
+      return;
+    }
+    if (!currentTursoToken.trim() && !syncConfigured) {
+      setTestStatus("error");
+      setTestMessage("Informe o token de acesso do Turso para testar.");
+      return;
+    }
+
+    setTesting(true);
+    setTestStatus("testing");
+    setTestMessage("Testando conexão com o Turso...");
+
+    try {
+      if (bridge?.TestTursoConnection) {
+        const msg = await bridge.TestTursoConnection(currentTursoURL.trim(), currentTursoToken.trim());
+        setTestStatus("success");
+        setTestMessage(msg || "Conexão estabelecida com sucesso!");
+      } else {
+        setTestStatus("success");
+        setTestMessage("Modo web: conexão simulada com sucesso.");
+      }
+    } catch (err: any) {
+      setTestStatus("error");
+      setTestMessage(err?.message || err?.toString() || "Falha ao conectar com o Turso.");
+    } finally {
+      setTesting(false);
+    }
+  };
+
   const handleSaveCloudSettings = async (e: FormEvent) => {
     e.preventDefault();
     if (!currentTursoURL.trim()) {
-      setSyncMessage("Informe a URL do seu banco Turso.");
+      setTestStatus("error");
+      setTestMessage("Informe a URL do seu banco Turso.");
       return;
     }
+
+    setSavingConfig(true);
     try {
       await onSaveSyncConfiguration?.(currentTursoURL.trim(), currentTursoToken);
       setCurrentTursoToken("");
-      setSyncMessage("Turso conectado com segurança neste dispositivo.");
-    } catch {
-      setSyncMessage("Não foi possível salvar a configuração do Turso.");
+      setTestStatus("success");
+      setTestMessage("Configuração salva com sucesso! Token guardado com segurança no cofre do sistema.");
+    } catch (err: any) {
+      setTestStatus("error");
+      setTestMessage(err?.message || "Não foi possível salvar a configuração do Turso.");
+    } finally {
+      setSavingConfig(false);
     }
   };
 
   const handleSync = async () => {
     if (!onSyncNow) {
+      setSyncStatus("error");
       setSyncMessage("Servidor não configurado ou desconectado.");
       return;
     }
     setSyncing(true);
-    setSyncMessage("Sincronizando notas com a nuvem Turso...");
+    setSyncStatus("syncing");
+    setSyncMessage("Sincronizando notas com o Turso...");
     try {
-      await onSyncNow();
-      setSyncMessage("Sincronização concluída com sucesso!");
-    } catch {
-      setSyncMessage("Falha ao sincronizar. Verifique se a API está rodando.");
+      const res = await onSyncNow();
+      setSyncStatus("success");
+      const msg = res?.message || (res?.uploaded !== undefined
+        ? `Sincronização concluída: ${res.uploaded} enviadas, ${res.downloaded} recebidas, ${res.conflicts} conflitos.`
+        : "Sincronização concluída com sucesso!");
+      setSyncMessage(msg);
+    } catch (err: any) {
+      setSyncStatus("error");
+      const errorMsg = err?.message || err?.toString() || "Falha ao sincronizar. Verifique a URL, token e conexão de internet.";
+      setSyncMessage(errorMsg);
     } finally {
       setSyncing(false);
     }
@@ -144,7 +198,7 @@ export function SettingsDialog({
           {activeTab === "storage" && (
             <div className="settings-section">
               <h3>Local do banco de dados SQLite</h3>
-              <p className="settings-desc">O Magnetares armazena suas notas localmente em um banco de dados SQLite de alta performance. Na primeira execução, o banco de dados é criado automaticamente no diretório de dados do usuário (Windows: %LOCALAPPDATA%, Linux: ~/.config, macOS: Library/Application Support).</p>
+              <p className="settings-desc">O Magnetares armazena suas notas localmente em um banco de dados SQLite de alta performance. Todas as suas notas, pastas e edições são gravadas instantaneamente no seu disco de forma 100% offline.</p>
               <form onSubmit={(e) => void handleSaveDbPath(e)} className="storage-path-box">
                 <label htmlFor="db-path-input">Caminho do banco de dados local (.db):</label>
                 <div className="cloud-input-group">
@@ -155,7 +209,7 @@ export function SettingsDialog({
                   />
                   <button type="submit">Salvar Local</button>
                 </div>
-                {dbPathMessage && <p className="sync-status-msg">{dbPathMessage}</p>}
+                {dbPathMessage && <p className="sync-status-msg success">{dbPathMessage}</p>}
                 <small>As alterações no banco são salvas em tempo real com journal WAL e integridade transacional.</small>
               </form>
             </div>
@@ -163,8 +217,15 @@ export function SettingsDialog({
 
           {activeTab === "cloud" && (
             <div className="settings-section">
-              <h3>Sincronização na nuvem (Opcional)</h3>
-              <p className="settings-desc">O Magnetares Notes é <strong>100% local-first e funciona offline</strong> sem precisar de servidor. Ative a nuvem apenas quando quiser trazer suas notas para outros computadores.</p>
+              <div className="cloud-header-status-row">
+                <div>
+                  <h3>Sincronização na nuvem (Turso / libSQL)</h3>
+                  <p className="settings-desc">O Magnetares é <strong>100% local-first</strong>. O salvamento de notas funciona sempre offline. Configure o Turso caso queira sincronizar suas notas entre múltiplos dispositivos.</p>
+                </div>
+                <span className={`connection-badge ${syncConfigured ? "connected" : "disconnected"}`}>
+                  <span className="sync-dot" /> {syncConfigured ? "Conectado" : "Não configurado"}
+                </span>
+              </div>
               
               <form onSubmit={handleSaveCloudSettings} className="cloud-form">
                 <label htmlFor="turso-url-input">URL do seu banco Turso:</label>
@@ -173,18 +234,18 @@ export function SettingsDialog({
                     id="turso-url-input"
                     value={currentTursoURL}
                     onChange={(e) => setCurrentTursoURL(e.target.value)}
-                    placeholder="libsql://seu-banco.turso.io"
+                    placeholder="libsql://seu-banco.turso.io ou https://seu-banco.turso.io"
                   />
                 </div>
 
-                <label htmlFor="turso-token-input">Token de acesso Turso:</label>
+                <label htmlFor="turso-token-input">Token de autenticação Turso:</label>
                 <div className="cloud-input-group">
                   <input
                     id="turso-token-input"
                     type={showToken ? "text" : "password"}
                     value={currentTursoToken}
                     onChange={(e) => setCurrentTursoToken(e.target.value)}
-                    placeholder={syncConfigured ? "Token salvo no cofre do sistema" : "Cole o token do seu Turso"}
+                    placeholder={syncConfigured ? "Token salvo no cofre do sistema (deixe vazio para manter)" : "Cole seu token Turso aqui"}
                   />
                   <button
                     type="button"
@@ -196,31 +257,57 @@ export function SettingsDialog({
                     {showToken ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
                   </button>
                 </div>
-                <small>O token é guardado no cofre de credenciais do sistema e não é incluído no aplicativo. Em outro computador, informe a mesma URL e token para baixar as mesmas notas.</small>
+                <div className="security-notice">
+                  <ShieldCheck aria-hidden="true" />
+                  <span>O token é protegido no cofre de credenciais nativo do seu sistema operacional.</span>
+                </div>
 
                 <div className="save-cloud-btn-row">
-                  <button type="submit" className="save-cloud-settings-btn">
+                  <button
+                    type="button"
+                    className="test-connection-btn"
+                    onClick={() => void handleTestConnection()}
+                    disabled={testing}
+                  >
+                    {testing ? <RefreshCw className="spinning" aria-hidden="true" /> : <Info aria-hidden="true" />}
+                    {testing ? "Testando..." : "Testar Conexão"}
+                  </button>
+
+                  <button type="submit" className="save-cloud-settings-btn" disabled={savingConfig}>
                     {syncConfigured ? "Atualizar conexão Turso" : "Conectar Turso"}
                   </button>
                 </div>
+
+                {testMessage && (
+                  <div className={`status-feedback-box ${testStatus}`}>
+                    {testStatus === "success" && <CheckCircle2 aria-hidden="true" />}
+                    {testStatus === "error" && <XCircle aria-hidden="true" />}
+                    {testStatus === "testing" && <RefreshCw className="spinning" aria-hidden="true" />}
+                    <span>{testMessage}</span>
+                  </div>
+                )}
               </form>
 
               <div className="sync-actions-box">
+                <div className="sync-actions-header">
+                  <strong>Ação manual de sincronização:</strong>
+                </div>
                 <button type="button" className="sync-now-btn" onClick={() => void handleSync()} disabled={syncing}>
                   <RefreshCw className={syncing ? "spinning" : ""} aria-hidden="true" />
-                  {syncing ? "Sincronizando..." : "Sincronizar agora com a Nuvem"}
+                  {syncing ? "Sincronizando com a Nuvem..." : "Sincronizar agora com a Nuvem"}
                 </button>
-                {syncMessage && <p className="sync-status-msg">{syncMessage}</p>}
+                {syncMessage && (
+                  <div className={`status-feedback-box ${syncStatus}`}>
+                    {syncStatus === "success" && <CheckCircle2 aria-hidden="true" />}
+                    {syncStatus === "error" && <XCircle aria-hidden="true" />}
+                    {syncStatus === "syncing" && <RefreshCw className="spinning" aria-hidden="true" />}
+                    <span>{syncMessage}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
         </div>
-
-        <footer className="settings-dialog-footer">
-          <button type="button" className="settings-close-btn" onClick={onClose}>
-            Concluído
-          </button>
-        </footer>
       </div>
     </div>
   );

@@ -51,6 +51,7 @@ export function App() {
   const [tagInputOpen, setTagInputOpen] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [syncNotification, setSyncNotification] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(new Set());
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null);
   const [draggedFolderId, setDraggedFolderId] = useState<string | null>(null);
@@ -333,7 +334,7 @@ export function App() {
     if (!syncConfiguration.configured) {
       throw new Error("Conecte o Turso em Preferências antes de sincronizar.");
     }
-    await bridge.SyncNow(syncServiceURL);
+    const result = await bridge.SyncNow(syncServiceURL);
     await Promise.all([
       bridge.ListNotes?.() ?? Promise.resolve([]),
       bridge.ListDeletedNotes?.() ?? Promise.resolve([]),
@@ -342,8 +343,12 @@ export function App() {
       setNotes(loadedNotes);
       setDeletedNotes(loadedDeletedNotes);
       setNavigation(loadedNav);
-      setActiveId(loadedNotes[0]?.id ?? "");
+      setActiveId((currentActiveId) => {
+        if (loadedNotes.some((n) => n.id === currentActiveId)) return currentActiveId;
+        return loadedNotes[0]?.id ?? "";
+      });
     });
+    return result;
   };
 
   const handleSaveSyncConfiguration = async (databaseURL: string, authToken: string) => {
@@ -356,13 +361,20 @@ export function App() {
   };
 
   const handleQuickSync = async () => {
+    if (syncing) return;
     setSyncing(true);
-    setSaveState("saving");
+    setSyncNotification({ type: "info", message: "Sincronizando notas com a nuvem..." });
     try {
-      await handleSyncWithCloud();
-      setSaveState("saved");
-    } catch {
-      setSaveState("error");
+      const result = await handleSyncWithCloud();
+      const msg = result?.message || (result?.uploaded !== undefined
+        ? `Sincronização concluída: ${result.uploaded} enviadas, ${result.downloaded} recebidas, ${result.conflicts} conflitos.`
+        : "Sincronização concluída com sucesso!");
+      setSyncNotification({ type: "success", message: msg });
+      setTimeout(() => setSyncNotification(null), 5000);
+    } catch (err: any) {
+      const errorMsg = err?.message || err?.toString() || "Falha ao sincronizar com a nuvem.";
+      setSyncNotification({ type: "error", message: errorMsg });
+      setTimeout(() => setSyncNotification(null), 7000);
     } finally {
       setSyncing(false);
     }
@@ -471,12 +483,16 @@ export function App() {
 
   const createNote = () => {
     const now = new Date().toISOString();
+    const targetFolderID = selectedQuery.kind === "folder" && selectedQuery.id ? selectedQuery.id : "folder-default";
+    const targetFolder = folderOptions.find((f) => f.id === targetFolderID)?.name ?? "Notas";
+
     const note: Note = {
       id: crypto.randomUUID(),
       title: "",
       body: "",
       bodyText: "",
-      folder: "Notas",
+      folder: targetFolder,
+      folderId: targetFolderID,
       revision: 0,
       createdAt: now,
       updatedAt: now
@@ -489,7 +505,7 @@ export function App() {
     const version = (saveVersions.current.get(note.id) ?? 0) + 1;
     saveVersions.current.set(note.id, version);
     void enqueueSave(note, version);
-    window.setTimeout(() => titleRef.current?.focus(), 0);
+    window.setTimeout(() => titleRef.current?.focus(), 50);
   };
 
   const deleteNote = async (note: Note) => {
@@ -670,6 +686,14 @@ export function App() {
   return (
     <div className="app-container">
       <TitleBar title={active?.title ? `${active.title} — Magnetares` : "Magnetares Notes"} />
+      {syncNotification && (
+        <div className={`app-toast ${syncNotification.type}`} role="status">
+          <span>{syncNotification.message}</span>
+          <button type="button" onClick={() => setSyncNotification(null)} aria-label="Fechar notificação">
+            <X aria-hidden="true" />
+          </button>
+        </div>
+      )}
       <main className={`shell ${sidebarOpen ? "" : "sidebar-closed"}`}>
       <aside className="sidebar" aria-label="Pastas">
         <div className="sidebar-heading">
@@ -738,8 +762,14 @@ export function App() {
         </button>
         </div>
         <footer>
-          <div className="footer-status">
-            <span className="sync-dot" /> Armazenado neste dispositivo
+          <div
+            className="footer-status"
+            onClick={() => setSettingsOpen(true)}
+            style={{ cursor: "pointer" }}
+            title={syncConfiguration.configured ? "Turso Conectado — clique para ver configurações" : "Armazenado localmente — clique para conectar nuvem"}
+          >
+            <span className={`sync-dot ${syncConfiguration.configured ? "cloud-active" : ""}`} />
+            <span>{syncConfiguration.configured ? "Nuvem Turso ativa" : "Armazenamento local"}</span>
           </div>
           <button
             type="button"

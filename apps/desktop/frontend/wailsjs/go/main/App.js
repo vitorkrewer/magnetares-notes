@@ -102,6 +102,10 @@ export function SyncNow(arg1) {
   return window['go']['main']['App']['SyncNow'](arg1);
 }
 
+export function TestTursoConnection(arg1, arg2) {
+  return window['go']['main']['App']['TestTursoConnection'](arg1, arg2);
+}
+
 export function ToggleMaximizeWindow() {
   return window['go']['main']['App']['ToggleMaximizeWindow']();
 }

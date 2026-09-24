@@ -1294,10 +1294,11 @@ textarea:focus-visible {
   box-shadow: 0 16px 40px rgb(0 0 0 / 22%);
   display: flex;
   flex-direction: column;
-  height: 520px;
+  height: auto;
+  min-height: 560px;
   max-height: 90vh;
-  width: 580px;
-  max-width: 90vw;
+  width: 640px;
+  max-width: 92vw;
   overflow: hidden;
 }
 
@@ -1306,7 +1307,7 @@ textarea:focus-visible {
   border-bottom: 1px solid #e0ded5;
   display: flex;
   gap: 10px;
-  padding: 16px 20px;
+  padding: 16px 22px;
 }
 
 .settings-dialog-header svg {
@@ -1323,21 +1324,29 @@ textarea:focus-visible {
 }
 
 .settings-dialog-header button {
+  align-items: center;
   background: transparent;
   border: 0;
-  border-radius: 50%;
+  border-radius: 6px;
   color: #797871;
   cursor: pointer;
-  height: 26px;
+  display: flex;
+  height: 28px;
+  justify-content: center;
   padding: 0;
-  width: 26px;
+  width: 28px;
+}
+
+.settings-dialog-header button:hover {
+  background: rgb(0 0 0 / 6%);
+  color: #2b2a26;
 }
 
 .settings-tabs {
   background: #eae8e1;
   border-bottom: 1px solid #dcdad0;
   display: flex;
-  padding: 0 16px;
+  padding: 0 18px;
 }
 
 .settings-tab {
@@ -1351,7 +1360,7 @@ textarea:focus-visible {
   font-size: 13px;
   font-weight: 600;
   gap: 7px;
-  padding: 12px 14px;
+  padding: 12px 16px;
 }
 
 .settings-tab svg {
@@ -1367,7 +1376,7 @@ textarea:focus-visible {
 .settings-content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 24px 28px 30px;
 }
 
 .settings-section h3 {
@@ -1379,7 +1388,8 @@ textarea:focus-visible {
 .settings-desc {
   color: #696861;
   font-size: 12px;
-  margin: 0 0 16px;
+  line-height: 1.45;
+  margin: 0 0 18px;
 }
 
 .theme-options {
@@ -1452,7 +1462,7 @@ textarea:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .cloud-form label {
@@ -1503,26 +1513,38 @@ textarea:focus-visible {
 
 .save-cloud-btn-row {
   display: flex;
+  gap: 12px;
   justify-content: flex-end;
-  margin-top: 6px;
+  margin-top: 12px;
 }
 
 .save-cloud-settings-btn {
   background: #2d2d29;
   border: 0;
-  border-radius: 6px;
+  border-radius: 7px;
   color: #fff;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  height: 32px;
-  padding: 0 14px;
+  height: 36px;
+  padding: 0 18px;
+}
+
+.save-cloud-settings-btn:hover:not(:disabled) {
+  background: #1c1c19;
+}
+
+.save-cloud-settings-btn:disabled {
+  opacity: 0.6;
 }
 
 .sync-actions-box {
+  border-top: 1px solid #e0ded5;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 22px;
+  padding-top: 20px;
 }
 
 .sync-now-btn {
@@ -1536,8 +1558,9 @@ textarea:focus-visible {
   font-size: 13px;
   font-weight: 650;
   gap: 8px;
+  height: 42px;
   justify-content: center;
-  padding: 10px 18px;
+  padding: 0 20px;
 }
 
 .sync-now-btn:hover:not(:disabled) {
@@ -1563,34 +1586,19 @@ textarea:focus-visible {
   margin: 0;
 }
 
-.settings-dialog-footer {
-  border-top: 1px solid #e0ded5;
-  display: flex;
-  justify-content: flex-end;
-  padding: 12px 20px;
-}
-
-.settings-close-btn {
-  background: #2d2d29;
-  border: 0;
-  border-radius: 6px;
-  color: #fff;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  height: 32px;
-  padding: 0 18px;
-}
-
 [data-theme="dark"] .settings-dialog {
   background: #22221f;
   border-color: #383731;
   color: #e6e5df;
 }
 
-[data-theme="dark"] .settings-dialog-header,
-[data-theme="dark"] .settings-dialog-footer {
+[data-theme="dark"] .settings-dialog-header {
   border-color: #383731;
+}
+
+[data-theme="dark"] .settings-dialog-header button:hover {
+  background: rgb(255 255 255 / 8%);
+  color: #fff;
 }
 
 [data-theme="dark"] .settings-tabs {
@@ -1623,6 +1631,243 @@ textarea:focus-visible {
   background: #181816;
   border-color: #383731;
   color: #e6e5df;
+}
+
+[data-theme="dark"] .sync-actions-box {
+  border-top-color: #383731;
+}
+
+/* Titlebar icon */
+.titlebar-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+  vertical-align: -2px;
+  display: inline-block;
+  border-radius: 3px;
+}
+
+/* Toast notification */
+.app-toast {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 550;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 14%);
+  animation: slide-down 0.2s ease-out;
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.app-toast.info {
+  background: #383733;
+  color: #fff;
+}
+
+.app-toast.success {
+  background: #256637;
+  color: #fff;
+}
+
+.app-toast.error {
+  background: #9b2c2c;
+  color: #fff;
+}
+
+.app-toast button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  opacity: 0.8;
+}
+
+.app-toast button:hover {
+  opacity: 1;
+}
+
+.app-toast button svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Sync dot variations */
+.sync-dot.cloud-active {
+  background: #22c55e;
+  box-shadow: 0 0 6px rgb(34 197 94 / 40%);
+}
+
+/* Cloud settings header row */
+.cloud-header-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.connection-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.connection-badge.connected {
+  background: #e6f6ec;
+  color: #1a6e35;
+  border: 1px solid #b7e6c6;
+}
+
+.connection-badge.disconnected {
+  background: #f0eee8;
+  color: #6d6b63;
+  border: 1px solid #dcd9d0;
+}
+
+[data-theme="dark"] .connection-badge.connected {
+  background: #14351d;
+  color: #6ee7b7;
+  border-color: #1f5730;
+}
+
+[data-theme="dark"] .connection-badge.disconnected {
+  background: #272724;
+  color: #9c9a91;
+  border-color: #3d3c37;
+}
+
+.security-notice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #636159;
+  margin-top: -2px;
+}
+
+.security-notice svg {
+  width: 14px;
+  height: 14px;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.test-connection-btn {
+  background: #ebe9e0;
+  border: 1px solid #ccc9be;
+  border-radius: 6px;
+  color: #3c3a34;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  height: 32px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.test-connection-btn:hover:not(:disabled) {
+  background: #dedcd2;
+}
+
+.test-connection-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.test-connection-btn svg.spinning {
+  animation: spin 1s linear infinite;
+}
+
+.status-feedback-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  margin-top: 8px;
+}
+
+.status-feedback-box svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.status-feedback-box.success {
+  background: #eef8f1;
+  border: 1px solid #b7e6c6;
+  color: #1b6834;
+}
+
+.status-feedback-box.error {
+  background: #fdf0ee;
+  border: 1px solid #f6c3be;
+  color: #a33228;
+}
+
+.status-feedback-box.testing,
+.status-feedback-box.syncing {
+  background: #f3f2eb;
+  border: 1px solid #dedcd2;
+  color: #55534b;
+}
+
+.status-feedback-box svg.spinning {
+  animation: spin 1s linear infinite;
+}
+
+[data-theme="dark"] .test-connection-btn {
+  background: #2b2b27;
+  border-color: #403f39;
+  color: #d6d4cb;
+}
+
+[data-theme="dark"] .status-feedback-box.success {
+  background: #14351d;
+  border-color: #1f5730;
+  color: #a7f3d0;
+}
+
+[data-theme="dark"] .status-feedback-box.error {
+  background: #391816;
+  border-color: #652b27;
+  color: #fca5a5;
+}
+
+[data-theme="dark"] .status-feedback-box.testing,
+[data-theme="dark"] .status-feedback-box.syncing {
+  background: #22221f;
+  border-color: #383731;
+  color: #b0ae9f;
+}
+
+.sync-actions-header {
+  font-size: 12px;
+  color: #636159;
 }
 
 /* Menu de exportação */

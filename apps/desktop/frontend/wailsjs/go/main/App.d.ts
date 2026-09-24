@@ -52,4 +52,6 @@ export function SetSyncProfileID(arg1:string):Promise<void>;
 
 export function SyncNow(arg1:string):Promise<main.SyncResult>;
 
+export function TestTursoConnection(arg1:string,arg2:string):Promise<string>;
+
 export function ToggleMaximizeWindow():Promise<boolean>;

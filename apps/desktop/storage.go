@@ -49,7 +49,8 @@ func openNoteStore(databasePath string) (*noteStore, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open local database: %w", err)
 	}
-	db.SetMaxOpenConns(1)
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(5)
 
 	store := &noteStore{db: db}
 	if err := store.prepare(); err != nil {

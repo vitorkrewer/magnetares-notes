@@ -85,6 +85,9 @@ func loadEnvFile(path string) {
 			os.Setenv(strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]))
 		}
 	}
+	if err := scanner.Err(); err != nil {
+		log.Printf("error reading env file: %v", err)
+	}
 }
 
 func enableCORS(next http.Handler) http.Handler {
