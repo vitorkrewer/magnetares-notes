@@ -1,22 +1,27 @@
-// Substitua os valores abaixo pelos links reais dos releases no GitHub.
+const REPO_OWNER = "vitorkrewer";
+const REPO_NAME = "magnetares-notes";
+const RELEASE_API = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest`;
+const LATEST_RELEASE_PAGE = `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/latest`;
+
+// Configuração padrão com fallback para a página de releases do GitHub
 const DOWNLOADS = {
   windows: {
     label: "Baixar para Windows",
     note: "Windows 10 ou superior · Instalador nativo",
-    meta: "Versão 1.0.0 · x64",
-    url: "#"
+    meta: "Versão mais recente · x64",
+    url: LATEST_RELEASE_PAGE
   },
   macos: {
     label: "Baixar para macOS",
     note: "macOS 12 ou superior · Apple Silicon e Intel",
-    meta: "Versão 1.0.0 · Universal",
-    url: "#"
+    meta: "Versão mais recente · Universal",
+    url: LATEST_RELEASE_PAGE
   },
   linux: {
     label: "Baixar para Linux",
     note: "Linux moderno · Pacote portátil",
-    meta: "Versão 1.0.0 · x64",
-    url: "#"
+    meta: "Versão mais recente · x64",
+    url: LATEST_RELEASE_PAGE
   }
 };
 
@@ -26,25 +31,65 @@ const downloadLabel = document.querySelector("#download-label");
 const platformNote = document.querySelector("#platform-note");
 const downloadMeta = document.querySelector("#download-meta");
 
+function updateDownloadUI(platform) {
+  const data = DOWNLOADS[platform];
+  if (!data) return;
+
+  buttons.forEach((item) => {
+    const isSelected = item.dataset.platform === platform;
+    item.classList.toggle("selected", isSelected);
+    item.setAttribute("aria-selected", String(isSelected));
+  });
+
+  if (downloadLink) downloadLink.href = data.url;
+  if (downloadLabel) downloadLabel.textContent = data.label;
+  if (platformNote) platformNote.textContent = data.note;
+  if (downloadMeta) downloadMeta.textContent = data.meta;
+}
+
 if (buttons.length > 0 && downloadLink) {
   buttons.forEach((button) => {
     button.addEventListener("click", () => {
       const platform = button.dataset.platform;
-      const data = DOWNLOADS[platform];
-      if (!data) return;
-
-      buttons.forEach((item) => {
-        item.classList.toggle("selected", item === button);
-        item.setAttribute("aria-selected", String(item === button));
-      });
-
-      if (downloadLink) downloadLink.href = data.url;
-      if (downloadLabel) downloadLabel.textContent = data.label;
-      if (platformNote) platformNote.textContent = data.note;
-      if (downloadMeta) downloadMeta.textContent = data.meta;
+      updateDownloadUI(platform);
     });
   });
 }
+
+// Busca dinamicamente os links diretos de download da última Release do GitHub
+async function fetchLatestRelease() {
+  try {
+    const res = await fetch(RELEASE_API);
+    if (!res.ok) return;
+    const data = await res.json();
+    const version = data.tag_name || "v1.0.0";
+    const assets = data.assets || [];
+
+    assets.forEach((asset) => {
+      const name = asset.name.toLowerCase();
+      const downloadUrl = asset.browser_download_url;
+
+      if (name.includes("windows") || name.endsWith(".exe")) {
+        DOWNLOADS.windows.url = downloadUrl;
+        DOWNLOADS.windows.meta = `Versão ${version} · x64`;
+      } else if (name.includes("macos") || name.includes("darwin") || name.endsWith(".zip")) {
+        DOWNLOADS.macos.url = downloadUrl;
+        DOWNLOADS.macos.meta = `Versão ${version} · Universal`;
+      } else if (name.includes("linux") || name.endsWith(".tar.gz")) {
+        DOWNLOADS.linux.url = downloadUrl;
+        DOWNLOADS.linux.meta = `Versão ${version} · x64`;
+      }
+    });
+
+    const activeBtn = document.querySelector(".platform.selected");
+    const activePlatform = activeBtn ? activeBtn.dataset.platform : "windows";
+    updateDownloadUI(activePlatform);
+  } catch (err) {
+    console.warn("Usando fallback de release estática.", err);
+  }
+}
+
+fetchLatestRelease();
 
 const yearEl = document.querySelector("#year");
 if (yearEl) {
