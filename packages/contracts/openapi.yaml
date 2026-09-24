@@ -1,0 +1,162 @@
+openapi: 3.1.0
+info:
+  title: Magnetares Sync API
+  version: 1.0.0-beta
+  description: |
+    Protocolo de sincronização incremental para notas Magnetares.
+    O perfil de sync atual é adequado para beta/self-hosting; uma versão de produção
+    deve substituir o header de perfil por autenticação de usuário validada pela API.
+servers:
+  - url: https://api.example.com
+paths:
+  /healthz:
+    get:
+      summary: Verifica disponibilidade da API
+      responses:
+        '204': { description: Serviço disponível }
+  /v1/changes:
+    get:
+      summary: Busca alterações desde um cursor
+      parameters:
+        - $ref: '#/components/parameters/SyncProfile'
+        - in: query
+          name: cursor
+          required: true
+          schema: { type: string, default: '0' }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 500, default: 200 }
+      responses:
+        '200':
+          description: Alterações ordenadas por cursor de servidor
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChangesPage' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /v1/notes/{id}:
+    put:
+      summary: Cria, atualiza ou restaura uma nota com precondição de revisão
+      parameters:
+        - $ref: '#/components/parameters/SyncProfile'
+        - $ref: '#/components/parameters/NoteID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NoteMutation' }
+      responses:
+        '200':
+          description: Mutação aceita ou repetição idempotente
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MutationResult' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/RevisionConflict' }
+    delete:
+      summary: Move uma nota para a lixeira remota
+      parameters:
+        - $ref: '#/components/parameters/SyncProfile'
+        - $ref: '#/components/parameters/NoteID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeleteMutation' }
+      responses:
+        '200':
+          description: Lápide registrada ou repetição idempotente
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MutationResult' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/RevisionConflict' }
+components:
+  parameters:
+    SyncProfile:
+      in: header
+      name: X-Magnetares-Profile
+      required: true
+      schema: { type: string, format: uuid }
+      description: Identificador de perfil usado no beta/self-hosting. Não substitui autenticação de produção.
+    NoteID:
+      in: path
+      name: id
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    RemoteNote:
+      type: object
+      required: [id, title, body, bodyText, revision, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        body: { type: string, description: Documento Tiptap JSON }
+        bodyText: { type: string }
+        revision: { type: integer, minimum: 1 }
+        deletedAt: { type: [string, 'null'], format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    NotePayload:
+      type: object
+      required: [title, body, bodyText]
+      properties:
+        title: { type: string }
+        body: { type: string }
+        bodyText: { type: string }
+    NoteMutation:
+      type: object
+      required: [baseRevision, mutationId, note]
+      properties:
+        baseRevision: { type: integer, minimum: 0 }
+        mutationId: { type: string, format: uuid }
+        note: { $ref: '#/components/schemas/NotePayload' }
+    DeleteMutation:
+      type: object
+      required: [baseRevision, mutationId]
+      properties:
+        baseRevision: { type: integer, minimum: 1 }
+        mutationId: { type: string, format: uuid }
+    MutationResult:
+      type: object
+      required: [note, cursor]
+      properties:
+        note: { $ref: '#/components/schemas/RemoteNote' }
+        cursor: { type: string }
+    Change:
+      type: object
+      required: [cursor, note]
+      properties:
+        cursor: { type: string }
+        note: { $ref: '#/components/schemas/RemoteNote' }
+    ChangesPage:
+      type: object
+      required: [changes, nextCursor, hasMore]
+      properties:
+        changes:
+          type: array
+          items: { $ref: '#/components/schemas/Change' }
+        nextCursor: { type: string }
+        hasMore: { type: boolean }
+    Conflict:
+      type: object
+      required: [code, note, cursor]
+      properties:
+        code: { type: string, const: revision_conflict }
+        note: { $ref: '#/components/schemas/RemoteNote' }
+        cursor: { type: string }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+  responses:
+    BadRequest:
+      description: Request inválido
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RevisionConflict:
+      description: A revisão local está desatualizada
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Conflict' }

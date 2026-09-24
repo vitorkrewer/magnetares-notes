@@ -1,0 +1,28 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: '1.25.x' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22.x' }
+      - name: Verify API
+        working-directory: apps/api
+        run: go test ./...
+      - name: Install frontend dependencies
+        working-directory: apps/desktop/frontend
+        run: npm ci --no-audit --no-fund
+      - name: Build frontend
+        working-directory: apps/desktop/frontend
+        run: npm run build
+      - name: Verify desktop storage
+        working-directory: apps/desktop
+        run: go test .
