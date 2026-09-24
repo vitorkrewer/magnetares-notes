@@ -10,20 +10,20 @@
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="index.html#top" aria-label="Magnetares Notes">
+      <a class="brand" href="index.html" aria-label="Magnetares Notes">
         <img src="assets/magnetar-icon.png" alt="" />
         <span>Magnetares</span>
       </a>
       <nav aria-label="Navegação principal">
         <a href="index.html#recursos">Recursos</a>
         <a href="index.html#melhorias">Novidades</a>
-        <a class="active" href="screenshots.html">Screenshots</a>
-        <a href="index.html#downloads">Downloads</a>
+        <a class="active" href="#top">Screenshots</a>
+        <a href="#downloads">Downloads</a>
       </nav>
-      <a class="header-download" href="index.html#downloads">Baixar agora <span aria-hidden="true">↘</span></a>
+      <a class="header-download" href="#downloads">Baixar agora <span aria-hidden="true">↘</span></a>
     </header>
 
-    <main>
+    <main id="top">
       <section class="gallery-hero">
         <div class="starfield" aria-hidden="true"></div>
         <div class="gallery-hero-copy">
@@ -123,6 +123,28 @@
 
         </div>
       </section>
+
+      <section class="download-section" id="downloads">
+        <div class="download-heading">
+          <p class="section-kicker">Magnetares Notes</p>
+          <h2>Pronto para<br />entrar em órbita?</h2>
+        </div>
+        <div class="download-panel">
+          <div class="platform-switch" role="tablist" aria-label="Escolha sua plataforma">
+            <button class="platform selected" type="button" data-platform="windows" role="tab" aria-selected="true">Windows</button>
+            <button class="platform" type="button" data-platform="macos" role="tab" aria-selected="false">macOS</button>
+            <button class="platform" type="button" data-platform="linux" role="tab" aria-selected="false">Linux</button>
+          </div>
+          <div class="download-details">
+            <p id="platform-note">Windows 10 ou superior · Instalador nativo</p>
+            <a id="download-link" class="download-link" href="#" data-download-link>
+              <span id="download-label">Baixar para Windows</span>
+              <span aria-hidden="true">↓</span>
+            </a>
+            <small id="download-meta">Versão 1.0.0 · x64</small>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- Modal Lightbox -->
@@ -140,7 +162,7 @@
     </div>
 
     <footer class="site-footer">
-      <a class="brand" href="index.html#top" aria-label="Voltar ao topo">
+      <a class="brand" href="#top" aria-label="Voltar ao topo">
         <img src="assets/magnetar-icon.png" alt="" />
         <span>Magnetares</span>
       </a>
