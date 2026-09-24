@@ -26,6 +26,14 @@ export function GetDatabasePath() {
   return window['go']['main']['App']['GetDatabasePath']();
 }
 
+export function GetSyncConfiguration() {
+  return window['go']['main']['App']['GetSyncConfiguration']();
+}
+
+export function GetSyncProfileID() {
+  return window['go']['main']['App']['GetSyncProfileID']();
+}
+
 export function IsWindowMaximized() {
   return window['go']['main']['App']['IsWindowMaximized']();
 }
@@ -70,6 +78,10 @@ export function SaveSmartFolder(arg1) {
   return window['go']['main']['App']['SaveSmartFolder'](arg1);
 }
 
+export function SaveSyncConfiguration(arg1, arg2) {
+  return window['go']['main']['App']['SaveSyncConfiguration'](arg1, arg2);
+}
+
 export function SetCustomDatabasePath(arg1) {
   return window['go']['main']['App']['SetCustomDatabasePath'](arg1);
 }
@@ -80,6 +92,14 @@ export function SetNotePinned(arg1, arg2) {
 
 export function SetNoteTags(arg1, arg2) {
   return window['go']['main']['App']['SetNoteTags'](arg1, arg2);
+}
+
+export function SetSyncProfileID(arg1) {
+  return window['go']['main']['App']['SetSyncProfileID'](arg1);
+}
+
+export function SyncNow(arg1) {
+  return window['go']['main']['App']['SyncNow'](arg1);
 }
 
 export function ToggleMaximizeWindow() {

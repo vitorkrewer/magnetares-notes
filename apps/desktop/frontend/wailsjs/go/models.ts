@@ -167,6 +167,36 @@ export namespace main {
 	    }
 	}
 	
+	export class SyncConfiguration {
+	    tursoDatabaseUrl: string;
+	    configured: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new SyncConfiguration(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.tursoDatabaseUrl = source["tursoDatabaseUrl"];
+	        this.configured = source["configured"];
+	    }
+	}
+	export class SyncResult {
+	    uploaded: number;
+	    downloaded: number;
+	    conflicts: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new SyncResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.uploaded = source["uploaded"];
+	        this.downloaded = source["downloaded"];
+	        this.conflicts = source["conflicts"];
+	    }
+	}
 
 }
 

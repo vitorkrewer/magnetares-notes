@@ -14,6 +14,10 @@ export function DeleteSmartFolder(arg1:string):Promise<void>;
 
 export function GetDatabasePath():Promise<string>;
 
+export function GetSyncConfiguration():Promise<main.SyncConfiguration>;
+
+export function GetSyncProfileID():Promise<string>;
+
 export function IsWindowMaximized():Promise<boolean>;
 
 export function ListDeletedNotes():Promise<Array<main.Note>>;
@@ -36,10 +40,16 @@ export function SaveNote(arg1:main.Note):Promise<main.Note>;
 
 export function SaveSmartFolder(arg1:main.SmartFolder):Promise<main.SmartFolder>;
 
+export function SaveSyncConfiguration(arg1:string,arg2:string):Promise<main.SyncConfiguration>;
+
 export function SetCustomDatabasePath(arg1:string):Promise<string>;
 
 export function SetNotePinned(arg1:string,arg2:boolean):Promise<main.Note>;
 
 export function SetNoteTags(arg1:string,arg2:Array<string>):Promise<main.Note>;
+
+export function SetSyncProfileID(arg1:string):Promise<void>;
+
+export function SyncNow(arg1:string):Promise<main.SyncResult>;
 
 export function ToggleMaximizeWindow():Promise<boolean>;
