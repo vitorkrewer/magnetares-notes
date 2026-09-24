@@ -77,8 +77,15 @@ jobs:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
         run: wails build -clean -trimpath -platform ${{ matrix.platform }} -webview2 download
 
-      - name: Build Linux or macOS desktop
-        if: runner.os != 'Windows'
+      - name: Build Linux desktop
+        if: runner.os == 'Linux'
+        working-directory: apps/desktop
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+        run: wails build -clean -trimpath -platform ${{ matrix.platform }} -tags webkit2_41
+
+      - name: Build macOS desktop
+        if: runner.os == 'macOS'
         working-directory: apps/desktop
         env:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
