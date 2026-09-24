@@ -5,10 +5,16 @@ on:
     tags: ["v*"]
   workflow_dispatch:
     inputs:
-      tag:
-        description: "Tag existente da release, por exemplo v1.0.0"
-        required: true
+      version:
+        description: "Versão a publicar (ex: v1.0.0). Deixe em branco para auto-detectar do CHANGELOG.md"
+        required: false
+        default: ""
         type: string
+      prerelease:
+        description: "Publicar como pré-release"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -39,7 +45,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{ github.ref }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -114,17 +120,93 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Download all platform artifacts
         uses: actions/download-artifact@v4
         with:
           path: release-assets
           merge-multiple: true
 
+      - name: Extract tag and release notes from CHANGELOG
+        id: release_info
+        shell: python
+        run: |
+          import os, re
+
+          event_name = "${{ github.event_name }}"
+          ref_name = "${{ github.ref_name }}"
+          input_version = "${{ inputs.version }}"
+
+          changelog_path = "CHANGELOG.md"
+          changelog_content = ""
+          if os.path.exists(changelog_path):
+              with open(changelog_path, "r", encoding="utf-8") as f:
+                  changelog_content = f.read()
+
+          # 1. Determine tag name
+          tag = ""
+          if event_name == "workflow_dispatch" and input_version.strip():
+              tag = input_version.strip()
+              if not tag.startswith("v"):
+                  tag = f"v{tag}"
+          elif event_name == "push" and ref_name and ref_name.startswith("v"):
+              tag = ref_name
+
+          if not tag:
+              match = re.search(r'##\s*\[?(v?\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?)\]?', changelog_content)
+              if match:
+                  tag = match.group(1)
+                  if not tag.startswith("v"):
+                      tag = f"v{tag}"
+              else:
+                  tag = "v1.0.0"
+
+          print(f"Calculated RELEASE_TAG: {tag}")
+
+          # 2. Extract release notes for this tag
+          clean_ver = tag.lstrip("v")
+          pattern = rf'^##\s*\[?v?{re.escape(clean_ver)}\]?.*$'
+          lines = changelog_content.splitlines()
+
+          start_idx = None
+          end_idx = None
+          for i, line in enumerate(lines):
+              if start_idx is None:
+                  if re.match(pattern, line.strip(), re.IGNORECASE):
+                      start_idx = i + 1
+              else:
+                  if re.match(r'^##\s+', line.strip()):
+                      end_idx = i
+                      break
+
+          notes = ""
+          if start_idx is not None:
+              if end_idx is None:
+                  end_idx = len(lines)
+              notes = "\n".join(lines[start_idx:end_idx]).strip()
+
+          notes_file = "extracted-release-notes.md"
+          if notes:
+              with open(notes_file, "w", encoding="utf-8") as f:
+                  f.write(notes + "\n")
+              print("Extracted release notes successfully.")
+          else:
+              with open(notes_file, "w", encoding="utf-8") as f:
+                  f.write(f"Release {tag}\n")
+              print("No specific section found in CHANGELOG.md, created fallback release notes.")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write(f"tag_name={tag}\n")
+              f.write(f"body_path={notes_file}\n")
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.tag || github.ref_name }}
-          target_commitish: ${{ inputs.tag || github.sha }}
-          generate_release_notes: true
-          body_path: CHANGELOG.md
+          tag_name: ${{ steps.release_info.outputs.tag_name }}
+          target_commitish: ${{ github.sha }}
+          prerelease: ${{ github.event_name == 'workflow_dispatch' && inputs.prerelease || false }}
+          generate_release_notes: false
+          body_path: ${{ steps.release_info.outputs.body_path }}
           files: release-assets/*
