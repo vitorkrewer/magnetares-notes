@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Magnetares Notes: Screenshots e galeria de interface da aplicação." />
+    <link rel="icon" type="image/png" href="assets/magnetar-icon.png" />
+    <title>Screenshots — Magnetares Notes</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html#top" aria-label="Magnetares Notes">
+        <img src="assets/magnetar-icon.png" alt="" />
+        <span>Magnetares</span>
+      </a>
+      <nav aria-label="Navegação principal">
+        <a href="index.html#recursos">Recursos</a>
+        <a href="index.html#melhorias">Novidades</a>
+        <a class="active" href="screenshots.html">Screenshots</a>
+        <a href="index.html#downloads">Downloads</a>
+      </nav>
+      <a class="header-download" href="index.html#downloads">Baixar agora <span aria-hidden="true">↘</span></a>
+    </header>
+
+    <main>
+      <section class="gallery-hero">
+        <div class="starfield" aria-hidden="true"></div>
+        <div class="gallery-hero-copy">
+          <p class="eyebrow">Interface & Experiência</p>
+          <h1>Galeria de <em>Screenshots</em></h1>
+          <p class="gallery-hero-description">Explore a interface do Magnetares Notes: um ambiente de escrita minimalista, organização fluida em órbitas e temas para o seu ritmo.</p>
+        </div>
+      </section>
+
+      <section class="gallery-section">
+        <div class="gallery-grid">
+
+          <!-- Card 1: Editor Principal -->
+          <article class="screenshot-card">
+            <div class="screenshot-image-wrapper">
+              <img src="assets/screenshots/editor.png" alt="Editor principal do Magnetares Notes" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+              <div class="screenshot-placeholder" style="display:none;">
+                <div class="screenshot-placeholder-icon">✦</div>
+                <span>Editor Principal</span>
+                <code>assets/screenshots/editor.png</code>
+              </div>
+            </div>
+            <div class="screenshot-info">
+              <span class="screenshot-badge">Escrita</span>
+              <h3>Editor de Texto Rico</h3>
+              <p>Interface limpa com suporte a títulos, checklists, citações, tabelas e modo de foco.</p>
+            </div>
+          </article>
+
+          <!-- Card 2: Estrutura de Pastas e Subpastas -->
+          <article class="screenshot-card">
+            <div class="screenshot-image-wrapper">
+              <img src="assets/screenshots/folders.png" alt="Hierarquia de pastas no Magnetares Notes" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+              <div class="screenshot-placeholder" style="display:none;">
+                <div class="screenshot-placeholder-icon">📁</div>
+                <span>Hierarquia de Pastas</span>
+                <code>assets/screenshots/folders.png</code>
+              </div>
+            </div>
+            <div class="screenshot-info">
+              <span class="screenshot-badge">Estrutura</span>
+              <h3>Hierarquia de Subpastas</h3>
+              <p>Organize suas notas com níveis ilimitados de subpastas e navegação rápida.</p>
+            </div>
+          </article>
+
+          <!-- Card 3: Organização por Pastas e Tags -->
+          <article class="screenshot-card">
+            <div class="screenshot-image-wrapper">
+              <img src="assets/screenshots/organization.png" alt="Organização por pastas e tags" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+              <div class="screenshot-placeholder" style="display:none;">
+                <div class="screenshot-placeholder-icon">⌘</div>
+                <span>Navegação & Pastas</span>
+                <code>assets/screenshots/organization.png</code>
+              </div>
+            </div>
+            <div class="screenshot-info">
+              <span class="screenshot-badge">Organização</span>
+              <h3>Pastas e Pastas Inteligentes</h3>
+              <p>Estrutura flexível para categorizar suas notas, marcadores e notas fixadas.</p>
+            </div>
+          </article>
+
+          <!-- Card 4: Sincronização e Backup -->
+          <article class="screenshot-card">
+            <div class="screenshot-image-wrapper">
+              <img src="assets/screenshots/sync.png" alt="Sincronização com Turso" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+              <div class="screenshot-placeholder" style="display:none;">
+                <div class="screenshot-placeholder-icon">◌</div>
+                <span>Sincronização</span>
+                <code>assets/screenshots/sync.png</code>
+              </div>
+            </div>
+            <div class="screenshot-info">
+              <span class="screenshot-badge">Nuvem & Local</span>
+              <h3>Sincronização Turso Opcional</h3>
+              <p>Seus dados permanecem locais e sincronizam na nuvem quando você desejar.</p>
+            </div>
+          </article>
+
+          <!-- Card 5: Configurações & Preferências -->
+          <article class="screenshot-card">
+            <div class="screenshot-image-wrapper">
+              <img src="assets/screenshots/settings.png" alt="Configurações da aplicação" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+              <div class="screenshot-placeholder" style="display:none;">
+                <div class="screenshot-placeholder-icon">⚙</div>
+                <span>Configurações</span>
+                <code>assets/screenshots/settings.png</code>
+              </div>
+            </div>
+            <div class="screenshot-info">
+              <span class="screenshot-badge">Preferências</span>
+              <h3>Painel de Configurações</h3>
+              <p>Ajuste de diretório de banco de dados, atalhos, exportação e backups locais.</p>
+            </div>
+          </article>
+
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal Lightbox -->
+    <div class="screenshot-modal" id="screenshot-modal" aria-hidden="true" role="dialog">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3 id="modal-title">Visualização do Screenshot</h3>
+          <button class="modal-close" id="modal-close" type="button" aria-label="Fechar modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <img id="modal-img" src="" alt="" />
+          <p id="modal-desc"></p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="site-footer">
+      <a class="brand" href="index.html#top" aria-label="Voltar ao topo">
+        <img src="assets/magnetar-icon.png" alt="" />
+        <span>Magnetares</span>
+      </a>
+      <div class="footer-center">
+        <p>Feito para pensamentos que merecem ficar.</p>
+        <div class="social-links" aria-label="Links do projeto">
+          <a href="https://www.linkedin.com/in/vitorkrewer/" target="_blank" rel="noreferrer">LinkedIn <span aria-hidden="true">↗</span></a>
+          <a href="https://github.com/vitorkrewer" target="_blank" rel="noreferrer">GitHub pessoal <span aria-hidden="true">↗</span></a>
+          <a href="https://github.com/vitorkrewer/magnetares-notes" target="_blank" rel="noreferrer">Repositório <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+      <span class="footer-copyright">© <span id="year"></span> Magnetares Notes</span>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
