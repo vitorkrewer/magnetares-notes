@@ -11,8 +11,8 @@ vMAJOR.MINOR.PATCH
 Exemplo:
 
 ```powershell
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.1.0
+git push origin v1.1.0
 ```
 
 Mantenha `CHANGELOG.md` atualizado antes de criar a tag. O changelog humano complementa as release notes geradas automaticamente pelo GitHub.

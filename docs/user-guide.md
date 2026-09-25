@@ -35,13 +35,14 @@ O editor persiste um documento estruturado Tiptap no banco local e gera `bodyTex
 
 ### Pastas e subpastas
 
-- Use o botão `+` da seção **Pastas** para criar uma pasta.
-- Selecione uma pasta superior para criar uma subpasta.
+- Use o botão `+` da seção **Pastas** para criar uma pasta com cor (8 opções HSL) e ícone (8 símbolos visuais).
+- Selecione uma pasta para editar ou criar subpastas.
+- Clique no ícone de lápis/configurações de qualquer pasta (incluindo pastas legadas) para editar seu nome, cor e ícone a qualquer momento.
 - Arraste uma nota da lista para uma pasta na barra lateral para movê-la.
 - Arraste uma pasta sobre outra pasta para transformá-la em subpasta.
 - Use os chevrons da árvore para expandir ou recolher subpastas; a navegação permanece rolável para grandes coleções.
 - O aplicativo impede ciclos, como uma pasta ser ancestral de si mesma.
-- Não é possível excluir uma pasta que tenha notas ou subpastas.
+- Ao excluir uma nota, um alerta de confirmação informa que ela será movida para a pasta padrão (*Default*) e preservada na Lixeira local.
 
 ### Notas fixadas
 
@@ -99,3 +100,16 @@ O app funciona sem configuração de nuvem. Para usar suas notas em outro comput
 5. No novo computador, informe a mesma URL e o mesmo token, conecte e sincronize para popular o banco local.
 
 O token é guardado pelo cofre de credenciais do sistema. Consulte [API e sincronização](api-and-sync.md) e [Segurança](security.md).
+
+## Auditoria de Compliance e Integridade
+
+Se você possui bancos locais legados ou deseja verificar a integridade da sincronização com a nuvem:
+
+1. Abra **Preferências > Manutenção & Compliance**.
+2. Clique em **Executar Auditoria de Compliance**.
+3. O sistema verificará automaticamente:
+   - Resolução de conflitos órfãos ou inconsistentes em `note_conflicts`.
+   - Normalização de datas e timestamps inválidos.
+   - Recálculo de pendências e totais de checklists.
+   - Restauração do estado de sincronização (`pending` / `clean`) para upload direto na nuvem.
+4. Um relatório resumido com o status e total de reparos efetuados será exibido.

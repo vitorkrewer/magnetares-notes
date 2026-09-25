@@ -168,7 +168,7 @@ jobs:
                   if not tag.startswith("v"):
                       tag = f"v{tag}"
               else:
-                  tag = "v1.0.0"
+                  tag = "v1.1.0"
 
           print(f"Calculated RELEASE_TAG: {tag}")
 

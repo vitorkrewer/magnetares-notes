@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -167,6 +168,9 @@ func (s *noteStore) syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, turso
 				_, _, _ = requestSyncRaw(http.MethodPut, fmt.Sprintf("%s/v1/folders/%s", apiURL, id), profileID, tursoDatabaseURL, tursoAuthToken, payload)
 			}
 		}
+		if err := rows.Err(); err != nil {
+			log.Printf("syncFoldersViaAPI: error iterating rows: %v", err)
+		}
 	}
 
 	// Pull remote folders
@@ -205,6 +209,9 @@ func (s *noteStore) syncFoldersDirect(turso *TursoClient, profileID string) erro
 					ON CONFLICT(user_id, id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, color = excluded.color, icon = excluded.icon, updated_at = excluded.updated_at`,
 					profileID, id, name, pID, color, icon, createdAt, updatedAt)
 			}
+		}
+		if err := rows.Err(); err != nil {
+			log.Printf("syncFoldersDirect: error iterating rows: %v", err)
 		}
 	}
 
@@ -376,7 +383,7 @@ func (s *noteStore) pushPendingNoteDirect(turso *TursoClient, profileID string, 
 		return err
 	}
 
-	if (found && existing.Revision != note.ServerRev) || (!found && note.ServerRev != 0) {
+	if found && existing.Revision != note.ServerRev {
 		return s.recordConflict(note.ID, note.MutationID, existing)
 	}
 

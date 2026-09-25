@@ -377,7 +377,7 @@ func (s *syncService) putNote(profile, id string, mutation NoteMutation) (Mutati
 	if err != nil {
 		return MutationResult{}, nil, err
 	}
-	if (found && existing.Revision != mutation.BaseRevision) || (!found && mutation.BaseRevision != 0) {
+	if found && existing.Revision != mutation.BaseRevision {
 		return MutationResult{}, s.conflict(profile, existing, found), nil
 	}
 

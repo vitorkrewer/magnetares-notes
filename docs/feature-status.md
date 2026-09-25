@@ -14,16 +14,17 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 | Checklists | Implementado | Estado visual, contagem de itens e regras inteligentes. |
 | Tabelas | Implementado | Inserção, redimensionamento e controles contextuais. |
 | Cálculos | Implementado | Nó inline com expressão e resultado; parser restringe identificadores. |
-| Pastas e subpastas | Implementado no backend | Bridge e banco suportam hierarquia; a interface ainda é incremental para ações de mover, renomear e excluir. |
+| Pastas e subpastas | Implementado | Criação e edição completa de pastas e subpastas com cores HSL e 8 ícones personalizáveis, suporte a pastas legadas. |
 | Notas fixadas | Implementado | Pin e ordenação no topo. |
-| Etiquetas | Implementado | Chips e associação persistida. |
-| Pastas Inteligentes | Implementado no backend | Tag, período e checklist; a interface ainda evolui para todos os fluxos de gerenciamento. |
+| Etiquetas | Implementado | Chips, associação persistida e layout responsivo para tags extensas. |
+| Pastas Inteligentes | Implementado | Tag, período e checklist com atualização automática. |
 | Busca por texto local | Implementado | Título e `body_text`; não usa FTS/OCR. |
-| Lixeira e restauração | Implementado | Exclusão lógica e modo somente leitura. |
+| Lixeira e restauração | Implementado | Exclusão lógica com confirmação e redirecionamento seguro para a pasta padrão. |
 | Importar Markdown/texto | Implementado | `.md`, `.markdown` e `.txt`. |
 | Exportar Markdown/HTML/texto | Implementado | Exportação local pelo editor. |
 | Impressão/PDF | Implementado | `window.print()` e CSS de impressão. |
-| Backup Turso e Sync | Implementado | Sincronização bidirecional de notas, pastas, etiquetas e metadados via API/Turso com cursores e lápides. |
+| Compliance & Autocura | Implementado | Diagnóstico `EnsureDataCompliance`, reparo de checklists, limpeza de conflitos orfãos e normalização no SQLite. |
+| Backup Turso e Sync | Implementado | Sincronização bidirecional de notas e pastas (com cores/ícones) via API/Turso, sem conflitos falsos para `!found`. |
 | Anexos e PDFs | Planejado | Sem modelo de blob, visualizador ou armazenamento de arquivo. |
 | Desenho/anotação | Planejado | Depende de canvas e anexos. |
 | OCR e busca em imagens/PDF | Planejado | Depende de pipeline de extração e indexação. |

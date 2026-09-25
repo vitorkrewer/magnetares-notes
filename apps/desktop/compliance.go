@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -104,6 +105,7 @@ func (s *noteStore) EnsureDataCompliance() (ComplianceReport, error) {
 	// 7. Recalcular e verificar projeções de checklist (checklist_total & checklist_open)
 	rows, err := tx.Query(`SELECT id, body, checklist_total, checklist_open FROM notes WHERE body IS NOT NULL AND body != ''`)
 	if err == nil {
+		defer rows.Close()
 		type checklistPatch struct {
 			id    string
 			total int64
@@ -120,7 +122,9 @@ func (s *noteStore) EnsureDataCompliance() (ComplianceReport, error) {
 				}
 			}
 		}
-		_ = rows.Close()
+		if err := rows.Err(); err != nil {
+			log.Printf("EnsureDataCompliance: error iterating checklist rows: %v", err)
+		}
 
 		for _, p := range patches {
 			if _, err := tx.Exec(`UPDATE notes SET checklist_total = ?, checklist_open = ?, sync_state = 'pending', updated_at = ? WHERE id = ?`, p.total, p.open, now, p.id); err == nil {
@@ -142,7 +146,25 @@ func (s *noteStore) EnsureDataCompliance() (ComplianceReport, error) {
 		}
 	}
 
-	// 9. Garantir sync_state válido ('pending', 'clean', 'conflict')
+	// 9. Limpar conflitos falsos (onde a nota remota registrada possuía revisão 0 ou ID vazio)
+	res, err = tx.Exec(`DELETE FROM note_conflicts WHERE server_revision = 0 OR server_note_json LIKE '%"id":""%'`)
+	if err == nil {
+		if affected, _ := res.RowsAffected(); affected > 0 {
+			report.Details = append(report.Details, fmt.Sprintf("Removidos %d registros de conflitos falsos", affected))
+		}
+	}
+
+	// 10. Restaurar notas com conflito falso para 'pending' e server_revision = 0 para permitir upload à nuvem
+	res, err = tx.Exec(`UPDATE notes SET sync_state = 'pending', server_revision = 0, updated_at = ?
+		WHERE sync_state = 'conflict' AND id NOT IN (SELECT note_id FROM note_conflicts)`, now)
+	if err == nil {
+		if affected, _ := res.RowsAffected(); affected > 0 {
+			report.RepairedNotes += int(affected)
+			report.Details = append(report.Details, fmt.Sprintf("Restauradas %d notas em falso conflito para sincronização com a nuvem", affected))
+		}
+	}
+
+	// 11. Garantir sync_state válido ('pending', 'clean', 'conflict')
 	res, err = tx.Exec(`UPDATE notes SET sync_state = 'pending' WHERE sync_state IS NULL OR sync_state NOT IN ('pending', 'clean', 'conflict')`)
 	if err == nil {
 		if affected, _ := res.RowsAffected(); affected > 0 {

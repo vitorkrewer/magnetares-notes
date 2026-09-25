@@ -62,7 +62,7 @@ async function fetchLatestRelease() {
     const res = await fetch(RELEASE_API);
     if (!res.ok) return;
     const data = await res.json();
-    const version = data.tag_name || "v1.0.0";
+    const version = data.tag_name || "v1.1.0";
     const assets = data.assets || [];
 
     assets.forEach((asset) => {

@@ -57,12 +57,13 @@ Exemplo de corpo de mutação de nota:
 ## O que é sincronizado hoje
 
 - ID, título, documento estruturado, texto extraído, revisão remota, cursor e datas canônicas do servidor.
-- **Estrutura de Pastas:** `folderId`, `folder` (nome), e tabela remota `sync_folders` preservando a hierarquia.
+- **Estrutura de Pastas:** `folderId`, `folder` (nome), metadados de personalização (`color` HSL, `icon` visual) e tabela remota `sync_folders` preservando a hierarquia.
 - **Etiquetas (Tags):** associação N:N entre notas e tags sincronizada via array e processada localmente.
 - **Metadados de Organização:** nota fixada (`pinnedAt`), estado e contagem de checklists (`checklistTotal`, `checklistOpen`).
 - Exclusão e restauração por lápide (`deletedAt`).
+- Resolução robusta de conflitos: Inserção direta sem falsos conflitos quando a nota não existe no servidor (`found = false`).
 - Outbox local com mutações idempotentes por `mutationId`.
-- Conflitos preservados localmente em `note_conflicts`, sem sobrescrever a edição do usuário.
+- Conflitos reais preservados localmente em `note_conflicts`, com limpeza via ferramenta de compliance.
 
 ## O que ainda não é sincronizado
 

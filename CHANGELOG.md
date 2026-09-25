@@ -2,6 +2,38 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## [v1.1.0] - 2026-09-25
+
+### Added
+
+- **Personalização de Pastas (Cores e Ícones):**
+  - Modal de criação de pasta com seletor interativo de 8 cores (paletas Tailwind/HSL) e 8 ícones (Pasta, Projeto, Estudo, Código, Trabalho, Pessoal, Estrela, Arquivo).
+  - Modal de edição de pasta para alterar nome, cor e ícone de qualquer pasta existente (incluindo pastas legadas).
+  - Suporte completo no backend SQLite e sincronização com Turso para os metadados de cor e ícone.
+
+- **Motor de Compliance e Integridade Local (`compliance.go`):**
+  - Ferramenta de auditoria e autorreparo de banco de dados no menu de Preferências.
+  - Limpeza automática de registros falsos em `note_conflicts` provenientes de migrações ou revisões inconsistentes (`server_revision = 0`).
+  - Recálculo de contagem de checklists e reparo de timestamps inválidos.
+  - Relatório visual de integridade com detalhes de todas as correções aplicadas.
+
+### Improved
+
+- **UX na Barra Lateral & Etiquetas Longas:**
+  - Correção de layout CSS na lista de etiquetas da barra lateral, evitando que hashtags `#` sejam ocultadas ou cortadas em nomes de etiquetas extensos.
+
+- **Exclusão Segura de Notas:**
+  - Alerta de confirmação ao excluir notas com aviso transparente de que as notas serão movidas para a pasta padrão (*Default*) e enviadas para a Lixeira local.
+
+### Fixed
+
+- **Sincronização na Nuvem Turso/libSQL:**
+  - Correção da regra de resolução de conflitos na sincronização incremental quando a nota não existe no servidor remoto (`found = false`). Notas locais com `server_revision > 0` são enviadas diretamente em vez de gerar conflito falso com payload vazio.
+  - Inserções diretas de notas sem histórico no Turso agora mantêm o banco local 100% em sincronia (`sync_state = 'clean'`).
+
+- **Qualidade de Código Go:**
+  - Adicionadas verificações rigorosas de `rows.Err()` e liberação explícita de recursos (`defer rows.Close()`) em todas as iterações de banco em `compliance.go` e `sync.go`.
+
 ## [v1.0.0] - 2026-09-24
 
 ### Added
