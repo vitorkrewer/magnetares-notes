@@ -44,6 +44,8 @@ type syncRemoteFolder struct {
 	ID        string     `json:"id"`
 	Name      string     `json:"name"`
 	ParentID  *string    `json:"parentId"`
+	Color     string     `json:"color"`
+	Icon      string     `json:"icon"`
 	DeletedAt *time.Time `json:"deletedAt"`
 	CreatedAt time.Time  `json:"createdAt"`
 	UpdatedAt time.Time  `json:"updatedAt"`
@@ -136,14 +138,14 @@ func (s *noteStore) syncNow(apiURL, tursoDatabaseURL, tursoAuthToken string) (Sy
 
 func (s *noteStore) syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAuthToken string) error {
 	// Push local folders
-	rows, err := s.db.Query(`SELECT id, name, parent_id, created_at, updated_at FROM folders WHERE id != 'folder-default'`)
+	rows, err := s.db.Query(`SELECT id, name, parent_id, COALESCE(color, ''), COALESCE(icon, ''), created_at, updated_at FROM folders WHERE id != 'folder-default'`)
 	if err == nil {
 		defer rows.Close()
 		for rows.Next() {
-			var id, name string
+			var id, name, color, icon string
 			var parentID sql.NullString
 			var createdAt, updatedAt int64
-			if err := rows.Scan(&id, &name, &parentID, &createdAt, &updatedAt); err == nil {
+			if err := rows.Scan(&id, &name, &parentID, &color, &icon, &createdAt, &updatedAt); err == nil {
 				var pID *string
 				if parentID.Valid && parentID.String != "" {
 					pID = &parentID.String
@@ -154,6 +156,8 @@ func (s *noteStore) syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, turso
 					ID:        id,
 					Name:      name,
 					ParentID:  pID,
+					Color:     color,
+					Icon:      icon,
 					CreatedAt: cTime,
 					UpdatedAt: uTime,
 				}
@@ -170,10 +174,10 @@ func (s *noteStore) syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, turso
 			if rf.ParentID != nil && *rf.ParentID != "" {
 				pID = *rf.ParentID
 			}
-			_, _ = s.db.Exec(`INSERT INTO folders(id, name, parent_id, created_at, updated_at)
-				VALUES (?, ?, ?, ?, ?)
-				ON CONFLICT(id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, updated_at = excluded.updated_at`,
-				rf.ID, rf.Name, pID, rf.CreatedAt.UnixMilli(), rf.UpdatedAt.UnixMilli())
+			_, _ = s.db.Exec(`INSERT INTO folders(id, name, parent_id, color, icon, created_at, updated_at)
+				VALUES (?, ?, ?, ?, ?, ?, ?)
+				ON CONFLICT(id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, color = excluded.color, icon = excluded.icon, updated_at = excluded.updated_at`,
+				rf.ID, rf.Name, pID, rf.Color, rf.Icon, rf.CreatedAt.UnixMilli(), rf.UpdatedAt.UnixMilli())
 		}
 	}
 	return nil
@@ -181,31 +185,31 @@ func (s *noteStore) syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, turso
 
 func (s *noteStore) syncFoldersDirect(turso *TursoClient, profileID string) error {
 	// 1. Push local folders to Turso
-	rows, err := s.db.Query(`SELECT id, name, parent_id, created_at, updated_at FROM folders WHERE id != 'folder-default'`)
+	rows, err := s.db.Query(`SELECT id, name, parent_id, COALESCE(color, ''), COALESCE(icon, ''), created_at, updated_at FROM folders WHERE id != 'folder-default'`)
 	if err == nil {
 		defer rows.Close()
 		for rows.Next() {
-			var id, name string
+			var id, name, color, icon string
 			var parentID sql.NullString
 			var createdAt, updatedAt int64
-			if err := rows.Scan(&id, &name, &parentID, &createdAt, &updatedAt); err == nil {
+			if err := rows.Scan(&id, &name, &parentID, &color, &icon, &createdAt, &updatedAt); err == nil {
 				var pID any = nil
 				if parentID.Valid && parentID.String != "" {
 					pID = parentID.String
 				}
-				_ = turso.Execute(`INSERT INTO sync_folders(user_id, id, name, parent_id, deleted_at, created_at, updated_at)
-					VALUES (?, ?, ?, ?, NULL, ?, ?)
-					ON CONFLICT(user_id, id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, updated_at = excluded.updated_at`,
-					profileID, id, name, pID, createdAt, updatedAt)
+				_ = turso.Execute(`INSERT INTO sync_folders(user_id, id, name, parent_id, color, icon, deleted_at, created_at, updated_at)
+					VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)
+					ON CONFLICT(user_id, id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, color = excluded.color, icon = excluded.icon, updated_at = excluded.updated_at`,
+					profileID, id, name, pID, color, icon, createdAt, updatedAt)
 			}
 		}
 	}
 
 	// 2. Pull remote folders from Turso
-	_, rRows, err := turso.Query(`SELECT id, name, parent_id, created_at, updated_at FROM sync_folders WHERE user_id = ? AND deleted_at IS NULL`, profileID)
+	_, rRows, err := turso.Query(`SELECT id, name, parent_id, color, icon, created_at, updated_at FROM sync_folders WHERE user_id = ? AND deleted_at IS NULL`, profileID)
 	if err == nil {
 		for _, rRow := range rRows {
-			if len(rRow) < 5 {
+			if len(rRow) < 7 {
 				continue
 			}
 			fID := rRow[0].Value
@@ -214,12 +218,14 @@ func (s *noteStore) syncFoldersDirect(turso *TursoClient, profileID string) erro
 			if rRow[2].Type != "null" && rRow[2].Value != "" {
 				pID = rRow[2].Value
 			}
-			cAt, _ := tursoInt(rRow[3])
-			uAt, _ := tursoInt(rRow[4])
-			_, _ = s.db.Exec(`INSERT INTO folders(id, name, parent_id, created_at, updated_at)
-				VALUES (?, ?, ?, ?, ?)
-				ON CONFLICT(id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, updated_at = excluded.updated_at`,
-				fID, fName, pID, cAt, uAt)
+			fColor := rRow[3].Value
+			fIcon := rRow[4].Value
+			cAt, _ := tursoInt(rRow[5])
+			uAt, _ := tursoInt(rRow[6])
+			_, _ = s.db.Exec(`INSERT INTO folders(id, name, parent_id, color, icon, created_at, updated_at)
+				VALUES (?, ?, ?, ?, ?, ?, ?)
+				ON CONFLICT(id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, color = excluded.color, icon = excluded.icon, updated_at = excluded.updated_at`,
+				fID, fName, pID, fColor, fIcon, cAt, uAt)
 		}
 	}
 	return nil

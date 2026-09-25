@@ -12,11 +12,11 @@ func TestFolderHierarchyAndRestrictedDeletion(t *testing.T) {
 	}
 	defer app.Close()
 
-	parent, err := app.SaveFolder(Folder{Name: "Trabalho"})
+	parent, err := app.SaveFolder(Folder{Name: "Trabalho", Color: "#6366f1", Icon: "briefcase"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	child, err := app.SaveFolder(Folder{Name: "Projeto A", ParentID: &parent.ID})
+	child, err := app.SaveFolder(Folder{Name: "Projeto A", ParentID: &parent.ID, Color: "#10b981", Icon: "code"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,14 +41,21 @@ func TestFolderHierarchyAndRestrictedDeletion(t *testing.T) {
 		t.Fatal(err)
 	}
 	var childCount int64 = -1
+	var foundColor, foundIcon string
 	for _, folder := range navigation.Folders {
 		if folder.ID == child.ID {
 			childCount = folder.NoteCount
+			foundColor = folder.Color
+			foundIcon = folder.Icon
 		}
 	}
 	if childCount != 1 {
 		t.Fatalf("expected child note count 1, got %d", childCount)
 	}
+	if foundColor != "#10b981" || foundIcon != "code" {
+		t.Fatalf("folder color/icon not preserved: color=%s icon=%s", foundColor, foundIcon)
+	}
+
 	folderNotes, err := app.QueryNotes(NoteQuery{Kind: "folder", ID: parent.ID})
 	if err != nil {
 		t.Fatal(err)

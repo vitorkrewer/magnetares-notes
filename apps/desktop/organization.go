@@ -17,6 +17,8 @@ type Folder struct {
 	ID        string  `json:"id"`
 	Name      string  `json:"name"`
 	ParentID  *string `json:"parentId"`
+	Color     string  `json:"color"`
+	Icon      string  `json:"icon"`
 	NoteCount int64   `json:"noteCount"`
 }
 
@@ -48,10 +50,10 @@ type NoteQuery struct {
 }
 
 func (s *noteStore) listNavigation() (Navigation, error) {
-	rows, err := s.db.Query(`SELECT f.id, f.name, f.parent_id, COUNT(n.id)
+	rows, err := s.db.Query(`SELECT f.id, f.name, f.parent_id, COALESCE(f.color, ''), COALESCE(f.icon, ''), COUNT(n.id)
 		FROM folders f
 		LEFT JOIN notes n ON n.folder_id = f.id AND n.deleted_at IS NULL
-		GROUP BY f.id, f.name, f.parent_id
+		GROUP BY f.id, f.name, f.parent_id, f.color, f.icon
 		ORDER BY f.parent_id IS NOT NULL, f.name COLLATE NOCASE`)
 	if err != nil {
 		return Navigation{}, fmt.Errorf("list folders: %w", err)
@@ -60,7 +62,7 @@ func (s *noteStore) listNavigation() (Navigation, error) {
 	for rows.Next() {
 		var folder Folder
 		var parentID sql.NullString
-		if err := rows.Scan(&folder.ID, &folder.Name, &parentID, &folder.NoteCount); err != nil {
+		if err := rows.Scan(&folder.ID, &folder.Name, &parentID, &folder.Color, &folder.Icon, &folder.NoteCount); err != nil {
 			return Navigation{}, fmt.Errorf("scan folder: %w", err)
 		}
 		if parentID.Valid {
@@ -160,10 +162,10 @@ func (s *noteStore) saveFolder(folder Folder) (Folder, error) {
 	}
 
 	now := time.Now().UTC().UnixMilli()
-	_, err := s.db.Exec(`INSERT INTO folders(id, name, parent_id, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?)
-		ON CONFLICT(id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, updated_at = excluded.updated_at`,
-		folder.ID, folder.Name, folder.ParentID, now, now)
+	_, err := s.db.Exec(`INSERT INTO folders(id, name, parent_id, color, icon, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, color = excluded.color, icon = excluded.icon, updated_at = excluded.updated_at`,
+		folder.ID, folder.Name, folder.ParentID, folder.Color, folder.Icon, now, now)
 	if err != nil {
 		return Folder{}, fmt.Errorf("save folder: %w", err)
 	}

@@ -4,6 +4,8 @@ export namespace main {
 	    id: string;
 	    name: string;
 	    parentId?: string;
+	    color: string;
+	    icon: string;
 	    noteCount: number;
 	
 	    static createFrom(source: any = {}) {
@@ -15,6 +17,8 @@ export namespace main {
 	        this.id = source["id"];
 	        this.name = source["name"];
 	        this.parentId = source["parentId"];
+	        this.color = source["color"];
+	        this.icon = source["icon"];
 	        this.noteCount = source["noteCount"];
 	    }
 	}

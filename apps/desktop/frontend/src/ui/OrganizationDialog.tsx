@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { FolderPlus, Sparkles, X } from "lucide-react";
+import { FolderPlus, Sparkles, X, Folder, Briefcase, Code, BookOpen, Star, Heart, Archive, User, Check } from "lucide-react";
 import { FolderRecord, NavigationRecord, SmartFolderRecord, TagRecord } from "./types";
 
 export type { FolderRecord, NavigationRecord, SmartFolderRecord, TagRecord };
@@ -14,9 +14,38 @@ type OrganizationDialogProps = {
   onSaveSmartFolder: (smartFolder: SmartFolderRecord) => Promise<void>;
 };
 
+export const FOLDER_ICONS = [
+  { id: "folder", label: "Pasta", Icon: Folder },
+  { id: "briefcase", label: "Trabalho", Icon: Briefcase },
+  { id: "code", label: "Código", Icon: Code },
+  { id: "book", label: "Estudos", Icon: BookOpen },
+  { id: "star", label: "Favorito", Icon: Star },
+  { id: "heart", label: "Pessoal", Icon: Heart },
+  { id: "archive", label: "Arquivo", Icon: Archive },
+  { id: "user", label: "Perfil", Icon: User },
+] as const;
+
+export const FOLDER_COLORS = [
+  { id: "#6366f1", name: "Índigo" },
+  { id: "#10b981", name: "Esmeralda" },
+  { id: "#f59e0b", name: "Âmbar" },
+  { id: "#ec4899", name: "Rosa" },
+  { id: "#8b5cf6", name: "Roxo" },
+  { id: "#06b6d4", name: "Turquesa" },
+  { id: "#f97316", name: "Laranja" },
+  { id: "#64748b", name: "Grafite" },
+];
+
+export function getFolderIconComponent(iconId?: string) {
+  const item = FOLDER_ICONS.find((i) => i.id === iconId);
+  return item ? item.Icon : Folder;
+}
+
 export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, onSaveSmartFolder }: OrganizationDialogProps) {
   const [name, setName] = useState("");
   const [parentId, setParentId] = useState(mode.kind === "folder" ? mode.parentId ?? "" : "");
+  const [selectedIcon, setSelectedIcon] = useState<string>("folder");
+  const [selectedColor, setSelectedColor] = useState<string>("#6366f1");
   const [ruleKind, setRuleKind] = useState<SmartFolderRecord["ruleKind"]>("tag");
   const [tagId, setTagId] = useState(navigation.tags[0]?.id ?? "");
   const [dateField, setDateField] = useState<NonNullable<SmartFolderRecord["dateField"]>>("updated_at");
@@ -35,7 +64,14 @@ export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, on
     setError("");
     try {
       if (mode.kind === "folder") {
-        await onSaveFolder({ id: crypto.randomUUID(), name: name.trim(), parentId: parentId || null, noteCount: 0 });
+        await onSaveFolder({
+          id: crypto.randomUUID(),
+          name: name.trim(),
+          parentId: parentId || null,
+          color: selectedColor,
+          icon: selectedIcon,
+          noteCount: 0
+        });
       } else {
         await onSaveSmartFolder({
           id: crypto.randomUUID(),
@@ -59,22 +95,71 @@ export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, on
     <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <form className="organization-dialog" role="dialog" aria-modal="true" aria-labelledby="organization-dialog-title" onSubmit={submit}>
         <header>
-          {mode.kind === "folder" ? <FolderPlus aria-hidden="true" /> : <Sparkles aria-hidden="true" />}
+          {mode.kind === "folder" ? <FolderPlus aria-hidden="true" style={{ color: selectedColor }} /> : <Sparkles aria-hidden="true" />}
           <h2 id="organization-dialog-title">{mode.kind === "folder" ? (mode.parentId ? "Nova subpasta" : "Nova pasta") : "Nova Pasta Inteligente"}</h2>
           <button type="button" onClick={onClose} aria-label="Fechar" title="Fechar"><X aria-hidden="true" /></button>
         </header>
+
         <label>
           Nome
-          <input autoFocus value={name} onChange={(event) => setName(event.target.value)} />
+          <input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex: Projetos 2026" />
         </label>
+
         {mode.kind === "folder" ? (
-          <label>
-            Pasta superior
-            <select value={parentId} onChange={(event) => setParentId(event.target.value)}>
-              <option value="">Nenhuma</option>
-              {navigation.folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
-            </select>
-          </label>
+          <>
+            <label>
+              Pasta superior
+              <select value={parentId} onChange={(event) => setParentId(event.target.value)}>
+                <option value="">Nenhuma (Pasta Raiz)</option>
+                {navigation.folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
+              </select>
+            </label>
+
+            <div className="picker-section">
+              <span className="picker-label">Ícone da pasta</span>
+              <div className="icon-grid" role="radiogroup" aria-label="Ícone da pasta">
+                {FOLDER_ICONS.map(({ id, label, Icon }) => {
+                  const isSelected = selectedIcon === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      title={label}
+                      className={`picker-btn icon-picker-btn ${isSelected ? "selected" : ""}`}
+                      onClick={() => setSelectedIcon(id)}
+                    >
+                      <Icon style={{ color: isSelected ? selectedColor : "inherit" }} aria-hidden="true" />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="picker-section">
+              <span className="picker-label">Cor da pasta</span>
+              <div className="color-grid" role="radiogroup" aria-label="Cor da pasta">
+                {FOLDER_COLORS.map(({ id, name: colorName }) => {
+                  const isSelected = selectedColor === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      title={colorName}
+                      className={`picker-btn color-picker-btn ${isSelected ? "selected" : ""}`}
+                      style={{ backgroundColor: id }}
+                      onClick={() => setSelectedColor(id)}
+                    >
+                      {isSelected && <Check className="color-check-icon" aria-hidden="true" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
         ) : (
           <>
             <label>
@@ -95,6 +180,7 @@ export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, on
             {ruleKind === "checklist" && <label>Estado<select value={checklistState} onChange={(event) => setChecklistState(event.target.value as typeof checklistState)}><option value="open">Com itens pendentes</option><option value="completed">Todos concluídos</option><option value="any">Qualquer checklist</option></select></label>}
           </>
         )}
+
         {error && <p className="dialog-error" role="alert">{error}</p>}
         <footer>
           <button type="button" onClick={onClose}>Cancelar</button>

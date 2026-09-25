@@ -19,6 +19,8 @@ export type FolderRecord = {
   id: string;
   name: string;
   parentId?: string | null;
+  color?: string;
+  icon?: string;
   noteCount: number;
 };
 

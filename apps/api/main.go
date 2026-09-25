@@ -79,6 +79,8 @@ type RemoteFolder struct {
 	ID        string     `json:"id"`
 	Name      string     `json:"name"`
 	ParentID  *string    `json:"parentId"`
+	Color     string     `json:"color"`
+	Icon      string     `json:"icon"`
 	DeletedAt *time.Time `json:"deletedAt"`
 	CreatedAt time.Time  `json:"createdAt"`
 	UpdatedAt time.Time  `json:"updatedAt"`
@@ -530,20 +532,22 @@ func (s *syncService) getFolders(profile string) ([]RemoteFolder, error) {
 	if s.turso == nil {
 		return nil, errors.New("sincronização remota não configurada no servidor")
 	}
-	_, rows, err := s.turso.Query(`SELECT id, name, parent_id, deleted_at, created_at, updated_at FROM sync_folders WHERE user_id = ? AND deleted_at IS NULL ORDER BY name ASC`, profile)
+	_, rows, err := s.turso.Query(`SELECT id, name, parent_id, COALESCE(color, ''), COALESCE(icon, ''), deleted_at, created_at, updated_at FROM sync_folders WHERE user_id = ? AND deleted_at IS NULL ORDER BY name ASC`, profile)
 	if err != nil {
 		return nil, err
 	}
 	folders := make([]RemoteFolder, 0, len(rows))
 	for _, row := range rows {
-		if len(row) < 6 {
+		if len(row) < 8 {
 			continue
 		}
-		createdAt, _ := tursoTime(row[4])
-		updatedAt, _ := tursoTime(row[5])
+		createdAt, _ := tursoTime(row[6])
+		updatedAt, _ := tursoTime(row[7])
 		folder := RemoteFolder{
 			ID:        row[0].Value,
 			Name:      row[1].Value,
+			Color:     row[3].Value,
+			Icon:      row[4].Value,
 			CreatedAt: createdAt,
 			UpdatedAt: updatedAt,
 		}
@@ -551,8 +555,8 @@ func (s *syncService) getFolders(profile string) ([]RemoteFolder, error) {
 			pID := row[2].Value
 			folder.ParentID = &pID
 		}
-		if row[3].Type != "null" && row[3].Value != "" {
-			dTime, err := tursoTime(row[3])
+		if row[5].Type != "null" && row[5].Value != "" {
+			dTime, err := tursoTime(row[5])
 			if err == nil {
 				folder.DeletedAt = &dTime
 			}
@@ -579,10 +583,10 @@ func (s *syncService) putFolder(profile string, folder RemoteFolder) error {
 	if folder.DeletedAt != nil {
 		deletedAt = folder.DeletedAt.UnixMilli()
 	}
-	return s.turso.Execute(`INSERT INTO sync_folders(user_id, id, name, parent_id, deleted_at, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT(user_id, id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, deleted_at = excluded.deleted_at, updated_at = excluded.updated_at`,
-		profile, folder.ID, folder.Name, parentID, deletedAt, createdAt, now)
+	return s.turso.Execute(`INSERT INTO sync_folders(user_id, id, name, parent_id, color, icon, deleted_at, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(user_id, id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, color = excluded.color, icon = excluded.icon, deleted_at = excluded.deleted_at, updated_at = excluded.updated_at`,
+		profile, folder.ID, folder.Name, parentID, folder.Color, folder.Icon, deletedAt, createdAt, now)
 }
 
 func (s *syncService) deleteFolder(profile string, folderID string) error {

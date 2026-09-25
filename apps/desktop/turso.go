@@ -250,6 +250,8 @@ func (t *TursoClient) InitSchema() error {
 			id TEXT NOT NULL,
 			name TEXT NOT NULL DEFAULT '',
 			parent_id TEXT,
+			color TEXT NOT NULL DEFAULT '',
+			icon TEXT NOT NULL DEFAULT '',
 			deleted_at INTEGER,
 			created_at INTEGER NOT NULL,
 			updated_at INTEGER NOT NULL,
@@ -286,6 +288,8 @@ func (t *TursoClient) InitSchema() error {
 		`ALTER TABLE sync_notes ADD COLUMN checklist_total INTEGER NOT NULL DEFAULT 0`,
 		`ALTER TABLE sync_notes ADD COLUMN checklist_open INTEGER NOT NULL DEFAULT 0`,
 		`ALTER TABLE sync_notes ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'`,
+		`ALTER TABLE sync_folders ADD COLUMN color TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE sync_folders ADD COLUMN icon TEXT NOT NULL DEFAULT ''`,
 	}
 	for _, statement := range alterStatements {
 		_ = t.Execute(statement)

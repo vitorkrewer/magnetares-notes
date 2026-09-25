@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FilePenLine, FileText, Folder, FolderPlus, Globe, Hash, List, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, Trash2, Upload, X } from "lucide-react";
 import { StructuredEditor } from "./StructuredEditor";
 import { TitleBar } from "./TitleBar";
-import { OrganizationDialog } from "./OrganizationDialog";
+import { OrganizationDialog, getFolderIconComponent } from "./OrganizationDialog";
 import { SettingsDialog, type ThemeOption } from "./SettingsDialog";
 import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, SyncConfiguration } from "./types";
 import { downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
@@ -634,53 +634,56 @@ export function App() {
     const isExpanded = expandedFolderIds.has(folder.id);
     const isDropTarget = dropTargetFolderId === folder.id;
 
-    return (
-      <div className="folder-node" key={folder.id}>
-        <div className="folder-node-row" style={{ paddingLeft: 4 + depth * 16 }}>
-          {hasChildren ? (
-            <button type="button" className="folder-expander" onClick={() => toggleFolderExpanded(folder.id)} aria-label={isExpanded ? `Recolher ${folder.name}` : `Expandir ${folder.name}`}>
-              {isExpanded ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}
-            </button>
-          ) : <span className="folder-expander-spacer" />}
-          <button
-            type="button"
-            draggable
-            className={`nav-item folder-item folder-drop-zone ${selectedQuery.kind === "folder" && selectedQuery.id === folder.id ? "selected-folder" : ""} ${isDropTarget ? "drop-target" : ""}`}
-            onClick={() => selectQuery({ kind: "folder", id: folder.id })}
-            onDragStart={(event) => {
-              event.dataTransfer.effectAllowed = "move";
-              event.dataTransfer.setData("application/x-magnetares-folder", folder.id);
-              draggedFolderIdRef.current = folder.id;
-              setDraggedFolderId(folder.id);
-            }}
-            onDragEnd={() => {
-              setDraggedFolderId(null);
-              draggedFolderIdRef.current = null;
-              setDropTargetFolderId(null);
-            }}
-            onDragOver={(event) => {
-              if (!draggedNoteId && !draggedFolderId) return;
-              event.preventDefault();
-              event.dataTransfer.dropEffect = "move";
-              setDropTargetFolderId(folder.id);
-            }}
-            onDragLeave={() => setDropTargetFolderId((current) => current === folder.id ? null : current)}
-            onDrop={(event) => {
-              event.preventDefault();
-              void handleDropOnFolder(
-                folder.id,
-                event.dataTransfer.getData("application/x-magnetares-note"),
-                event.dataTransfer.getData("application/x-magnetares-folder")
-              );
-            }}
-          >
-            <span><Folder className="folder-icon" aria-hidden="true" /> {folder.name}</span>
-            <small>{folder.noteCount}</small>
-          </button>
-        </div>
-        {hasChildren && isExpanded && <div className="folder-children">{children.map((child) => renderFolderNode(child, depth + 1))}</div>}
-      </div>
-    );
+            const FolderIconComp = getFolderIconComponent(folder.icon);
+            const folderIconStyle = folder.color ? { color: folder.color } : undefined;
+
+            return (
+              <div className="folder-node" key={folder.id}>
+                <div className="folder-node-row" style={{ paddingLeft: 4 + depth * 16 }}>
+                  {hasChildren ? (
+                    <button type="button" className="folder-expander" onClick={() => toggleFolderExpanded(folder.id)} aria-label={isExpanded ? `Recolher ${folder.name}` : `Expandir ${folder.name}`}>
+                      {isExpanded ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}
+                    </button>
+                  ) : <span className="folder-expander-spacer" />}
+                  <button
+                    type="button"
+                    draggable
+                    className={`nav-item folder-item folder-drop-zone ${selectedQuery.kind === "folder" && selectedQuery.id === folder.id ? "selected-folder" : ""} ${isDropTarget ? "drop-target" : ""}`}
+                    onClick={() => selectQuery({ kind: "folder", id: folder.id })}
+                    onDragStart={(event) => {
+                      event.dataTransfer.effectAllowed = "move";
+                      event.dataTransfer.setData("application/x-magnetares-folder", folder.id);
+                      draggedFolderIdRef.current = folder.id;
+                      setDraggedFolderId(folder.id);
+                    }}
+                    onDragEnd={() => {
+                      setDraggedFolderId(null);
+                      draggedFolderIdRef.current = null;
+                      setDropTargetFolderId(null);
+                    }}
+                    onDragOver={(event) => {
+                      if (!draggedNoteId && !draggedFolderId) return;
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = "move";
+                      setDropTargetFolderId(folder.id);
+                    }}
+                    onDragLeave={() => setDropTargetFolderId((current) => current === folder.id ? null : current)}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      void handleDropOnFolder(
+                        folder.id,
+                        event.dataTransfer.getData("application/x-magnetares-note"),
+                        event.dataTransfer.getData("application/x-magnetares-folder")
+                      );
+                    }}
+                  >
+                    <span><FolderIconComp className="folder-icon" style={folderIconStyle} aria-hidden="true" /> {folder.name}</span>
+                    <small>{folder.noteCount}</small>
+                  </button>
+                </div>
+                {hasChildren && isExpanded && <div className="folder-children">{children.map((child) => renderFolderNode(child, depth + 1))}</div>}
+              </div>
+            );
   };
 
   return (
