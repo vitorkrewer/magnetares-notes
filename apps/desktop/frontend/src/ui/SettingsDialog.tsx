@@ -40,6 +40,33 @@ export function SettingsDialog({
   const [testMessage, setTestMessage] = useState("");
   const [savingConfig, setSavingConfig] = useState(false);
 
+  const [runningCompliance, setRunningCompliance] = useState(false);
+  const [complianceReport, setComplianceReport] = useState<any>(null);
+
+  const handleRunCompliance = async () => {
+    const bridge = window.go?.main?.App;
+    setRunningCompliance(true);
+    setComplianceReport(null);
+    try {
+      if (bridge?.RunComplianceAudit) {
+        const report = await bridge.RunComplianceAudit();
+        setComplianceReport(report);
+      } else {
+        setComplianceReport({
+          passed: true,
+          details: ["Modo web: banco simulado em conformidade total."]
+        });
+      }
+    } catch (err: any) {
+      setComplianceReport({
+        passed: false,
+        details: [err?.message || "Erro ao executar auditoria."]
+      });
+    } finally {
+      setRunningCompliance(false);
+    }
+  };
+
   const handleSaveDbPath = async (e: FormEvent) => {
     e.preventDefault();
     if (!currentDbPath.trim()) return;
@@ -212,6 +239,38 @@ export function SettingsDialog({
                 {dbPathMessage && <p className="sync-status-msg success">{dbPathMessage}</p>}
                 <small>As alterações no banco são salvas em tempo real com journal WAL e integridade transacional.</small>
               </form>
+
+              <div className="sync-actions-box" style={{ marginTop: 24, paddingTop: 18 }}>
+                <div className="sync-actions-header">
+                  <strong>Integridade & Compliance de Dados:</strong>
+                  <p className="settings-desc" style={{ margin: "4px 0 10px" }}>
+                    Executa uma varredura transacional de conformidade: reatribui notas órfãs para a pasta padrão ('Notas'), repara hierarquias de pastas legadas e recalcula metadados.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="test-connection-btn"
+                  onClick={() => void handleRunCompliance()}
+                  disabled={runningCompliance}
+                  style={{ height: 38, width: "fit-content", padding: "0 16px" }}
+                >
+                  <ShieldCheck aria-hidden="true" />
+                  {runningCompliance ? "Analisando conformidade..." : "Executar Auditoria de Compliance"}
+                </button>
+                {complianceReport && (
+                  <div className={`status-feedback-box ${complianceReport.passed ? "success" : "error"}`} style={{ flexDirection: "column", alignItems: "flex-start", width: "100%" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
+                      <ShieldCheck aria-hidden="true" />
+                      <span>Relatório de Compliance ({complianceReport.auditedAt || "Agora"})</span>
+                    </div>
+                    <ul style={{ margin: "6px 0 0", paddingLeft: 18, fontSize: 12, lineHeight: 1.5 }}>
+                      {(complianceReport.details || []).map((detail: string, idx: number) => (
+                        <li key={idx}>{detail}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

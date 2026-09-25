@@ -64,6 +64,17 @@ export type SyncConfiguration = {
   configured: boolean;
 };
 
+export type ComplianceReport = {
+  passed: boolean;
+  repairedNotes: number;
+  repairedFolders: number;
+  orphanNotesFixed: number;
+  checklistsCorrected: number;
+  orphanTagsCleaned: number;
+  details: string[];
+  auditedAt: string;
+};
+
 export type DesktopBridge = {
   ListNotes?: () => Promise<Note[]>;
   ListDeletedNotes?: () => Promise<Note[]>;
@@ -82,6 +93,7 @@ export type DesktopBridge = {
   GetDatabasePath?: () => Promise<string>;
   SetCustomDatabasePath?: (newPath: string) => Promise<string>;
   SyncNow?: (apiURL: string) => Promise<SyncResult>;
+  RunComplianceAudit?: () => Promise<ComplianceReport>;
   TestTursoConnection?: (databaseURL: string, authToken: string) => Promise<string>;
   GetSyncProfileID?: () => Promise<string>;
   SetSyncProfileID?: (profileID: string) => Promise<void>;

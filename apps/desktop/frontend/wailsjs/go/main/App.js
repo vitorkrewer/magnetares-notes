@@ -66,6 +66,10 @@ export function RestoreNote(arg1) {
   return window['go']['main']['App']['RestoreNote'](arg1);
 }
 
+export function RunComplianceAudit() {
+  return window['go']['main']['App']['RunComplianceAudit']();
+}
+
 export function SaveFolder(arg1) {
   return window['go']['main']['App']['SaveFolder'](arg1);
 }

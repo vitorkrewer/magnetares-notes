@@ -57,6 +57,7 @@ func openNoteStore(databasePath string) (*noteStore, error) {
 		db.Close()
 		return nil, err
 	}
+	_, _ = store.EnsureDataCompliance()
 	return store, nil
 }
 

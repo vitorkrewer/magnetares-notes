@@ -110,6 +110,9 @@ func (s *noteStore) syncNow(apiURL, tursoDatabaseURL, tursoAuthToken string) (Sy
 	tursoAuthToken = strings.TrimSpace(tursoAuthToken)
 	apiURL = strings.TrimRight(strings.TrimSpace(apiURL), "/")
 
+	// Garante compliance e integridade dos dados locais antes da sincronização
+	_, _ = s.EnsureDataCompliance()
+
 	profileID, cursor, err := s.syncMetadataForTurso(tursoDatabaseURL)
 	if err != nil {
 		return SyncResult{}, fmt.Errorf("metadados locais: %w", err)

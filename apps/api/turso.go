@@ -283,5 +283,14 @@ func (t *TursoClient) InitSchema() error {
 		_ = t.Execute(statement)
 	}
 
+	complianceStatements := []string{
+		`UPDATE sync_notes SET folder_id = 'folder-default', folder = 'Notas' WHERE folder_id IS NULL OR folder_id = ''`,
+		`UPDATE sync_folders SET color = '#6366f1' WHERE color IS NULL OR color = ''`,
+		`UPDATE sync_folders SET icon = 'folder' WHERE icon IS NULL OR icon = ''`,
+	}
+	for _, statement := range complianceStatements {
+		_ = t.Execute(statement)
+	}
+
 	return nil
 }

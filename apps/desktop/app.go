@@ -135,6 +135,10 @@ func (a *App) SyncNow(apiURL string) (SyncResult, error) {
 	return a.store.syncNow(apiURL, databaseURL, authToken)
 }
 
+func (a *App) RunComplianceAudit() (ComplianceReport, error) {
+	return a.store.EnsureDataCompliance()
+}
+
 func (a *App) GetSyncProfileID() (string, error) {
 	profileID, _, err := a.store.syncMetadata()
 	return profileID, err

@@ -1,5 +1,31 @@
 export namespace main {
 	
+	export class ComplianceReport {
+	    passed: boolean;
+	    repairedNotes: number;
+	    repairedFolders: number;
+	    orphanNotesFixed: number;
+	    checklistsCorrected: number;
+	    orphanTagsCleaned: number;
+	    details: string[];
+	    auditedAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ComplianceReport(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.passed = source["passed"];
+	        this.repairedNotes = source["repairedNotes"];
+	        this.repairedFolders = source["repairedFolders"];
+	        this.orphanNotesFixed = source["orphanNotesFixed"];
+	        this.checklistsCorrected = source["checklistsCorrected"];
+	        this.orphanTagsCleaned = source["orphanTagsCleaned"];
+	        this.details = source["details"];
+	        this.auditedAt = source["auditedAt"];
+	    }
+	}
 	export class Folder {
 	    id: string;
 	    name: string;

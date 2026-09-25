@@ -34,6 +34,8 @@ export function QueryNotes(arg1:main.NoteQuery):Promise<Array<main.Note>>;
 
 export function RestoreNote(arg1:string):Promise<void>;
 
+export function RunComplianceAudit():Promise<main.ComplianceReport>;
+
 export function SaveFolder(arg1:main.Folder):Promise<main.Folder>;
 
 export function SaveNote(arg1:main.Note):Promise<main.Note>;
