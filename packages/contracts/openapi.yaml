@@ -3,7 +3,7 @@ info:
   title: Magnetares Sync API
   version: 1.0.0-beta
   description: |
-    Protocolo de sincronização incremental para notas Magnetares.
+    Protocolo de sincronização incremental para notas e metadados de organização Magnetares.
     O perfil de sync atual é adequado para beta/self-hosting; uma versão de produção
     deve substituir o header de perfil por autenticação de usuário validada pela API.
 servers:
@@ -35,7 +35,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
   /v1/notes/{id}:
     put:
-      summary: Cria, atualiza ou restaura uma nota com precondição de revisão
+      summary: Cria, atualiza ou restaura uma nota com precondição de revisão e metadados de organização
       parameters:
         - $ref: '#/components/parameters/SyncProfile'
         - $ref: '#/components/parameters/NoteID'
@@ -70,6 +70,45 @@ paths:
               schema: { $ref: '#/components/schemas/MutationResult' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '409': { $ref: '#/components/responses/RevisionConflict' }
+  /v1/folders:
+    get:
+      summary: Lista pastas remotas do perfil
+      parameters:
+        - $ref: '#/components/parameters/SyncProfile'
+      responses:
+        '200':
+          description: Lista de pastas
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/RemoteFolder' }
+  /v1/folders/{id}:
+    put:
+      summary: Cria ou atualiza uma pasta remota
+      parameters:
+        - $ref: '#/components/parameters/SyncProfile'
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RemoteFolder' }
+      responses:
+        '200': { description: Pasta salva }
+    delete:
+      summary: Remove uma pasta remota
+      parameters:
+        - $ref: '#/components/parameters/SyncProfile'
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Pasta removida }
 components:
   parameters:
     SyncProfile:
@@ -84,6 +123,16 @@ components:
       required: true
       schema: { type: string, format: uuid }
   schemas:
+    RemoteFolder:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        parentId: { type: [string, 'null'] }
+        deletedAt: { type: [string, 'null'], format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
     RemoteNote:
       type: object
       required: [id, title, body, bodyText, revision, createdAt, updatedAt]
@@ -92,6 +141,12 @@ components:
         title: { type: string }
         body: { type: string, description: Documento Tiptap JSON }
         bodyText: { type: string }
+        folder: { type: string }
+        folderId: { type: string }
+        pinnedAt: { type: [string, 'null'], format: date-time }
+        tags: { type: array, items: { type: string } }
+        checklistTotal: { type: integer }
+        checklistOpen: { type: integer }
         revision: { type: integer, minimum: 1 }
         deletedAt: { type: [string, 'null'], format: date-time }
         createdAt: { type: string, format: date-time }
@@ -103,6 +158,12 @@ components:
         title: { type: string }
         body: { type: string }
         bodyText: { type: string }
+        folder: { type: string }
+        folderId: { type: string }
+        pinnedAt: { type: [string, 'null'], format: date-time }
+        tags: { type: array, items: { type: string } }
+        checklistTotal: { type: integer }
+        checklistOpen: { type: integer }
     NoteMutation:
       type: object
       required: [baseRevision, mutationId, note]

@@ -23,7 +23,7 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 | Importar Markdown/texto | Implementado | `.md`, `.markdown` e `.txt`. |
 | Exportar Markdown/HTML/texto | Implementado | Exportação local pelo editor. |
 | Impressão/PDF | Implementado | `window.print()` e CSS de impressão. |
-| Backup Turso | Parcial/beta | Envio de notas para API; não há pull, cursor ou conflitos. |
+| Backup Turso e Sync | Implementado | Sincronização bidirecional de notas, pastas, etiquetas e metadados via API/Turso com cursores e lápides. |
 | Anexos e PDFs | Planejado | Sem modelo de blob, visualizador ou armazenamento de arquivo. |
 | Desenho/anotação | Planejado | Depende de canvas e anexos. |
 | OCR e busca em imagens/PDF | Planejado | Depende de pipeline de extração e indexação. |

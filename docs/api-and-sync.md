@@ -2,7 +2,7 @@
 
 ## Estado atual
 
-O Magnetares implementa sincronização incremental de notas e lápides de exclusão. Cada desktop mantém SQLite local e uma outbox; quando o usuário solicita sync, o aplicativo envia alterações pendentes e busca mudanças posteriores por cursor. Pastas, tags, pin e Pastas Inteligentes continuam locais neste primeiro corte.
+O Magnetares implementa sincronização incremental de notas, pastas, metadados e lápides de exclusão. Cada desktop mantém SQLite local e uma outbox; quando o usuário solicita sync (ou salva uma alteração), o aplicativo envia alterações pendentes e busca mudanças posteriores por cursor, garantindo a paridade entre o banco de dados local e o banco de dados na nuvem (Turso).
 
 ## Endpoints implementados
 
@@ -12,75 +12,74 @@ Retorna `204 No Content` se a API estiver acessível.
 
 ### `GET /v1/changes`
 
-Recebe `cursor`, `limit` e o header `X-Magnetares-Profile`. Retorna alterações ordenadas por cursor, incluindo lápides de exclusão.
+Recebe `cursor`, `limit` e o header `X-Magnetares-Profile`. Retorna alterações ordenadas por cursor, incluindo lápides de exclusão e metadados organizacionais completos.
 
 ### `PUT /v1/notes/{id}`
 
-Cria, atualiza ou restaura uma nota. Exige `baseRevision` e `mutationId`; o servidor devolve `409 Conflict` quando a revisão não corresponde ao estado canônico.
+Cria, atualiza ou restaura uma nota. Exige `baseRevision` e `mutationId`; o servidor devolve `409 Conflict` quando a revisão não corresponde ao estado canônico. Preserva pastas, fixação (`pinnedAt`), etiquetas (`tags`) e contagem de checklists.
 
 ### `DELETE /v1/notes/{id}`
 
 Registra uma exclusão lógica remota e devolve uma lápide versionada.
 
-Exemplo de corpo:
+### `GET /v1/folders`
+
+Lista todas as pastas salvas na nuvem para o perfil ativo.
+
+### `PUT /v1/folders/{id}`
+
+Cria ou atualiza uma pasta na nuvem (suportando hierarquia `parentId`).
+
+### `DELETE /v1/folders/{id}`
+
+Registra a exclusão lógica de uma pasta na nuvem.
+
+Exemplo de corpo de mutação de nota:
 
 ```json
 {
-  "notes": [
-    {
-      "id": "nota-123",
-      "title": "Plano",
-      "body": "{\"type\":\"doc\"}",
-      "bodyText": "Plano de lançamento",
-      "folder": "Notas",
-      "folderId": "folder-default",
-      "revision": 4,
-      "updatedAt": "2026-09-24T12:00:00Z"
-    }
-  ]
-}
-```
-
-Resposta atual:
-
-```json
-{
-  "syncedAt": "2026-09-24T12:01:00Z",
-  "count": 1,
-  "message": "Sincronização com a nuvem concluída com sucesso."
+  "baseRevision": 1,
+  "mutationId": "550e8400-e29b-41d4-a716-446655440000",
+  "note": {
+    "title": "Plano de Projeto",
+    "body": "{\"type\":\"doc\"}",
+    "bodyText": "Plano de projeto",
+    "folder": "Trabalho",
+    "folderId": "folder-123",
+    "pinnedAt": "2026-09-25T14:00:00Z",
+    "tags": ["importante", "projeto"],
+    "checklistTotal": 5,
+    "checklistOpen": 2
+  }
 }
 ```
 
 ## O que é sincronizado hoje
 
 - ID, título, documento estruturado, texto extraído, revisão remota, cursor e datas canônicas do servidor.
+- **Estrutura de Pastas:** `folderId`, `folder` (nome), e tabela remota `sync_folders` preservando a hierarquia.
+- **Etiquetas (Tags):** associação N:N entre notas e tags sincronizada via array e processada localmente.
+- **Metadados de Organização:** nota fixada (`pinnedAt`), estado e contagem de checklists (`checklistTotal`, `checklistOpen`).
 - Exclusão e restauração por lápide (`deletedAt`).
 - Outbox local com mutações idempotentes por `mutationId`.
 - Conflitos preservados localmente em `note_conflicts`, sem sobrescrever a edição do usuário.
 
 ## O que ainda não é sincronizado
 
-- Tags, relações de tags, Pastas Inteligentes e hierarquia de pastas.
-- Configurações de tema e caminho do banco.
-- Merge automático do corpo de uma nota em conflito.
+- Pastas Inteligentes personalizadas (sincronização de regras dinâmicas).
+- Configurações locais de tema e caminho do banco.
+- Merge automático de conflitos no corpo da nota.
 - Autenticação de usuário de produção.
 
 ## Contrato OpenAPI
 
-`packages/contracts/openapi.yaml` descreve `GET /v1/changes`, `PUT /v1/notes/{id}` e `DELETE /v1/notes/{id}` com cursor, revisão e `409 Conflict`.
-
-Antes de publicar uma API estável, a próxima evolução deve:
-
-1. Substituir o perfil beta por autenticação de usuário validada na API.
-2. Sincronizar metadados de organização e regras inteligentes.
-3. Criar UI de resolução de conflitos e cópia de conflito de nota.
-4. Adicionar merge estruturado de documentos ou CRDT para colaboração.
+`packages/contracts/openapi.yaml` descreve `GET /v1/changes`, `PUT /v1/notes/{id}`, `DELETE /v1/notes/{id}`, `GET /v1/folders`, `PUT /v1/folders/{id}` e `DELETE /v1/folders/{id}`.
 
 ## Turso/libSQL
 
 A API converte `libsql://...` para o endpoint HTTPS de pipeline `.../v2/pipeline`, envia SQL parametrizado e usa `Authorization: Bearer <token>`.
 
-Na inicialização, quando as credenciais existem no ambiente, a API tenta criar a tabela remota mínima `notes`.
+Na inicialização, a API e o aplicativo Desktop aplicam a migração automática para a tabela remota `sync_notes` (com colunas de pastas e metadados) e a tabela `sync_folders`.
 
 ## Configuração da API
 
@@ -90,16 +89,12 @@ TURSO_DATABASE_URL=libsql://<database>.turso.io
 TURSO_AUTH_TOKEN=<token>
 ```
 
-O arquivo `.env` é apropriado para desenvolvimento local. Em produção, injete variáveis pelo ambiente do provedor. Nunca envie o arquivo `.env` ao repositório.
-
 ## CORS e autenticação
 
 O servidor atual responde com CORS aberto para facilitar desenvolvimento. Não há contas de usuário, sessão ou autorização de chamadas. Isso é uma limitação de segurança importante; veja [Segurança](security.md).
 
 ## Uso no desktop
 
-Em **Preferências > Nuvem**, o usuário pode manter o modo offline ou informar a URL e o token do próprio Turso. O token é armazenado no cofre de credenciais do sistema, e o desktop o envia ao serviço de sync pelo bridge Wails, nunca por `localStorage` ou bundle.
-
-O perfil de sync é derivado internamente da URL Turso; computadores configurados com a mesma URL e token sincronizam a mesma coleção beta/self-hosted sem exigir que o usuário conheça API ou cursor.
+Em **Preferências > Nuvem**, o usuário pode manter o modo offline ou informar a URL e o token do próprio Turso. O token é armazenado no cofre de credenciais do sistema, e o desktop o envia ao serviço de sync pelo bridge Wails.
 
 > O aplicativo continua utilizável offline mesmo sem uma API configurada.

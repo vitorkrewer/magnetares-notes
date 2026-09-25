@@ -221,7 +221,23 @@ func (t *TursoClient) InitSchema() error {
 			title TEXT NOT NULL DEFAULT '',
 			body TEXT NOT NULL DEFAULT '',
 			body_text TEXT NOT NULL DEFAULT '',
+			folder_id TEXT NOT NULL DEFAULT 'folder-default',
+			folder TEXT NOT NULL DEFAULT 'Notas',
+			pinned_at INTEGER,
+			checklist_total INTEGER NOT NULL DEFAULT 0,
+			checklist_open INTEGER NOT NULL DEFAULT 0,
+			tags TEXT NOT NULL DEFAULT '[]',
 			revision INTEGER NOT NULL DEFAULT 1,
+			deleted_at INTEGER,
+			created_at INTEGER NOT NULL,
+			updated_at INTEGER NOT NULL,
+			PRIMARY KEY (user_id, id)
+		)`,
+		`CREATE TABLE IF NOT EXISTS sync_folders (
+			user_id TEXT NOT NULL,
+			id TEXT NOT NULL,
+			name TEXT NOT NULL DEFAULT '',
+			parent_id TEXT,
 			deleted_at INTEGER,
 			created_at INTEGER NOT NULL,
 			updated_at INTEGER NOT NULL,
@@ -250,5 +266,18 @@ func (t *TursoClient) InitSchema() error {
 			return err
 		}
 	}
+
+	alterStatements := []string{
+		`ALTER TABLE sync_notes ADD COLUMN folder_id TEXT NOT NULL DEFAULT 'folder-default'`,
+		`ALTER TABLE sync_notes ADD COLUMN folder TEXT NOT NULL DEFAULT 'Notas'`,
+		`ALTER TABLE sync_notes ADD COLUMN pinned_at INTEGER`,
+		`ALTER TABLE sync_notes ADD COLUMN checklist_total INTEGER NOT NULL DEFAULT 0`,
+		`ALTER TABLE sync_notes ADD COLUMN checklist_open INTEGER NOT NULL DEFAULT 0`,
+		`ALTER TABLE sync_notes ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'`,
+	}
+	for _, statement := range alterStatements {
+		_ = t.Execute(statement)
+	}
+
 	return nil
 }

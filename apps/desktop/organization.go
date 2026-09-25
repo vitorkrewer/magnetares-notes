@@ -193,9 +193,11 @@ func (s *noteStore) moveNote(noteID, folderID string) error {
 	if err := s.db.QueryRow("SELECT name FROM folders WHERE id = ?", folderID).Scan(&folderName); err != nil {
 		return fmt.Errorf("find destination folder: %w", err)
 	}
+	mutationID := uuid.NewString()
 	result, err := s.db.Exec(`UPDATE notes
-		SET folder_id = ?, folder = ?, revision = revision + 1, updated_at = ?
-		WHERE id = ?`, folderID, folderName, time.Now().UTC().UnixMilli(), noteID)
+		SET folder_id = ?, folder = ?, revision = revision + 1, updated_at = ?,
+			sync_state = 'pending', pending_mutation_id = ?
+		WHERE id = ?`, folderID, folderName, time.Now().UTC().UnixMilli(), mutationID, noteID)
 	if err != nil {
 		return fmt.Errorf("move note: %w", err)
 	}
@@ -214,8 +216,10 @@ func (s *noteStore) setNotePinned(id string, pinned bool) (Note, error) {
 	if pinned {
 		pinnedAt = time.Now().UTC().UnixMilli()
 	}
-	result, err := s.db.Exec(`UPDATE notes SET pinned_at = ?, revision = revision + 1, updated_at = ?
-		WHERE id = ?`, pinnedAt, time.Now().UTC().UnixMilli(), id)
+	mutationID := uuid.NewString()
+	result, err := s.db.Exec(`UPDATE notes SET pinned_at = ?, revision = revision + 1, updated_at = ?,
+		sync_state = 'pending', pending_mutation_id = ?
+		WHERE id = ?`, pinnedAt, time.Now().UTC().UnixMilli(), mutationID, id)
 	if err != nil {
 		return Note{}, fmt.Errorf("set note pin: %w", err)
 	}
@@ -269,6 +273,12 @@ func (s *noteStore) setNoteTags(noteID string, values []string) (Note, error) {
 		WHERE NOT EXISTS (SELECT 1 FROM note_tags WHERE note_tags.tag_id = tags.id)
 		AND NOT EXISTS (SELECT 1 FROM smart_folders WHERE smart_folders.tag_id = tags.id)`); err != nil {
 		return Note{}, fmt.Errorf("remove unused tags: %w", err)
+	}
+	mutationID := uuid.NewString()
+	now := time.Now().UTC().UnixMilli()
+	if _, err := tx.Exec(`UPDATE notes SET revision = revision + 1, updated_at = ?,
+		sync_state = 'pending', pending_mutation_id = ? WHERE id = ?`, now, mutationID, noteID); err != nil {
+		return Note{}, fmt.Errorf("update note revision for tags: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
 		return Note{}, fmt.Errorf("commit tag update: %w", err)

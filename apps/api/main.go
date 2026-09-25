@@ -14,20 +14,32 @@ import (
 )
 
 type RemoteNote struct {
-	ID        string     `json:"id"`
-	Title     string     `json:"title"`
-	Body      string     `json:"body"`
-	BodyText  string     `json:"bodyText"`
-	Revision  int64      `json:"revision"`
-	DeletedAt *time.Time `json:"deletedAt"`
-	CreatedAt time.Time  `json:"createdAt"`
-	UpdatedAt time.Time  `json:"updatedAt"`
+	ID             string     `json:"id"`
+	Title          string     `json:"title"`
+	Body           string     `json:"body"`
+	BodyText       string     `json:"bodyText"`
+	Folder         string     `json:"folder"`
+	FolderID       string     `json:"folderId"`
+	Revision       int64      `json:"revision"`
+	PinnedAt       *time.Time `json:"pinnedAt"`
+	Tags           []string   `json:"tags"`
+	ChecklistTotal int64      `json:"checklistTotal"`
+	ChecklistOpen  int64      `json:"checklistOpen"`
+	DeletedAt      *time.Time `json:"deletedAt"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
 }
 
 type NotePayload struct {
-	Title    string `json:"title"`
-	Body     string `json:"body"`
-	BodyText string `json:"bodyText"`
+	Title          string     `json:"title"`
+	Body           string     `json:"body"`
+	BodyText       string     `json:"bodyText"`
+	Folder         string     `json:"folder"`
+	FolderID       string     `json:"folderId"`
+	PinnedAt       *time.Time `json:"pinnedAt"`
+	Tags           []string   `json:"tags"`
+	ChecklistTotal int64      `json:"checklistTotal"`
+	ChecklistOpen  int64      `json:"checklistOpen"`
 }
 
 type NoteMutation struct {
@@ -61,6 +73,15 @@ type Conflict struct {
 	Code   string     `json:"code"`
 	Note   RemoteNote `json:"note"`
 	Cursor string     `json:"cursor"`
+}
+
+type RemoteFolder struct {
+	ID        string     `json:"id"`
+	Name      string     `json:"name"`
+	ParentID  *string    `json:"parentId"`
+	DeletedAt *time.Time `json:"deletedAt"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
 }
 
 type syncService struct {
@@ -121,6 +142,9 @@ func main() {
 	mux.HandleFunc("GET /v1/changes", service.handleChanges)
 	mux.HandleFunc("PUT /v1/notes/{id}", service.handlePutNote)
 	mux.HandleFunc("DELETE /v1/notes/{id}", service.handleDeleteNote)
+	mux.HandleFunc("GET /v1/folders", service.handleGetFolders)
+	mux.HandleFunc("PUT /v1/folders/{id}", service.handlePutFolder)
+	mux.HandleFunc("DELETE /v1/folders/{id}", service.handleDeleteFolder)
 
 	addr := os.Getenv("PORT")
 	if addr == "" {
@@ -214,6 +238,68 @@ func (s *syncService) handleDeleteNote(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, result)
 }
 
+func (s *syncService) handleGetFolders(w http.ResponseWriter, r *http.Request) {
+	service, err := s.forRequest(r)
+	if err != nil {
+		writeJSONError(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+	profile, ok := syncProfile(w, r)
+	if !ok {
+		return
+	}
+	folders, err := service.getFolders(profile)
+	if err != nil {
+		writeJSONError(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, folders)
+}
+
+func (s *syncService) handlePutFolder(w http.ResponseWriter, r *http.Request) {
+	service, err := s.forRequest(r)
+	if err != nil {
+		writeJSONError(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+	profile, ok := syncProfile(w, r)
+	if !ok {
+		return
+	}
+	var folder RemoteFolder
+	if err := json.NewDecoder(r.Body).Decode(&folder); err != nil || folder.ID == "" {
+		writeJSONError(w, http.StatusBadRequest, "pasta inválida")
+		return
+	}
+	if err := service.putFolder(profile, folder); err != nil {
+		writeJSONError(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, folder)
+}
+
+func (s *syncService) handleDeleteFolder(w http.ResponseWriter, r *http.Request) {
+	service, err := s.forRequest(r)
+	if err != nil {
+		writeJSONError(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+	profile, ok := syncProfile(w, r)
+	if !ok {
+		return
+	}
+	folderID := r.PathValue("id")
+	if folderID == "" {
+		writeJSONError(w, http.StatusBadRequest, "id inválido")
+		return
+	}
+	if err := service.deleteFolder(profile, folderID); err != nil {
+		writeJSONError(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"message": "folder deleted"})
+}
+
 func (s *syncService) forRequest(r *http.Request) (*syncService, error) {
 	databaseURL := strings.TrimSpace(r.Header.Get("X-Magnetares-Turso-URL"))
 	authToken := strings.TrimSpace(r.Header.Get("X-Magnetares-Turso-Token"))
@@ -249,7 +335,7 @@ func (s *syncService) changes(profile string, cursor int64, limit int) (ChangesP
 	if s.turso == nil {
 		return ChangesPage{}, errors.New("sincronização remota não configurada no servidor")
 	}
-	_, rows, err := s.turso.Query(`SELECT c.cursor, n.id, n.title, n.body, n.body_text, n.revision, n.deleted_at, n.created_at, n.updated_at
+	_, rows, err := s.turso.Query(`SELECT c.cursor, n.id, n.title, n.body, n.body_text, n.folder, n.folder_id, n.pinned_at, n.checklist_total, n.checklist_open, n.tags, n.revision, n.deleted_at, n.created_at, n.updated_at
 		FROM sync_note_changes c JOIN sync_notes n ON n.user_id = c.user_id AND n.id = c.note_id
 		WHERE c.user_id = ? AND c.cursor > ? ORDER BY c.cursor ASC LIMIT ?`, profile, cursor, limit+1)
 	if err != nil {
@@ -300,11 +386,45 @@ func (s *syncService) putNote(profile, id string, mutation NoteMutation) (Mutati
 		nextRevision = existing.Revision + 1
 		createdAt = existing.CreatedAt
 	}
-	note := RemoteNote{ID: id, Title: mutation.Note.Title, Body: mutation.Note.Body, BodyText: mutation.Note.BodyText, Revision: nextRevision, CreatedAt: createdAt, UpdatedAt: now}
-	if err := s.turso.Execute(`INSERT INTO sync_notes(user_id, id, title, body, body_text, revision, deleted_at, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)
+	tagsJSON, _ := json.Marshal(mutation.Note.Tags)
+	var pinnedAtMilli any = nil
+	if mutation.Note.PinnedAt != nil {
+		pinnedAtMilli = mutation.Note.PinnedAt.UnixMilli()
+	}
+	folder := mutation.Note.Folder
+	if folder == "" {
+		folder = "Notas"
+	}
+	folderID := mutation.Note.FolderID
+	if folderID == "" {
+		folderID = "folder-default"
+	}
+	note := RemoteNote{
+		ID:             id,
+		Title:          mutation.Note.Title,
+		Body:           mutation.Note.Body,
+		BodyText:       mutation.Note.BodyText,
+		Folder:         folder,
+		FolderID:       folderID,
+		PinnedAt:       mutation.Note.PinnedAt,
+		Tags:           mutation.Note.Tags,
+		ChecklistTotal: mutation.Note.ChecklistTotal,
+		ChecklistOpen:  mutation.Note.ChecklistOpen,
+		Revision:       nextRevision,
+		CreatedAt:      createdAt,
+		UpdatedAt:      now,
+	}
+	if note.Tags == nil {
+		note.Tags = make([]string, 0)
+	}
+
+	if err := s.turso.Execute(`INSERT INTO sync_notes(user_id, id, title, body, body_text, folder, folder_id, pinned_at, checklist_total, checklist_open, tags, revision, deleted_at, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
 		ON CONFLICT(user_id, id) DO UPDATE SET title = excluded.title, body = excluded.body, body_text = excluded.body_text,
-		revision = excluded.revision, deleted_at = NULL, updated_at = excluded.updated_at`, profile, note.ID, note.Title, note.Body, note.BodyText, note.Revision, note.CreatedAt.UnixMilli(), note.UpdatedAt.UnixMilli()); err != nil {
+		folder = excluded.folder, folder_id = excluded.folder_id, pinned_at = excluded.pinned_at,
+		checklist_total = excluded.checklist_total, checklist_open = excluded.checklist_open, tags = excluded.tags,
+		revision = excluded.revision, deleted_at = NULL, updated_at = excluded.updated_at`,
+		profile, note.ID, note.Title, note.Body, note.BodyText, note.Folder, note.FolderID, pinnedAtMilli, note.ChecklistTotal, note.ChecklistOpen, string(tagsJSON), note.Revision, note.CreatedAt.UnixMilli(), note.UpdatedAt.UnixMilli()); err != nil {
 		return MutationResult{}, nil, err
 	}
 	cursor, err := s.recordMutation(profile, mutation.MutationID, note)
@@ -347,7 +467,7 @@ func (s *syncService) deleteNote(profile, id string, mutation DeleteMutation) (M
 }
 
 func (s *syncService) remoteNote(profile, id string) (RemoteNote, bool, error) {
-	_, rows, err := s.turso.Query(`SELECT id, title, body, body_text, revision, deleted_at, created_at, updated_at
+	_, rows, err := s.turso.Query(`SELECT id, title, body, body_text, folder, folder_id, pinned_at, checklist_total, checklist_open, tags, revision, deleted_at, created_at, updated_at
 		FROM sync_notes WHERE user_id = ? AND id = ?`, profile, id)
 	if err != nil {
 		return RemoteNote{}, false, err
@@ -360,7 +480,7 @@ func (s *syncService) remoteNote(profile, id string) (RemoteNote, bool, error) {
 }
 
 func (s *syncService) mutationResult(profile, mutationID string) (RemoteNote, int64, bool, error) {
-	_, rows, err := s.turso.Query(`SELECT m.cursor, n.id, n.title, n.body, n.body_text, n.revision, n.deleted_at, n.created_at, n.updated_at
+	_, rows, err := s.turso.Query(`SELECT m.cursor, n.id, n.title, n.body, n.body_text, n.folder, n.folder_id, n.pinned_at, n.checklist_total, n.checklist_open, n.tags, n.revision, n.deleted_at, n.created_at, n.updated_at
 		FROM sync_mutations m JOIN sync_notes n ON n.user_id = m.user_id AND n.id = m.note_id
 		WHERE m.user_id = ? AND m.mutation_id = ?`, profile, mutationID)
 	if err != nil {
@@ -406,25 +526,128 @@ func (s *syncService) conflict(profile string, note RemoteNote, found bool) *Con
 	return &Conflict{Code: "revision_conflict", Note: note, Cursor: strconv.FormatInt(cursor, 10)}
 }
 
+func (s *syncService) getFolders(profile string) ([]RemoteFolder, error) {
+	if s.turso == nil {
+		return nil, errors.New("sincronização remota não configurada no servidor")
+	}
+	_, rows, err := s.turso.Query(`SELECT id, name, parent_id, deleted_at, created_at, updated_at FROM sync_folders WHERE user_id = ? AND deleted_at IS NULL ORDER BY name ASC`, profile)
+	if err != nil {
+		return nil, err
+	}
+	folders := make([]RemoteFolder, 0, len(rows))
+	for _, row := range rows {
+		if len(row) < 6 {
+			continue
+		}
+		createdAt, _ := tursoTime(row[4])
+		updatedAt, _ := tursoTime(row[5])
+		folder := RemoteFolder{
+			ID:        row[0].Value,
+			Name:      row[1].Value,
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+		}
+		if row[2].Type != "null" && row[2].Value != "" {
+			pID := row[2].Value
+			folder.ParentID = &pID
+		}
+		if row[3].Type != "null" && row[3].Value != "" {
+			dTime, err := tursoTime(row[3])
+			if err == nil {
+				folder.DeletedAt = &dTime
+			}
+		}
+		folders = append(folders, folder)
+	}
+	return folders, nil
+}
+
+func (s *syncService) putFolder(profile string, folder RemoteFolder) error {
+	if s.turso == nil {
+		return errors.New("sincronização remota não configurada no servidor")
+	}
+	now := time.Now().UTC().UnixMilli()
+	createdAt := now
+	if !folder.CreatedAt.IsZero() {
+		createdAt = folder.CreatedAt.UnixMilli()
+	}
+	var parentID any = nil
+	if folder.ParentID != nil && *folder.ParentID != "" {
+		parentID = *folder.ParentID
+	}
+	var deletedAt any = nil
+	if folder.DeletedAt != nil {
+		deletedAt = folder.DeletedAt.UnixMilli()
+	}
+	return s.turso.Execute(`INSERT INTO sync_folders(user_id, id, name, parent_id, deleted_at, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(user_id, id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, deleted_at = excluded.deleted_at, updated_at = excluded.updated_at`,
+		profile, folder.ID, folder.Name, parentID, deletedAt, createdAt, now)
+}
+
+func (s *syncService) deleteFolder(profile string, folderID string) error {
+	if s.turso == nil {
+		return errors.New("sincronização remota não configurada no servidor")
+	}
+	now := time.Now().UTC().UnixMilli()
+	return s.turso.Execute(`UPDATE sync_folders SET deleted_at = ?, updated_at = ? WHERE user_id = ? AND id = ?`, now, now, profile, folderID)
+}
+
 func noteFromRow(row []TursoValue) (RemoteNote, error) {
-	if len(row) < 8 {
+	if len(row) < 14 {
 		return RemoteNote{}, errors.New("invalid remote note row")
 	}
-	revision, err := tursoInt(row[4])
+	checklistTotal, _ := tursoInt(row[7])
+	checklistOpen, _ := tursoInt(row[8])
+	revision, err := tursoInt(row[10])
 	if err != nil {
 		return RemoteNote{}, err
 	}
-	createdAt, err := tursoTime(row[6])
+	createdAt, err := tursoTime(row[12])
 	if err != nil {
 		return RemoteNote{}, err
 	}
-	updatedAt, err := tursoTime(row[7])
+	updatedAt, err := tursoTime(row[13])
 	if err != nil {
 		return RemoteNote{}, err
 	}
-	note := RemoteNote{ID: row[0].Value, Title: row[1].Value, Body: row[2].Value, BodyText: row[3].Value, Revision: revision, CreatedAt: createdAt, UpdatedAt: updatedAt}
-	if row[5].Type != "null" {
-		deletedAt, err := tursoTime(row[5])
+	note := RemoteNote{
+		ID:             row[0].Value,
+		Title:          row[1].Value,
+		Body:           row[2].Value,
+		BodyText:       row[3].Value,
+		Folder:         row[4].Value,
+		FolderID:       row[5].Value,
+		ChecklistTotal: checklistTotal,
+		ChecklistOpen:  checklistOpen,
+		Revision:       revision,
+		CreatedAt:      createdAt,
+		UpdatedAt:      updatedAt,
+	}
+	if note.Folder == "" {
+		note.Folder = "Notas"
+	}
+	if note.FolderID == "" {
+		note.FolderID = "folder-default"
+	}
+	if row[6].Type != "null" && row[6].Value != "" {
+		pTime, err := tursoTime(row[6])
+		if err == nil {
+			note.PinnedAt = &pTime
+		}
+	}
+	if row[9].Type != "null" && row[9].Value != "" {
+		var tags []string
+		_ = json.Unmarshal([]byte(row[9].Value), &tags)
+		if tags == nil {
+			tags = make([]string, 0)
+		}
+		note.Tags = tags
+	} else {
+		note.Tags = make([]string, 0)
+	}
+	if row[11].Type != "null" && row[11].Value != "" {
+		deletedAt, err := tursoTime(row[11])
 		if err != nil {
 			return RemoteNote{}, err
 		}
@@ -434,6 +657,9 @@ func noteFromRow(row []TursoValue) (RemoteNote, error) {
 }
 
 func tursoInt(value TursoValue) (int64, error) {
+	if value.Type == "null" || value.Value == "" {
+		return 0, nil
+	}
 	return strconv.ParseInt(value.Value, 10, 64)
 }
 

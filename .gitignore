@@ -2,7 +2,8 @@ bin/
 dist/
 node_modules/
 frontend/dist/
-apps/desktop/frontend/dist/
+apps/desktop/frontend/dist/*
+!apps/desktop/frontend/dist/.gitkeep
 apps/desktop/build/bin/
 .env
 .env.*
