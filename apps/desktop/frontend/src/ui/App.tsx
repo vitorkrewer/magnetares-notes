@@ -703,7 +703,7 @@ export function App() {
               );
             }}
           >
-            <span><FolderIconComp className="folder-icon" style={folderIconStyle} aria-hidden="true" /> {folder.name}</span>
+            <span><FolderIconComp className="folder-icon" style={folderIconStyle} aria-hidden="true" /> <span className="nav-item-title">{folder.name}</span></span>
             <div className="folder-item-actions">
               <small className="folder-note-count">{folder.noteCount}</small>
               {folder.id !== "folder-default" && (
@@ -763,7 +763,7 @@ export function App() {
         <div className="sidebar-content">
         <nav aria-label="Biblioteca">
           <button className={`nav-item ${selectedQuery.kind === "all" ? "selected" : ""}`} onClick={() => selectQuery({ kind: "all" })}>
-            <span><List aria-hidden="true" /> Todas as notas</span>
+            <span><List aria-hidden="true" /><span className="nav-item-title">Todas as notas</span></span>
             <small>{notes.length}</small>
           </button>
         </nav>
@@ -775,7 +775,7 @@ export function App() {
         <div className="folder-tree">
           {navigation.folders.length === 0 ? (
             <button className={`nav-item folder-item ${selectedQuery.kind === "all" ? "selected-folder" : ""}`} onClick={() => selectQuery({ kind: "all" })}>
-              <span><Folder className="folder-icon" aria-hidden="true" /> Notas</span>
+              <span><Folder className="folder-icon" aria-hidden="true" /><span className="nav-item-title">Notas</span></span>
               <small>{notes.length}</small>
             </button>
           ) : (
@@ -791,8 +791,8 @@ export function App() {
             </div>
             <div className="folder-tree">
               {navigation.smartFolders.map((smart) => (
-                <button key={smart.id} className={`nav-item smart-item ${selectedQuery.kind === "smart" && selectedQuery.id === smart.id ? "selected" : ""}`} onClick={() => selectQuery({ kind: "smart", id: smart.id })}>
-                  <span><Sparkles className="smart-icon" aria-hidden="true" /> {smart.name}</span>
+                <button key={smart.id} className={`nav-item smart-item ${selectedQuery.kind === "smart" && selectedQuery.id === smart.id ? "selected" : ""}`} onClick={() => selectQuery({ kind: "smart", id: smart.id })} title={smart.name}>
+                  <span><Sparkles className="smart-icon" aria-hidden="true" /><span className="nav-item-title">{smart.name}</span></span>
                 </button>
               ))}
             </div>
@@ -806,8 +806,8 @@ export function App() {
             </div>
             <div className="folder-tree">
               {navigation.tags.map((tag) => (
-                <button key={tag.id} className={`nav-item tag-item ${selectedQuery.kind === "tag" && selectedQuery.id === tag.id ? "selected" : ""}`} onClick={() => selectQuery({ kind: "tag", id: tag.id })}>
-                  <span><Hash className="tag-icon" aria-hidden="true" /> {tag.name}</span>
+                <button key={tag.id} className={`nav-item tag-item ${selectedQuery.kind === "tag" && selectedQuery.id === tag.id ? "selected" : ""}`} onClick={() => selectQuery({ kind: "tag", id: tag.id })} title={`#${tag.name}`}>
+                  <span><Hash className="tag-icon" aria-hidden="true" /><span className="nav-item-title">{tag.name}</span></span>
                   <small>{tag.noteCount}</small>
                 </button>
               ))}
@@ -816,7 +816,7 @@ export function App() {
         )}
 
         <button className={`nav-item trash-item ${view === "deleted" ? "selected" : ""}`} onClick={() => selectQuery({ kind: "deleted" })}>
-          <span><Trash2 aria-hidden="true" /> Apagadas recentemente</span>
+          <span><Trash2 aria-hidden="true" /><span className="nav-item-title">Apagadas recentemente</span></span>
           <small>{deletedNotes.length}</small>
         </button>
         </div>
@@ -949,8 +949,8 @@ export function App() {
                 {view !== "deleted" && (
                   <div className="tag-chips-bar">
                     {(active.tags ?? []).map((tag) => (
-                      <span key={tag} className="tag-chip">
-                        #{tag}
+                      <span key={tag} className="tag-chip" title={`#${tag}`}>
+                        <span className="tag-chip-text">#{tag}</span>
                         <button type="button" onClick={() => void removeTagFromActiveNote(tag)} title={`Remover etiqueta #${tag}`} aria-label={`Remover etiqueta #${tag}`}><X aria-hidden="true" /></button>
                       </span>
                     ))}

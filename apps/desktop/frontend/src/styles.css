@@ -492,12 +492,30 @@ textarea:focus-visible {
   display: flex;
   gap: 9px;
   min-width: 0;
+  flex: 1;
+  overflow: hidden;
   white-space: nowrap;
+}
+
+.nav-item > span svg,
+.tag-icon,
+.folder-icon,
+.smart-icon {
+  flex-shrink: 0;
+}
+
+.nav-item-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .nav-item small {
   color: #83827d;
   font-size: 12px;
+  flex-shrink: 0;
+  margin-left: 6px;
 }
 
 .nav-item.selected {
