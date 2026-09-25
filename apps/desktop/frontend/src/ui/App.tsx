@@ -41,7 +41,8 @@ export function App() {
   const [loadError, setLoadError] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [dialogMode, setDialogMode] = useState<{ kind: "folder"; parentId?: string } | { kind: "smart" } | null>(null);
+  const [dialogMode, setDialogMode] = useState<{ kind: "folder"; parentId?: string; folderToEdit?: FolderRecord } | { kind: "smart" } | null>(null);
+  const [deleteFolderTarget, setDeleteFolderTarget] = useState<FolderRecord | null>(null);
   const [theme, setTheme] = useState<ThemeOption>(() => ((localStorage.getItem("magnetares_theme") || localStorage.getItem("aster_theme")) as ThemeOption) || "light");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dbPath, setDbPath] = useState("%LOCALAPPDATA%\\Magnetares Notes\\magnetares.db");
@@ -619,6 +620,31 @@ export function App() {
     ? "Tente buscar outro termo."
     : view === "deleted" ? "As notas movidas para a lixeira aparecerão aqui." : "Crie uma nota para começar.";
 
+  const handleDeleteFolder = async (folder: FolderRecord) => {
+    if (folder.id === "folder-default") return;
+    try {
+      const bridge = window.go?.main?.App;
+      if (bridge?.DeleteFolder) {
+        await bridge.DeleteFolder(folder.id);
+        void reloadNavigation();
+        if (selectedQuery.kind === "folder" && selectedQuery.id === folder.id) {
+          selectQuery({ kind: "all" });
+        } else {
+          void loadQueryNotes(selectedQuery);
+        }
+      } else {
+        setNavigation((current) => ({
+          ...current,
+          folders: current.folders.filter((f) => f.id !== folder.id)
+        }));
+      }
+    } catch {
+      setLoadError("Não foi possível excluir a pasta.");
+    } finally {
+      setDeleteFolderTarget(null);
+    }
+  };
+
   const toggleFolderExpanded = (folderID: string) => {
     setExpandedFolderIds((current) => {
       const next = new Set(current);
@@ -634,56 +660,86 @@ export function App() {
     const isExpanded = expandedFolderIds.has(folder.id);
     const isDropTarget = dropTargetFolderId === folder.id;
 
-            const FolderIconComp = getFolderIconComponent(folder.icon);
-            const folderIconStyle = folder.color ? { color: folder.color } : undefined;
+    const FolderIconComp = getFolderIconComponent(folder.icon);
+    const folderIconStyle = folder.color ? { color: folder.color } : undefined;
 
-            return (
-              <div className="folder-node" key={folder.id}>
-                <div className="folder-node-row" style={{ paddingLeft: 4 + depth * 16 }}>
-                  {hasChildren ? (
-                    <button type="button" className="folder-expander" onClick={() => toggleFolderExpanded(folder.id)} aria-label={isExpanded ? `Recolher ${folder.name}` : `Expandir ${folder.name}`}>
-                      {isExpanded ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}
-                    </button>
-                  ) : <span className="folder-expander-spacer" />}
+    return (
+      <div className="folder-node" key={folder.id}>
+        <div className="folder-node-row" style={{ paddingLeft: 4 + depth * 16 }}>
+          {hasChildren ? (
+            <button type="button" className="folder-expander" onClick={() => toggleFolderExpanded(folder.id)} aria-label={isExpanded ? `Recolher ${folder.name}` : `Expandir ${folder.name}`}>
+              {isExpanded ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}
+            </button>
+          ) : <span className="folder-expander-spacer" />}
+          <button
+            type="button"
+            draggable
+            className={`nav-item folder-item folder-drop-zone ${selectedQuery.kind === "folder" && selectedQuery.id === folder.id ? "selected-folder" : ""} ${isDropTarget ? "drop-target" : ""}`}
+            onClick={() => selectQuery({ kind: "folder", id: folder.id })}
+            onDragStart={(event) => {
+              event.dataTransfer.effectAllowed = "move";
+              event.dataTransfer.setData("application/x-magnetares-folder", folder.id);
+              draggedFolderIdRef.current = folder.id;
+              setDraggedFolderId(folder.id);
+            }}
+            onDragEnd={() => {
+              setDraggedFolderId(null);
+              draggedFolderIdRef.current = null;
+              setDropTargetFolderId(null);
+            }}
+            onDragOver={(event) => {
+              if (!draggedNoteId && !draggedFolderId) return;
+              event.preventDefault();
+              event.dataTransfer.dropEffect = "move";
+              setDropTargetFolderId(folder.id);
+            }}
+            onDragLeave={() => setDropTargetFolderId((current) => current === folder.id ? null : current)}
+            onDrop={(event) => {
+              event.preventDefault();
+              void handleDropOnFolder(
+                folder.id,
+                event.dataTransfer.getData("application/x-magnetares-note"),
+                event.dataTransfer.getData("application/x-magnetares-folder")
+              );
+            }}
+          >
+            <span><FolderIconComp className="folder-icon" style={folderIconStyle} aria-hidden="true" /> {folder.name}</span>
+            <div className="folder-item-actions">
+              <small className="folder-note-count">{folder.noteCount}</small>
+              {folder.id !== "folder-default" && (
+                <div className="folder-hover-btns">
                   <button
                     type="button"
-                    draggable
-                    className={`nav-item folder-item folder-drop-zone ${selectedQuery.kind === "folder" && selectedQuery.id === folder.id ? "selected-folder" : ""} ${isDropTarget ? "drop-target" : ""}`}
-                    onClick={() => selectQuery({ kind: "folder", id: folder.id })}
-                    onDragStart={(event) => {
-                      event.dataTransfer.effectAllowed = "move";
-                      event.dataTransfer.setData("application/x-magnetares-folder", folder.id);
-                      draggedFolderIdRef.current = folder.id;
-                      setDraggedFolderId(folder.id);
-                    }}
-                    onDragEnd={() => {
-                      setDraggedFolderId(null);
-                      draggedFolderIdRef.current = null;
-                      setDropTargetFolderId(null);
-                    }}
-                    onDragOver={(event) => {
-                      if (!draggedNoteId && !draggedFolderId) return;
-                      event.preventDefault();
-                      event.dataTransfer.dropEffect = "move";
-                      setDropTargetFolderId(folder.id);
-                    }}
-                    onDragLeave={() => setDropTargetFolderId((current) => current === folder.id ? null : current)}
-                    onDrop={(event) => {
-                      event.preventDefault();
-                      void handleDropOnFolder(
-                        folder.id,
-                        event.dataTransfer.getData("application/x-magnetares-note"),
-                        event.dataTransfer.getData("application/x-magnetares-folder")
-                      );
+                    className="folder-action-btn"
+                    title="Editar pasta"
+                    aria-label={`Editar pasta ${folder.name}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDialogMode({ kind: "folder", folderToEdit: folder });
                     }}
                   >
-                    <span><FolderIconComp className="folder-icon" style={folderIconStyle} aria-hidden="true" /> {folder.name}</span>
-                    <small>{folder.noteCount}</small>
+                    <FilePenLine size={13} aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    className="folder-action-btn danger"
+                    title="Excluir pasta"
+                    aria-label={`Excluir pasta ${folder.name}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteFolderTarget(folder);
+                    }}
+                  >
+                    <Trash2 size={13} aria-hidden="true" />
                   </button>
                 </div>
-                {hasChildren && isExpanded && <div className="folder-children">{children.map((child) => renderFolderNode(child, depth + 1))}</div>}
-              </div>
-            );
+              )}
+            </div>
+          </button>
+        </div>
+        {hasChildren && isExpanded && <div className="folder-children">{children.map((child) => renderFolderNode(child, depth + 1))}</div>}
+      </div>
+    );
   };
 
   return (
@@ -960,6 +1016,31 @@ export function App() {
           onSyncNow={handleSyncWithCloud}
           onClose={() => setSettingsOpen(false)}
         />
+      )}
+
+      {deleteFolderTarget && (
+        <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setDeleteFolderTarget(null)}>
+          <div className="organization-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-folder-dialog-title" style={{ maxWidth: 420 }}>
+            <header>
+              <Trash2 aria-hidden="true" style={{ color: "#ef4444" }} />
+              <h2 id="delete-folder-dialog-title">Excluir pasta</h2>
+              <button type="button" onClick={() => setDeleteFolderTarget(null)} aria-label="Fechar" title="Fechar"><X aria-hidden="true" /></button>
+            </header>
+            <p style={{ marginTop: 12, marginBottom: 20, color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
+              Ao excluir a pasta <strong>"{deleteFolderTarget.name}"</strong>, todas as notas nela contidas serão enviadas para a pasta padrão (<strong>Notas</strong>). Deseja continuar?
+            </p>
+            <footer>
+              <button type="button" onClick={() => setDeleteFolderTarget(null)}>Cancelar</button>
+              <button
+                type="button"
+                style={{ background: "#dc2626", color: "#ffffff", borderColor: "#b91c1c" }}
+                onClick={() => void handleDeleteFolder(deleteFolderTarget)}
+              >
+                Excluir pasta
+              </button>
+            </footer>
+          </div>
+        </div>
       )}
     </main>
     </div>

@@ -624,6 +624,61 @@ textarea:focus-visible {
   color: #342600;
 }
 
+.folder-item-actions {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+}
+
+.folder-hover-btns {
+  align-items: center;
+  display: none;
+  gap: 2px;
+}
+
+.folder-node-row:hover .folder-hover-btns {
+  display: flex;
+}
+
+.folder-node-row:hover .folder-note-count {
+  display: none;
+}
+
+.folder-action-btn {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  color: #77766f;
+  cursor: pointer;
+  display: inline-flex;
+  height: 22px;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  width: 22px;
+}
+
+.folder-action-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: #1a1a18;
+}
+
+.folder-action-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+[data-theme="dark"] .folder-action-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .folder-action-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+
 [data-theme="dark"] .folder-expander:hover {
   background: rgb(255 255 255 / 8%);
   color: #e6e5df;

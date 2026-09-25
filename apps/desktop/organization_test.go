@@ -32,10 +32,6 @@ func TestFolderHierarchyAndRestrictedDeletion(t *testing.T) {
 	if err := app.MoveNote(note.ID, child.ID); err != nil {
 		t.Fatal(err)
 	}
-	if err := app.DeleteFolder(child.ID); err == nil {
-		t.Fatal("expected folder containing a note to be restricted")
-	}
-
 	navigation, err := app.ListNavigation()
 	if err != nil {
 		t.Fatal(err)
@@ -64,17 +60,27 @@ func TestFolderHierarchyAndRestrictedDeletion(t *testing.T) {
 		t.Fatalf("recursive folder query missed child note: %#v", folderNotes)
 	}
 
-	if err := app.MoveNote(note.ID, defaultFolderID); err != nil {
-		t.Fatal(err)
-	}
-	if err := app.DeleteFolder(parent.ID); err == nil {
-		t.Fatal("expected parent with a subfolder to be restricted")
-	}
+	// Deleting child folder should reassign note to defaultFolderID ("folder-default")
 	if err := app.DeleteFolder(child.ID); err != nil {
+		t.Fatalf("expected deleting folder with notes to succeed by reassigning notes, got: %v", err)
+	}
+
+	notes, err := app.ListNotes()
+	if err != nil {
 		t.Fatal(err)
 	}
+	var reassignedFolderID string
+	for _, n := range notes {
+		if n.ID == note.ID {
+			reassignedFolderID = n.FolderID
+		}
+	}
+	if reassignedFolderID != defaultFolderID {
+		t.Fatalf("expected note to be moved to default folder, got: %s", reassignedFolderID)
+	}
+
 	if err := app.DeleteFolder(parent.ID); err != nil {
-		t.Fatal(err)
+		t.Fatalf("expected parent folder deletion to succeed, got: %v", err)
 	}
 }
 

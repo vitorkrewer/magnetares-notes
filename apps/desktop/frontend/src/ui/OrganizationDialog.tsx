@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from "react";
-import { FolderPlus, Sparkles, X, Folder, Briefcase, Code, BookOpen, Star, Heart, Archive, User, Check } from "lucide-react";
+import { FolderPlus, Sparkles, X, Folder, Briefcase, Code, BookOpen, Star, Heart, Archive, User, Check, Edit2 } from "lucide-react";
 import { FolderRecord, NavigationRecord, SmartFolderRecord, TagRecord } from "./types";
 
 export type { FolderRecord, NavigationRecord, SmartFolderRecord, TagRecord };
 
-type DialogMode = { kind: "folder"; parentId?: string } | { kind: "smart" };
+type DialogMode = { kind: "folder"; parentId?: string; folderToEdit?: FolderRecord } | { kind: "smart" };
 
 type OrganizationDialogProps = {
   mode: DialogMode;
@@ -42,10 +42,11 @@ export function getFolderIconComponent(iconId?: string) {
 }
 
 export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, onSaveSmartFolder }: OrganizationDialogProps) {
-  const [name, setName] = useState("");
-  const [parentId, setParentId] = useState(mode.kind === "folder" ? mode.parentId ?? "" : "");
-  const [selectedIcon, setSelectedIcon] = useState<string>("folder");
-  const [selectedColor, setSelectedColor] = useState<string>("#6366f1");
+  const folderToEdit = mode.kind === "folder" ? mode.folderToEdit : undefined;
+  const [name, setName] = useState(folderToEdit ? folderToEdit.name : "");
+  const [parentId, setParentId] = useState(mode.kind === "folder" ? (folderToEdit ? folderToEdit.parentId ?? "" : mode.parentId ?? "") : "");
+  const [selectedIcon, setSelectedIcon] = useState<string>(folderToEdit?.icon || "folder");
+  const [selectedColor, setSelectedColor] = useState<string>(folderToEdit?.color || "#6366f1");
   const [ruleKind, setRuleKind] = useState<SmartFolderRecord["ruleKind"]>("tag");
   const [tagId, setTagId] = useState(navigation.tags[0]?.id ?? "");
   const [dateField, setDateField] = useState<NonNullable<SmartFolderRecord["dateField"]>>("updated_at");
@@ -65,12 +66,12 @@ export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, on
     try {
       if (mode.kind === "folder") {
         await onSaveFolder({
-          id: crypto.randomUUID(),
+          id: folderToEdit ? folderToEdit.id : crypto.randomUUID(),
           name: name.trim(),
           parentId: parentId || null,
           color: selectedColor,
           icon: selectedIcon,
-          noteCount: 0
+          noteCount: folderToEdit ? folderToEdit.noteCount : 0
         });
       } else {
         await onSaveSmartFolder({
@@ -95,13 +96,17 @@ export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, on
     <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <form className="organization-dialog" role="dialog" aria-modal="true" aria-labelledby="organization-dialog-title" onSubmit={submit}>
         <header>
-          {mode.kind === "folder" ? <FolderPlus aria-hidden="true" style={{ color: selectedColor }} /> : <Sparkles aria-hidden="true" />}
-          <h2 id="organization-dialog-title">{mode.kind === "folder" ? (mode.parentId ? "Nova subpasta" : "Nova pasta") : "Nova Pasta Inteligente"}</h2>
+          {mode.kind === "folder" ? (folderToEdit ? <Edit2 aria-hidden="true" style={{ color: selectedColor }} /> : <FolderPlus aria-hidden="true" style={{ color: selectedColor }} />) : <Sparkles aria-hidden="true" />}
+          <h2 id="organization-dialog-title">
+            {mode.kind === "folder"
+              ? (folderToEdit ? "Editar pasta" : (mode.parentId ? "Nova subpasta" : "Nova pasta"))
+              : "Nova Pasta Inteligente"}
+          </h2>
           <button type="button" onClick={onClose} aria-label="Fechar" title="Fechar"><X aria-hidden="true" /></button>
         </header>
 
         <label>
-          Nome
+          Nome da pasta
           <input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex: Projetos 2026" />
         </label>
 
@@ -111,7 +116,9 @@ export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, on
               Pasta superior
               <select value={parentId} onChange={(event) => setParentId(event.target.value)}>
                 <option value="">Nenhuma (Pasta Raiz)</option>
-                {navigation.folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
+                {navigation.folders
+                  .filter((f) => !folderToEdit || f.id !== folderToEdit.id)
+                  .map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
               </select>
             </label>
 
@@ -184,7 +191,9 @@ export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, on
         {error && <p className="dialog-error" role="alert">{error}</p>}
         <footer>
           <button type="button" onClick={onClose}>Cancelar</button>
-          <button type="submit" disabled={saving || (mode.kind === "smart" && ruleKind === "tag" && !tagId)}>{saving ? "Salvando…" : "Criar"}</button>
+          <button type="submit" disabled={saving || (mode.kind === "smart" && ruleKind === "tag" && !tagId)}>
+            {saving ? "Salvando…" : (folderToEdit ? "Salvar alterações" : "Criar")}
+          </button>
         </footer>
       </form>
     </div>

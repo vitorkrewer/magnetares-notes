@@ -176,9 +176,38 @@ func (s *noteStore) deleteFolder(id string) error {
 	if id == defaultFolderID {
 		return errors.New("the default folder cannot be deleted")
 	}
-	result, err := s.db.Exec("DELETE FROM folders WHERE id = ?", id)
+
+	tx, err := s.db.Begin()
 	if err != nil {
-		return fmt.Errorf("delete folder: %w", err)
+		return fmt.Errorf("begin delete folder tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	now := time.Now().UTC().UnixMilli()
+	mutationID := uuid.NewString()
+
+	// 1. Re-assign all notes in this folder (or subfolders) to defaultFolderID ("folder-default", name "Notas")
+	_, err = tx.Exec(`UPDATE notes
+		SET folder_id = 'folder-default', folder = 'Notas', revision = revision + 1, updated_at = ?,
+			sync_state = 'pending', pending_mutation_id = ?
+		WHERE folder_id IN (
+			WITH RECURSIVE descendants(id) AS (
+				SELECT id FROM folders WHERE id = ?
+				UNION ALL SELECT f.id FROM folders f JOIN descendants d ON f.parent_id = d.id
+			) SELECT id FROM descendants)`, now, mutationID, id)
+	if err != nil {
+		return fmt.Errorf("reassign notes to default folder: %w", err)
+	}
+
+	// 2. Un-parent any direct child subfolders
+	if _, err := tx.Exec("UPDATE folders SET parent_id = NULL WHERE parent_id = ?", id); err != nil {
+		return fmt.Errorf("unparent child folders: %w", err)
+	}
+
+	// 3. Delete the folder row
+	result, err := tx.Exec("DELETE FROM folders WHERE id = ?", id)
+	if err != nil {
+		return fmt.Errorf("delete folder row: %w", err)
 	}
 	affected, err := result.RowsAffected()
 	if err != nil {
@@ -187,7 +216,8 @@ func (s *noteStore) deleteFolder(id string) error {
 	if affected == 0 {
 		return sql.ErrNoRows
 	}
-	return nil
+
+	return tx.Commit()
 }
 
 func (s *noteStore) moveNote(noteID, folderID string) error {
