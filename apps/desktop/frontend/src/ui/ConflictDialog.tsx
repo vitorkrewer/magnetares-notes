@@ -1,9 +1,9 @@
-import { Cloud, Laptop, RefreshCw, X } from "lucide-react";
+import { Cloud, GitMerge, Laptop, RefreshCw, X } from "lucide-react";
 import { SyncConflict } from "./types";
 
 type ConflictDialogProps = {
   conflicts: SyncConflict[];
-  onResolve: (noteId: string, resolution: "local" | "remote") => Promise<void>;
+  onResolve: (noteId: string, resolution: "local" | "remote" | "merge") => Promise<void>;
   onClose: () => void;
 };
 
@@ -40,6 +40,13 @@ export function ConflictDialog({ conflicts, onResolve, onClose }: ConflictDialog
                     Usar versão da nuvem
                   </button>
                 </section>
+              </div>
+              <div className="conflict-merge-action">
+                <button type="button" className="merge" onClick={() => void onResolve(conflict.noteId, "merge")}>
+                  <GitMerge aria-hidden="true" />
+                  Mesclar as duas versões
+                </button>
+                <span>O conteúdo local fica primeiro e a versão da nuvem é anexada na mesma nota.</span>
               </div>
             </article>
           ))}

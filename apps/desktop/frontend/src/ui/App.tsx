@@ -363,7 +363,7 @@ export function App() {
     return result;
   };
 
-  const handleResolveConflict = async (noteID: string, resolution: "local" | "remote") => {
+  const handleResolveConflict = async (noteID: string, resolution: "local" | "remote" | "merge") => {
     const bridge = window.go?.main?.App;
     if (!bridge?.ResolveNoteConflict) return;
     await bridge.ResolveNoteConflict(noteID, resolution);
@@ -378,10 +378,12 @@ export function App() {
     setNavigation(loadedNav);
     setConflicts(currentConflicts);
     setConflictsOpen(currentConflicts.length > 0);
-    setSyncNotification({
-      type: "success",
-      message: resolution === "local" ? "Sua versão foi mantida e será enviada à nuvem." : "A versão da nuvem foi restaurada nesta máquina."
-    });
+    const message = resolution === "local"
+      ? "Sua versão foi mantida e será enviada à nuvem."
+      : resolution === "remote"
+        ? "A versão da nuvem foi restaurada nesta máquina."
+        : "As versões local e da nuvem foram mescladas em uma única nota e serão sincronizadas.";
+    setSyncNotification({ type: "success", message });
     setTimeout(() => setSyncNotification(null), 5000);
   };
 

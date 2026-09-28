@@ -56,7 +56,7 @@ func (s *noteStore) ListNoteConflicts() ([]SyncConflict, error) {
 }
 
 func (s *noteStore) ResolveNoteConflict(noteID, resolution string) error {
-	if resolution != "local" && resolution != "remote" {
+	if resolution != "local" && resolution != "remote" && resolution != "merge" {
 		return errors.New("resolução de conflito inválida")
 	}
 
@@ -93,6 +93,61 @@ func (s *noteStore) ResolveNoteConflict(noteID, resolution string) error {
 		}
 		if affected == 0 {
 			return errors.New("nota local não está em conflito")
+		}
+		if _, err := tx.Exec("UPDATE sync_outbox SET status = 'pending' WHERE entity_id = ? AND status = 'conflict'", noteID); err != nil {
+			return err
+		}
+	} else if resolution == "merge" {
+		local, err := scanNote(tx.QueryRow(`SELECT `+noteSelectColumns+` FROM notes n WHERE n.id = ?`, noteID))
+		if err != nil {
+			return err
+		}
+		body, bodyText := mergeNoteBodies(local.Body, local.BodyText, remote.Body, remote.BodyText, remote.Title)
+		mergedTags := mergeNoteTags(local.Tags, remote.Tags)
+		checklistTotal, checklistOpen := countChecklistItems(body)
+		folder := local.Folder
+		if folder == "" {
+			folder = remote.Folder
+		}
+		if folder == "" {
+			folder = "Notas"
+		}
+		folderID := local.FolderID
+		if folderID == "" {
+			folderID = remote.FolderID
+		}
+		if folderID == "" {
+			folderID = "folder-default"
+		}
+		var pinnedAt any
+		if local.PinnedAt != nil {
+			pinnedAt = local.PinnedAt.UnixMilli()
+		} else if remote.PinnedAt != nil {
+			pinnedAt = remote.PinnedAt.UnixMilli()
+		}
+		title := local.Title
+		if title == "" {
+			title = remote.Title
+		}
+		mutationID := uuid.NewString()
+		result, err := tx.Exec(`UPDATE notes SET title = ?, body = ?, body_text = ?, folder = ?, folder_id = ?,
+			pinned_at = ?, checklist_total = ?, checklist_open = ?, server_revision = ?, sync_state = 'pending',
+			pending_mutation_id = ?, deleted_at = NULL, created_at = ?, updated_at = ?
+			WHERE id = ? AND sync_state = 'conflict'`,
+			title, body, bodyText, folder, folderID, pinnedAt, checklistTotal, checklistOpen, remote.Revision,
+			mutationID, local.CreatedAt.UnixMilli(), now, noteID)
+		if err != nil {
+			return err
+		}
+		affected, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+		if affected == 0 {
+			return errors.New("nota local não está em conflito")
+		}
+		if err := replaceNoteTagsTx(tx, noteID, mergedTags); err != nil {
+			return err
 		}
 		if _, err := tx.Exec("UPDATE sync_outbox SET status = 'pending' WHERE entity_id = ? AND status = 'conflict'", noteID); err != nil {
 			return err
@@ -136,6 +191,62 @@ func (s *noteStore) ResolveNoteConflict(noteID, resolution string) error {
 		return fmt.Errorf("commit conflict resolution: %w", err)
 	}
 	return nil
+}
+
+func mergeNoteBodies(localBody, localText, remoteBody, remoteText, remoteTitle string) (string, string) {
+	if localBody == "" {
+		return remoteBody, remoteText
+	}
+	if remoteBody == "" {
+		return localBody, localText
+	}
+
+	var localDocument, remoteDocument documentNode
+	if json.Unmarshal([]byte(localBody), &localDocument) == nil && json.Unmarshal([]byte(remoteBody), &remoteDocument) == nil &&
+		localDocument.Type == "doc" && remoteDocument.Type == "doc" {
+		content := append([]documentNode{}, localDocument.Content...)
+		content = append(content, documentNode{
+			Type:    "paragraph",
+			Content: []documentNode{{Type: "text", Text: mergeSectionLabel(remoteTitle)}},
+		})
+		content = append(content, remoteDocument.Content...)
+		merged, err := json.Marshal(documentNode{Type: "doc", Content: content})
+		if err == nil {
+			return string(merged), mergeNoteText(localText, remoteText, remoteTitle)
+		}
+	}
+	return localBody + "\n\n" + mergeSectionLabel(remoteTitle) + "\n\n" + remoteBody, mergeNoteText(localText, remoteText, remoteTitle)
+}
+
+func mergeSectionLabel(remoteTitle string) string {
+	if remoteTitle == "" {
+		return "--- Versão da nuvem ---"
+	}
+	return "--- Versão da nuvem: " + remoteTitle + " ---"
+}
+
+func mergeNoteText(localText, remoteText, remoteTitle string) string {
+	if localText == "" {
+		return remoteText
+	}
+	if remoteText == "" {
+		return localText
+	}
+	return localText + "\n\n" + mergeSectionLabel(remoteTitle) + "\n\n" + remoteText
+}
+
+func mergeNoteTags(localTags, remoteTags []string) []string {
+	merged := make([]string, 0, len(localTags)+len(remoteTags))
+	seen := make(map[string]bool)
+	for _, tag := range append(append([]string{}, localTags...), remoteTags...) {
+		name, normalized := normalizeTagName(tag)
+		if name == "" || seen[normalized] {
+			continue
+		}
+		seen[normalized] = true
+		merged = append(merged, name)
+	}
+	return merged
 }
 
 func replaceNoteTagsTx(tx *sql.Tx, noteID string, values []string) error {

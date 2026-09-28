@@ -643,6 +643,63 @@ func TestApplyRemoteNoteIgnoresOlderRevision(t *testing.T) {
 	}
 }
 
+func TestEquivalentRemoteContentConvergesWithoutConflict(t *testing.T) {
+	app, err := NewApp(filepath.Join(t.TempDir(), "equivalent_remote.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	body := `{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Mesmo conteúdo"}]}]}`
+	note, err := app.SaveNote(Note{
+		ID:       "note-equivalent",
+		Title:    "Bem-vindo ao Magnetares",
+		Body:     body,
+		BodyText: "Um lugar tranquilo para pensar, planejar e guardar o que importa.",
+		Folder:   "Notas",
+		FolderID: "folder-default",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := app.store.db.Exec("UPDATE notes SET sync_state = 'clean', server_revision = 1 WHERE id = ?", note.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	remote := syncRemoteNote{
+		ID:        note.ID,
+		Title:     note.Title,
+		Body:      ` { "type": "doc", "content": [ { "type": "paragraph", "content": [ { "type": "text", "text": "Mesmo conteúdo" } ] } ] } `,
+		BodyText:  note.BodyText,
+		Folder:    note.Folder,
+		FolderID:  note.FolderID,
+		Revision:  2,
+		CreatedAt: note.CreatedAt,
+		UpdatedAt: time.Now().UTC(),
+	}
+
+	conflict, err := app.store.applyRemoteNote(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if conflict {
+		t.Fatal("equivalent content should converge without a conflict")
+	}
+
+	var state string
+	var revision int64
+	var conflictCount int
+	if err := app.store.db.QueryRow("SELECT sync_state, server_revision FROM notes WHERE id = ?", note.ID).Scan(&state, &revision); err != nil {
+		t.Fatal(err)
+	}
+	if err := app.store.db.QueryRow("SELECT COUNT(*) FROM note_conflicts WHERE note_id = ?", note.ID).Scan(&conflictCount); err != nil {
+		t.Fatal(err)
+	}
+	if state != "clean" || revision != 2 || conflictCount != 0 {
+		t.Fatalf("equivalent remote did not converge: state=%s revision=%d conflicts=%d", state, revision, conflictCount)
+	}
+}
+
 func TestResolveNoteConflictKeepsChosenVersion(t *testing.T) {
 	app, err := NewApp(filepath.Join(t.TempDir(), "resolve_conflict.db"))
 	if err != nil {
@@ -739,6 +796,71 @@ func TestResolveNoteConflictRebasesLocalVersion(t *testing.T) {
 	}
 	if state != "pending" || mutationID == "" || serverRevision != remote.Revision {
 		t.Fatalf("local resolution was not rebased: state=%s mutation=%q serverRevision=%d", state, mutationID, serverRevision)
+	}
+}
+
+func TestResolveNoteConflictMergesLocalAndRemote(t *testing.T) {
+	app, err := NewApp(filepath.Join(t.TempDir(), "merge_conflict.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	localBody := `{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Local"}]}]}`
+	note, err := app.SaveNote(Note{ID: "note-merge", Title: "Local title", Body: localBody, BodyText: "Local text"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := app.store.setNoteTags(note.ID, []string{"local"}); err != nil {
+		t.Fatal(err)
+	}
+	var mutationID string
+	if err := app.store.db.QueryRow("SELECT pending_mutation_id FROM notes WHERE id = ?", note.ID).Scan(&mutationID); err != nil {
+		t.Fatal(err)
+	}
+	remote := syncRemoteNote{
+		ID:        note.ID,
+		Title:     "Remote title",
+		Body:      `{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Cloud"}]}]}`,
+		BodyText:  "Cloud text",
+		Folder:    "Notas",
+		FolderID:  "folder-default",
+		Revision:  7,
+		Tags:      []string{"cloud", "LOCAL"},
+		CreatedAt: time.Now().UTC().Add(-time.Hour),
+		UpdatedAt: time.Now().UTC(),
+	}
+	if err := app.store.recordConflict(note.ID, mutationID, remote); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := app.store.ResolveNoteConflict(note.ID, "merge"); err != nil {
+		t.Fatal(err)
+	}
+	merged, err := app.store.getNote(note.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if merged.BodyText != "Local text\n\n--- Versão da nuvem: Remote title ---\n\nCloud text" {
+		t.Fatalf("merged text lost a side: %q", merged.BodyText)
+	}
+	if len(merged.Tags) != 2 || merged.Tags[0] != "cloud" || merged.Tags[1] != "local" {
+		t.Fatalf("merged tags were not deduplicated: %#v", merged.Tags)
+	}
+	var document documentNode
+	if err := json.Unmarshal([]byte(merged.Body), &document); err != nil {
+		t.Fatal(err)
+	}
+	if len(document.Content) != 3 || document.Content[1].Content[0].Text != "--- Versão da nuvem: Remote title ---" {
+		t.Fatalf("structured merge separator missing: %#v", document.Content)
+	}
+	var state string
+	var serverRevision int64
+	if err := app.store.db.QueryRow("SELECT sync_state, server_revision FROM notes WHERE id = ?", note.ID).Scan(&state, &serverRevision); err != nil {
+		t.Fatal(err)
+	}
+	if state != "pending" || serverRevision != remote.Revision {
+		t.Fatalf("merged note is not ready for sync: state=%s revision=%d", state, serverRevision)
 	}
 }
 

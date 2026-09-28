@@ -547,6 +547,7 @@ func scanNote(scanner noteScanner) (Note, error) {
 type documentNode struct {
 	Type    string         `json:"type"`
 	Attrs   map[string]any `json:"attrs"`
+	Text    string         `json:"text,omitempty"`
 	Content []documentNode `json:"content"`
 }
 

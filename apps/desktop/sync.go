@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -902,6 +903,13 @@ func (s *noteStore) markMutationClean(noteID, mutationID string, remote syncRemo
 }
 
 func (s *noteStore) recordConflict(noteID, mutationID string, remote syncRemoteNote) error {
+	reconciled, err := s.reconcileEquivalentRemote(remote)
+	if err != nil {
+		return err
+	}
+	if reconciled {
+		return nil
+	}
 	remoteJSON, err := json.Marshal(remote)
 	if err != nil {
 		return err
@@ -913,6 +921,99 @@ func (s *noteStore) recordConflict(noteID, mutationID string, remote syncRemoteN
 	}
 	_, err = s.db.Exec("UPDATE notes SET sync_state = 'conflict' WHERE id = ? AND pending_mutation_id = ?", noteID, mutationID)
 	return err
+}
+
+func (s *noteStore) reconcileEquivalentRemote(remote syncRemoteNote) (bool, error) {
+	local, err := s.getNote(remote.ID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	var serverRevision int64
+	if err := s.db.QueryRow("SELECT server_revision FROM notes WHERE id = ?", remote.ID).Scan(&serverRevision); err != nil {
+		return false, err
+	}
+	if remote.Revision < serverRevision || !notesEquivalent(local, remote) {
+		return false, nil
+	}
+	return true, s.markEquivalentRemote(remote)
+}
+
+func (s *noteStore) markEquivalentRemote(remote syncRemoteNote) error {
+	var deletedAt any
+	if remote.DeletedAt != nil {
+		deletedAt = remote.DeletedAt.UnixMilli()
+	}
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if _, err := tx.Exec(`UPDATE notes SET server_revision = ?, sync_state = 'clean', pending_mutation_id = NULL,
+		deleted_at = ?, created_at = MIN(created_at, ?), updated_at = ? WHERE id = ?`,
+		remote.Revision, deletedAt, remote.CreatedAt.UnixMilli(), remote.UpdatedAt.UnixMilli(), remote.ID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec("DELETE FROM note_conflicts WHERE note_id = ?", remote.ID); err != nil {
+		return err
+	}
+	if _, err := tx.Exec("UPDATE sync_outbox SET status = 'applied' WHERE entity_id = ? AND status IN ('pending', 'sent', 'conflict')", remote.ID); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func notesEquivalent(local Note, remote syncRemoteNote) bool {
+	if normalizeComparableText(local.Title) != normalizeComparableText(remote.Title) ||
+		normalizeComparableText(local.Folder) != normalizeComparableText(remote.Folder) ||
+		local.FolderID != remote.FolderID ||
+		normalizeBody(local.Body) != normalizeBody(remote.Body) ||
+		normalizeComparableText(local.BodyText) != normalizeComparableText(remote.BodyText) ||
+		local.ChecklistTotal != remote.ChecklistTotal || local.ChecklistOpen != remote.ChecklistOpen ||
+		!equalOptionalTime(local.PinnedAt, remote.PinnedAt) || !equalOptionalTime(local.DeletedAt, remote.DeletedAt) {
+		return false
+	}
+	return equivalentTags(local.Tags, remote.Tags)
+}
+
+func normalizeComparableText(value string) string {
+	return strings.TrimSpace(strings.ReplaceAll(value, "\r\n", "\n"))
+}
+
+func normalizeBody(value string) string {
+	var document any
+	if err := json.Unmarshal([]byte(value), &document); err == nil {
+		if normalized, err := json.Marshal(document); err == nil {
+			return string(normalized)
+		}
+	}
+	return normalizeComparableText(value)
+}
+
+func equalOptionalTime(left, right *time.Time) bool {
+	if left == nil || right == nil {
+		return left == nil && right == nil
+	}
+	return left.UnixMilli() == right.UnixMilli()
+}
+
+func equivalentTags(local, remote []string) bool {
+	normalize := func(values []string) []string {
+		result := make([]string, 0, len(values))
+		seen := make(map[string]bool)
+		for _, value := range values {
+			_, normalized := normalizeTagName(value)
+			if normalized != "" && !seen[normalized] {
+				seen[normalized] = true
+				result = append(result, normalized)
+			}
+		}
+		sort.Strings(result)
+		return result
+	}
+	return strings.Join(normalize(local), "\x00") == strings.Join(normalize(remote), "\x00")
 }
 
 func (s *noteStore) applyRemoteNote(remote syncRemoteNote) (bool, error) {
@@ -936,6 +1037,13 @@ func (s *noteStore) applyRemoteNote(remote syncRemoteNote) (bool, error) {
 	}
 
 	remoteUpdatedAtMilli := remote.UpdatedAt.UnixMilli()
+	if !notFound {
+		if reconciled, err := s.reconcileEquivalentRemote(remote); err != nil {
+			return false, err
+		} else if reconciled {
+			return false, nil
+		}
+	}
 
 	if !notFound {
 		if local.state == "conflict" {
