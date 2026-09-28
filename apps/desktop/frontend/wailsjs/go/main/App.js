@@ -82,6 +82,10 @@ export function RunComplianceAudit() {
   return window['go']['main']['App']['RunComplianceAudit']();
 }
 
+export function SaveAutoSyncInterval(arg1) {
+  return window['go']['main']['App']['SaveAutoSyncInterval'](arg1);
+}
+
 export function SaveFolder(arg1) {
   return window['go']['main']['App']['SaveFolder'](arg1);
 }
@@ -96,6 +100,10 @@ export function SaveSmartFolder(arg1) {
 
 export function SaveSyncConfiguration(arg1, arg2) {
   return window['go']['main']['App']['SaveSyncConfiguration'](arg1, arg2);
+}
+
+export function SaveAutoSyncInterval(arg1) {
+  return window['go']['main']['App']['SaveAutoSyncInterval'](arg1);
 }
 
 export function SetCustomDatabasePath(arg1) {

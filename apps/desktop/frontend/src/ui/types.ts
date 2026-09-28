@@ -73,6 +73,7 @@ export type SyncResult = {
 
 export type SyncConfiguration = {
   tursoDatabaseUrl: string;
+  autoSyncIntervalMinutes: number;
   configured: boolean;
 };
 
@@ -113,6 +114,7 @@ export type DesktopBridge = {
   SetSyncProfileID?: (profileID: string) => Promise<void>;
   GetSyncConfiguration?: () => Promise<SyncConfiguration>;
   SaveSyncConfiguration?: (databaseURL: string, authToken: string) => Promise<SyncConfiguration>;
+  SaveAutoSyncInterval?: (minutes: number) => Promise<SyncConfiguration>;
   MinimizeWindow?: () => Promise<void>;
   ToggleMaximizeWindow?: () => Promise<boolean>;
   IsWindowMaximized?: () => Promise<boolean>;

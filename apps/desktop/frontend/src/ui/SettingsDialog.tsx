@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { CheckCircle2, Cloud, Eye, EyeOff, HardDrive, Info, Moon, RefreshCw, Settings, ShieldCheck, Sun, X, XCircle } from "lucide-react";
 
 export type ThemeOption = "light" | "dark" | "system";
@@ -9,8 +9,10 @@ type SettingsDialogProps = {
   dbPath?: string;
   onDbPathChange?: (newPath: string) => Promise<void>;
   tursoDatabaseURL?: string;
+  autoSyncIntervalMinutes?: number;
   syncConfigured?: boolean;
   onSaveSyncConfiguration?: (databaseURL: string, authToken: string) => Promise<void>;
+  onAutoSyncIntervalChange?: (minutes: number) => Promise<void>;
   onSyncNow?: () => Promise<any>;
   onClose: () => void;
 };
@@ -21,8 +23,10 @@ export function SettingsDialog({
   dbPath = "%LOCALAPPDATA%\\Magnetares Notes\\magnetares.db",
   onDbPathChange,
   tursoDatabaseURL = "",
+  autoSyncIntervalMinutes = 0,
   syncConfigured = false,
   onSaveSyncConfiguration,
+  onAutoSyncIntervalChange,
   onSyncNow,
   onClose
 }: SettingsDialogProps) {
@@ -31,6 +35,8 @@ export function SettingsDialog({
   const [dbPathMessage, setDbPathMessage] = useState("");
   const [currentTursoURL, setCurrentTursoURL] = useState(tursoDatabaseURL);
   const [currentTursoToken, setCurrentTursoToken] = useState("");
+  const [currentAutoSyncInterval, setCurrentAutoSyncInterval] = useState(autoSyncIntervalMinutes);
+  const [autoSyncMessage, setAutoSyncMessage] = useState("");
   const [showToken, setShowToken] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
@@ -42,6 +48,10 @@ export function SettingsDialog({
 
   const [runningCompliance, setRunningCompliance] = useState(false);
   const [complianceReport, setComplianceReport] = useState<any>(null);
+
+  useEffect(() => {
+    setCurrentAutoSyncInterval(autoSyncIntervalMinutes);
+  }, [autoSyncIntervalMinutes]);
 
   const handleRunCompliance = async () => {
     const bridge = window.go?.main?.App;
@@ -131,6 +141,18 @@ export function SettingsDialog({
       setTestMessage(err?.message || "Não foi possível salvar a configuração do Turso.");
     } finally {
       setSavingConfig(false);
+    }
+  };
+
+  const handleAutoSyncIntervalChange = async (minutes: number) => {
+    setCurrentAutoSyncInterval(minutes);
+    setAutoSyncMessage("");
+    try {
+      await onAutoSyncIntervalChange?.(minutes);
+      setAutoSyncMessage(minutes === 0 ? "Sincronização automática desativada." : "Intervalo automático atualizado.");
+    } catch (err: any) {
+      setCurrentAutoSyncInterval(autoSyncIntervalMinutes);
+      setAutoSyncMessage(err?.message || "Não foi possível salvar o intervalo automático.");
     }
   };
 
@@ -346,6 +368,27 @@ export function SettingsDialog({
                   </div>
                 )}
               </form>
+
+              <div className="auto-sync-settings">
+                <div className="auto-sync-settings-copy">
+                  <strong>Sincronização automática</strong>
+                  <small>Quando o Turso estiver conectado, verifica alterações em segundo plano.</small>
+                </div>
+                <label htmlFor="auto-sync-interval">Frequência</label>
+                <select
+                  id="auto-sync-interval"
+                  value={currentAutoSyncInterval}
+                  disabled={!syncConfigured || !onAutoSyncIntervalChange}
+                  onChange={(event) => void handleAutoSyncIntervalChange(Number(event.target.value))}
+                >
+                  <option value={0}>Desativada</option>
+                  <option value={5}>A cada 5 minutos</option>
+                  <option value={15}>A cada 15 minutos</option>
+                  <option value={30}>A cada 30 minutos</option>
+                  <option value={60}>A cada hora</option>
+                </select>
+                {autoSyncMessage && <small className="auto-sync-message">{autoSyncMessage}</small>}
+              </div>
 
               <div className="sync-actions-box">
                 <div className="sync-actions-header">

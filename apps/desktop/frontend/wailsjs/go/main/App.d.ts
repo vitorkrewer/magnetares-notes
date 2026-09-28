@@ -42,6 +42,8 @@ export function RestoreNote(arg1:string):Promise<void>;
 
 export function RunComplianceAudit():Promise<main.ComplianceReport>;
 
+export function SaveAutoSyncInterval(arg1:number):Promise<main.SyncConfiguration>;
+
 export function SaveFolder(arg1:main.Folder):Promise<main.Folder>;
 
 export function SaveNote(arg1:main.Note):Promise<main.Note>;
@@ -49,6 +51,8 @@ export function SaveNote(arg1:main.Note):Promise<main.Note>;
 export function SaveSmartFolder(arg1:main.SmartFolder):Promise<main.SmartFolder>;
 
 export function SaveSyncConfiguration(arg1:string,arg2:string):Promise<main.SyncConfiguration>;
+
+export function SaveAutoSyncInterval(arg1:number):Promise<main.SyncConfiguration>;
 
 export function SetCustomDatabasePath(arg1:string):Promise<string>;
 

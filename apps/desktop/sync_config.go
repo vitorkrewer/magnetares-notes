@@ -14,16 +14,18 @@ const (
 )
 
 type SyncConfiguration struct {
-	TursoDatabaseURL string `json:"tursoDatabaseUrl"`
-	Configured       bool   `json:"configured"`
+	TursoDatabaseURL        string `json:"tursoDatabaseUrl"`
+	AutoSyncIntervalMinutes int    `json:"autoSyncIntervalMinutes"`
+	Configured              bool   `json:"configured"`
 }
 
 func (a *App) GetSyncConfiguration() SyncConfiguration {
 	cfg := loadAppConfig()
 	_, err := keyring.Get(syncKeyringService, syncKeyringUser)
 	return SyncConfiguration{
-		TursoDatabaseURL: cfg.TursoDatabaseURL,
-		Configured:       cfg.TursoDatabaseURL != "" && err == nil,
+		TursoDatabaseURL:        cfg.TursoDatabaseURL,
+		AutoSyncIntervalMinutes: cfg.AutoSyncIntervalMinutes,
+		Configured:              cfg.TursoDatabaseURL != "" && err == nil,
 	}
 }
 
@@ -46,6 +48,18 @@ func (a *App) SaveSyncConfiguration(databaseURL, authToken string) (SyncConfigur
 
 	cfg := loadAppConfig()
 	cfg.TursoDatabaseURL = databaseURL
+	if err := saveAppConfig(cfg); err != nil {
+		return SyncConfiguration{}, err
+	}
+	return a.GetSyncConfiguration(), nil
+}
+
+func (a *App) SaveAutoSyncInterval(minutes int) (SyncConfiguration, error) {
+	if minutes < 0 || minutes > 24*60 {
+		return SyncConfiguration{}, errors.New("intervalo de sincronização inválido")
+	}
+	cfg := loadAppConfig()
+	cfg.AutoSyncIntervalMinutes = minutes
 	if err := saveAppConfig(cfg); err != nil {
 		return SyncConfiguration{}, err
 	}

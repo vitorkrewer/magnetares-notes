@@ -42,11 +42,17 @@ export function ConflictDialog({ conflicts, onResolve, onClose }: ConflictDialog
                 </section>
               </div>
               <div className="conflict-merge-action">
+                <div className="conflict-merge-icon" aria-hidden="true">
+                  <GitMerge aria-hidden="true" />
+                </div>
+                <div className="conflict-merge-copy">
+                  <strong>Mesclar conteúdo</strong>
+                  <span>Local primeiro, nuvem anexada na mesma nota.</span>
+                </div>
                 <button type="button" className="merge" onClick={() => void onResolve(conflict.noteId, "merge")}>
                   <GitMerge aria-hidden="true" />
-                  Mesclar as duas versões
+                  Mesclar
                 </button>
-                <span>O conteúdo local fica primeiro e a versão da nuvem é anexada na mesma nota.</span>
               </div>
             </article>
           ))}

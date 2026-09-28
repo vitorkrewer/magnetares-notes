@@ -5,7 +5,7 @@ import { TitleBar } from "./TitleBar";
 import { OrganizationDialog, getFolderIconComponent } from "./OrganizationDialog";
 import { SettingsDialog, type ThemeOption } from "./SettingsDialog";
 import { ConflictDialog } from "./ConflictDialog";
-import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, SyncConfiguration, SyncConflict } from "./types";
+import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, SyncConfiguration, SyncConflict, SyncResult } from "./types";
 import { downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
 
 type SaveState = "saved" | "saving" | "error";
@@ -48,7 +48,7 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dbPath, setDbPath] = useState("%LOCALAPPDATA%\\Magnetares Notes\\magnetares.db");
   const [syncServiceURL] = useState(() => import.meta.env.VITE_API_BASE_URL || "http://localhost:8080");
-  const [syncConfiguration, setSyncConfiguration] = useState<SyncConfiguration>({ tursoDatabaseUrl: "", configured: false });
+  const [syncConfiguration, setSyncConfiguration] = useState<SyncConfiguration>({ tursoDatabaseUrl: "", autoSyncIntervalMinutes: 0, configured: false });
   const [newTagInput, setNewTagInput] = useState("");
   const [tagInputOpen, setTagInputOpen] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
@@ -66,6 +66,8 @@ export function App() {
   const activeIdRef = useRef(activeId);
   const searchRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
+  const syncingRef = useRef(false);
+  const syncRunnerRef = useRef<(() => Promise<SyncResult>) | null>(null);
 
   useEffect(() => {
     localStorage.setItem("magnetares_theme", theme);
@@ -334,6 +336,13 @@ export function App() {
   };
 
   const handleSyncWithCloud = async () => {
+    if (syncingRef.current) {
+      throw new Error("Uma sincronização já está em andamento.");
+    }
+    syncingRef.current = true;
+    setSyncing(true);
+
+    try {
     const bridge = window.go?.main?.App;
     if (!bridge?.SyncNow) {
       throw new Error("Sincronização em nuvem está disponível apenas no aplicativo desktop.");
@@ -361,7 +370,35 @@ export function App() {
       setConflictsOpen(currentConflicts.length > 0);
     }
     return result;
+    } finally {
+      syncingRef.current = false;
+      setSyncing(false);
+    }
   };
+
+  syncRunnerRef.current = handleSyncWithCloud;
+
+  useEffect(() => {
+    const minutes = syncConfiguration.autoSyncIntervalMinutes;
+    if (!syncConfiguration.configured || minutes <= 0) return;
+
+    const timer = window.setInterval(() => {
+      if (syncingRef.current || !syncRunnerRef.current) return;
+      void syncRunnerRef.current()
+        .then((result) => {
+          if (result.conflictNotes?.length) {
+            setSyncNotification({ type: "warning", message: result.message || "Há conflitos preservados para revisar." });
+            setTimeout(() => setSyncNotification(null), 7000);
+          }
+        })
+        .catch((error: any) => {
+          setSyncNotification({ type: "error", message: error?.message || "Falha na sincronização automática." });
+          setTimeout(() => setSyncNotification(null), 7000);
+        });
+    }, minutes * 60 * 1000);
+
+    return () => window.clearInterval(timer);
+  }, [syncConfiguration.configured, syncConfiguration.autoSyncIntervalMinutes]);
 
   const handleResolveConflict = async (noteID: string, resolution: "local" | "remote" | "merge") => {
     const bridge = window.go?.main?.App;
@@ -396,9 +433,17 @@ export function App() {
     setSyncConfiguration(configuration);
   };
 
+  const handleSaveAutoSyncInterval = async (minutes: number) => {
+    const bridge = window.go?.main?.App;
+    if (!bridge?.SaveAutoSyncInterval) {
+      throw new Error("Configuração automática disponível apenas no aplicativo desktop.");
+    }
+    const configuration = await bridge.SaveAutoSyncInterval(minutes);
+    setSyncConfiguration(configuration);
+  };
+
   const handleQuickSync = async () => {
-    if (syncing) return;
-    setSyncing(true);
+    if (syncingRef.current) return;
     setSyncNotification({ type: "info", message: "Sincronizando notas com a nuvem..." });
     try {
       const result = await handleSyncWithCloud();
@@ -411,8 +456,6 @@ export function App() {
       const errorMsg = err?.message || err?.toString() || "Falha ao sincronizar com a nuvem.";
       setSyncNotification({ type: "error", message: errorMsg });
       setTimeout(() => setSyncNotification(null), 7000);
-    } finally {
-      setSyncing(false);
     }
   };
 
@@ -1046,8 +1089,10 @@ export function App() {
           dbPath={dbPath}
           onDbPathChange={handleDbPathChange}
           tursoDatabaseURL={syncConfiguration.tursoDatabaseUrl}
+          autoSyncIntervalMinutes={syncConfiguration.autoSyncIntervalMinutes}
           syncConfigured={syncConfiguration.configured}
           onSaveSyncConfiguration={handleSaveSyncConfiguration}
+          onAutoSyncIntervalChange={handleSaveAutoSyncInterval}
           onSyncNow={handleSyncWithCloud}
           onClose={() => setSettingsOpen(false)}
         />

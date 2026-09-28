@@ -199,6 +199,7 @@ export namespace main {
 	
 	export class SyncConfiguration {
 	    tursoDatabaseUrl: string;
+	    autoSyncIntervalMinutes: number;
 	    configured: boolean;
 	
 	    static createFrom(source: any = {}) {
@@ -208,6 +209,7 @@ export namespace main {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.tursoDatabaseUrl = source["tursoDatabaseUrl"];
+	        this.autoSyncIntervalMinutes = source["autoSyncIntervalMinutes"];
 	        this.configured = source["configured"];
 	    }
 	}

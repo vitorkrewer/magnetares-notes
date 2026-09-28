@@ -64,8 +64,9 @@ func openNoteStore(databasePath string) (*noteStore, error) {
 }
 
 type appConfig struct {
-	CustomDatabasePath string `json:"customDatabasePath,omitempty"`
-	TursoDatabaseURL   string `json:"tursoDatabaseUrl,omitempty"`
+	CustomDatabasePath      string `json:"customDatabasePath,omitempty"`
+	TursoDatabaseURL        string `json:"tursoDatabaseUrl,omitempty"`
+	AutoSyncIntervalMinutes int    `json:"autoSyncIntervalMinutes,omitempty"`
 }
 
 func configFilePath() (string, error) {
