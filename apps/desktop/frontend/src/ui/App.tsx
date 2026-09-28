@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FilePenLine, FileText, Folder, FolderPlus, Globe, Hash, List, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, Trash2, Upload, X } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FilePenLine, FileText, Folder, Globe, List, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, Trash2, Upload, X } from "lucide-react";
 import { StructuredEditor } from "./StructuredEditor";
 import { TitleBar } from "./TitleBar";
-import { OrganizationDialog, getFolderIconComponent } from "./OrganizationDialog";
+import { OrganizationDialog, getFolderIconComponent, getTagIconComponent } from "./OrganizationDialog";
 import { SettingsDialog, type ThemeOption } from "./SettingsDialog";
 import { ConflictDialog } from "./ConflictDialog";
-import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, SyncConfiguration, SyncConflict, SyncResult } from "./types";
+import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord } from "./types";
 import { downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
 
 type SaveState = "saved" | "saving" | "error";
@@ -42,8 +42,9 @@ export function App() {
   const [loadError, setLoadError] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [dialogMode, setDialogMode] = useState<{ kind: "folder"; parentId?: string; folderToEdit?: FolderRecord } | { kind: "smart" } | null>(null);
+  const [dialogMode, setDialogMode] = useState<{ kind: "folder"; parentId?: string; folderToEdit?: FolderRecord } | { kind: "tag"; tagToEdit?: TagRecord } | { kind: "smart" } | null>(null);
   const [deleteFolderTarget, setDeleteFolderTarget] = useState<FolderRecord | null>(null);
+  const [deleteTagTarget, setDeleteTagTarget] = useState<TagRecord | null>(null);
   const [theme, setTheme] = useState<ThemeOption>(() => ((localStorage.getItem("magnetares_theme") || localStorage.getItem("aster_theme")) as ThemeOption) || "light");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dbPath, setDbPath] = useState("%LOCALAPPDATA%\\Magnetares Notes\\magnetares.db");
@@ -547,6 +548,19 @@ export function App() {
     }
   };
 
+  const handleSaveTag = async (tag: TagRecord) => {
+    const bridge = window.go?.main?.App;
+    if (bridge?.SaveTag) {
+      await bridge.SaveTag(tag);
+      void reloadNavigation();
+    } else {
+      setNavigation((current) => ({
+        ...current,
+        tags: [...current.tags.filter((item) => item.id !== tag.id), tag]
+      }));
+    }
+  };
+
   const handleSaveSmartFolder = async (smart: SmartFolderRecord) => {
     const bridge = window.go?.main?.App;
     if (bridge?.SaveSmartFolder) {
@@ -723,6 +737,28 @@ export function App() {
     }
   };
 
+  const handleDeleteTag = async (tag: TagRecord) => {
+    try {
+      const bridge = window.go?.main?.App;
+      if (bridge?.DeleteTag) {
+        await bridge.DeleteTag(tag.id);
+        void reloadNavigation();
+        if (selectedQuery.kind === "tag" && selectedQuery.id === tag.id) {
+          selectQuery({ kind: "all" });
+        }
+      } else {
+        setNavigation((current) => ({
+          ...current,
+          tags: current.tags.filter((item) => item.id !== tag.id)
+        }));
+      }
+    } catch (error: any) {
+      setLoadError(error?.message || "Não foi possível excluir a etiqueta.");
+    } finally {
+      setDeleteTagTarget(null);
+    }
+  };
+
   const toggleFolderExpanded = (folderID: string) => {
     setExpandedFolderIds((current) => {
       const next = new Set(current);
@@ -877,21 +913,29 @@ export function App() {
           </>
         )}
 
-        {navigation.tags.length > 0 && (
-          <>
-            <div className="sidebar-section-header">
-              <span className="folder-label">ETIQUETAS</span>
-            </div>
-            <div className="folder-tree">
-              {navigation.tags.map((tag) => (
+        <>
+          <div className="sidebar-section-header">
+            <span className="folder-label">ETIQUETAS</span>
+            <button className="icon-button mini-add" onClick={() => setDialogMode({ kind: "tag" })} title="Nova etiqueta" aria-label="Nova etiqueta"><Plus aria-hidden="true" /></button>
+          </div>
+          <div className="folder-tree">
+            {navigation.tags.map((tag) => {
+              const TagIcon = getTagIconComponent(tag.icon);
+              return (
                 <button key={tag.id} className={`nav-item tag-item ${selectedQuery.kind === "tag" && selectedQuery.id === tag.id ? "selected" : ""}`} onClick={() => selectQuery({ kind: "tag", id: tag.id })} title={`#${tag.name}`}>
-                  <span><Hash className="tag-icon" aria-hidden="true" /><span className="nav-item-title">{tag.name}</span></span>
-                  <small>{tag.noteCount}</small>
+                  <span><TagIcon className="tag-icon" aria-hidden="true" /><span className="nav-item-title">{tag.name}</span></span>
+                  <div className="folder-item-actions">
+                    <small className="folder-note-count">{tag.noteCount}</small>
+                    <div className="folder-hover-btns">
+                      <span className="folder-action-btn" role="button" tabIndex={0} title="Editar etiqueta" aria-label={`Editar etiqueta ${tag.name}`} onClick={(event) => { event.stopPropagation(); setDialogMode({ kind: "tag", tagToEdit: tag }); }}><FilePenLine size={13} aria-hidden="true" /></span>
+                      <span className="folder-action-btn danger" role="button" tabIndex={0} title="Excluir etiqueta" aria-label={`Excluir etiqueta ${tag.name}`} onClick={(event) => { event.stopPropagation(); setDeleteTagTarget(tag); }}><Trash2 size={13} aria-hidden="true" /></span>
+                    </div>
+                  </div>
                 </button>
-              ))}
-            </div>
-          </>
-        )}
+              );
+            })}
+          </div>
+        </>
 
         <button className={`nav-item trash-item ${view === "deleted" ? "selected" : ""}`} onClick={() => selectQuery({ kind: "deleted" })}>
           <span><Trash2 aria-hidden="true" /><span className="nav-item-title">Apagadas recentemente</span></span>
@@ -1078,6 +1122,7 @@ export function App() {
           navigation={navigation}
           onClose={() => setDialogMode(null)}
           onSaveFolder={handleSaveFolder}
+          onSaveTag={handleSaveTag}
           onSaveSmartFolder={handleSaveSmartFolder}
         />
       )}
@@ -1128,6 +1173,27 @@ export function App() {
                 onClick={() => void handleDeleteFolder(deleteFolderTarget)}
               >
                 Excluir pasta
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {deleteTagTarget && (
+        <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setDeleteTagTarget(null)}>
+          <div className="organization-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-tag-dialog-title" style={{ maxWidth: 420 }}>
+            <header>
+              <Trash2 aria-hidden="true" style={{ color: "#ef4444" }} />
+              <h2 id="delete-tag-dialog-title">Excluir etiqueta</h2>
+              <button type="button" onClick={() => setDeleteTagTarget(null)} aria-label="Fechar" title="Fechar"><X aria-hidden="true" /></button>
+            </header>
+            <p style={{ marginTop: 12, marginBottom: 20, color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
+              A etiqueta <strong>#{deleteTagTarget.name}</strong> será removida das notas. Etiquetas usadas por Pastas Inteligentes não podem ser excluídas.
+            </p>
+            <footer>
+              <button type="button" onClick={() => setDeleteTagTarget(null)}>Cancelar</button>
+              <button type="button" style={{ background: "#dc2626", color: "#ffffff", borderColor: "#b91c1c" }} onClick={() => void handleDeleteTag(deleteTagTarget)}>
+                Excluir etiqueta
               </button>
             </footer>
           </div>

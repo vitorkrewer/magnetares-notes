@@ -75,6 +75,7 @@ export namespace main {
 	export class Tag {
 	    id: string;
 	    name: string;
+	    icon: string;
 	    noteCount: number;
 	
 	    static createFrom(source: any = {}) {
@@ -85,6 +86,7 @@ export namespace main {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
 	        this.name = source["name"];
+	        this.icon = source["icon"];
 	        this.noteCount = source["noteCount"];
 	    }
 	}

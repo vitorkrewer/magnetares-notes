@@ -22,6 +22,10 @@ export function DeleteSmartFolder(arg1) {
   return window['go']['main']['App']['DeleteSmartFolder'](arg1);
 }
 
+export function DeleteTag(arg1) {
+  return window['go']['main']['App']['DeleteTag'](arg1);
+}
+
 export function GetDatabasePath() {
   return window['go']['main']['App']['GetDatabasePath']();
 }
@@ -102,8 +106,8 @@ export function SaveSyncConfiguration(arg1, arg2) {
   return window['go']['main']['App']['SaveSyncConfiguration'](arg1, arg2);
 }
 
-export function SaveAutoSyncInterval(arg1) {
-  return window['go']['main']['App']['SaveAutoSyncInterval'](arg1);
+export function SaveTag(arg1) {
+  return window['go']['main']['App']['SaveTag'](arg1);
 }
 
 export function SetCustomDatabasePath(arg1) {

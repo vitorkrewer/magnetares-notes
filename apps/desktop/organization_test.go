@@ -138,6 +138,58 @@ func TestPinTagsAndChecklistProjectionSurviveAutosave(t *testing.T) {
 	}
 }
 
+func TestTagCRUDAndIconProtection(t *testing.T) {
+	app, err := NewApp(filepath.Join(t.TempDir(), "tag_crud.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	tag, err := app.SaveTag(Tag{ID: "tag-crud", Name: "Projetos", Icon: "bookmark"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tag.Icon != "bookmark" || tag.Name != "Projetos" {
+		t.Fatalf("unexpected created tag: %#v", tag)
+	}
+
+	updated, err := app.SaveTag(Tag{ID: tag.ID, Name: "Projetos Ativos", Icon: "flag"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.Name != "Projetos Ativos" || updated.Icon != "flag" {
+		t.Fatalf("unexpected updated tag: %#v", updated)
+	}
+
+	note, err := app.SaveNote(Note{ID: "tagged-note", Title: "Tagged", Body: "Texto", BodyText: "Texto"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := app.SetNoteTags(note.ID, []string{updated.Name}); err != nil {
+		t.Fatal(err)
+	}
+	navigation, err := app.ListNavigation()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(navigation.Tags) != 1 || navigation.Tags[0].NoteCount != 1 || navigation.Tags[0].Icon != "flag" {
+		t.Fatalf("tag navigation did not preserve icon/count: %#v", navigation.Tags)
+	}
+
+	if _, err := app.SaveSmartFolder(SmartFolder{ID: "smart-tag-protection", Name: "Ativos", RuleKind: "tag", TagID: tag.ID}); err != nil {
+		t.Fatal(err)
+	}
+	if err := app.DeleteTag(tag.ID); err == nil {
+		t.Fatal("expected tag deletion to be blocked while used by smart folder")
+	}
+	if err := app.DeleteSmartFolder("smart-tag-protection"); err != nil {
+		t.Fatal(err)
+	}
+	if err := app.DeleteTag(tag.ID); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestSmartFolderRules(t *testing.T) {
 	app, err := NewApp(filepath.Join(t.TempDir(), "smart-folders.db"))
 	if err != nil {

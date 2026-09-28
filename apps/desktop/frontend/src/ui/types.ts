@@ -27,6 +27,7 @@ export type FolderRecord = {
 export type TagRecord = {
   id: string;
   name: string;
+  icon?: string;
   noteCount: number;
 };
 
@@ -98,6 +99,8 @@ export type DesktopBridge = {
   RestoreNote?: (id: string) => Promise<void>;
   ListNavigation?: () => Promise<NavigationRecord>;
   SaveFolder?: (folder: FolderRecord) => Promise<FolderRecord>;
+  SaveTag?: (tag: TagRecord) => Promise<TagRecord>;
+  DeleteTag?: (id: string) => Promise<void>;
   DeleteFolder?: (id: string) => Promise<void>;
   MoveNote?: (noteId: string, folderId: string) => Promise<void>;
   SetNotePinned?: (id: string, pinned: boolean) => Promise<Note>;

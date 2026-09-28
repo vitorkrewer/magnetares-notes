@@ -12,6 +12,8 @@ export function DeleteNote(arg1:string):Promise<void>;
 
 export function DeleteSmartFolder(arg1:string):Promise<void>;
 
+export function DeleteTag(arg1:string):Promise<void>;
+
 export function GetDatabasePath():Promise<string>;
 
 export function GetSyncConfiguration():Promise<main.SyncConfiguration>;
@@ -52,7 +54,7 @@ export function SaveSmartFolder(arg1:main.SmartFolder):Promise<main.SmartFolder>
 
 export function SaveSyncConfiguration(arg1:string,arg2:string):Promise<main.SyncConfiguration>;
 
-export function SaveAutoSyncInterval(arg1:number):Promise<main.SyncConfiguration>;
+export function SaveTag(arg1:main.Tag):Promise<main.Tag>;
 
 export function SetCustomDatabasePath(arg1:string):Promise<string>;
 

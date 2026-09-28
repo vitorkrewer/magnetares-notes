@@ -670,6 +670,14 @@ textarea:focus-visible {
   display: none;
 }
 
+.tag-item:hover .folder-hover-btns {
+  display: flex;
+}
+
+.tag-item:hover .folder-note-count {
+  display: none;
+}
+
 .folder-action-btn {
   align-items: center;
   background: transparent;

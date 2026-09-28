@@ -91,6 +91,14 @@ func (a *App) SetNoteTags(id string, tags []string) (Note, error) {
 	return a.store.setNoteTags(id, tags)
 }
 
+func (a *App) SaveTag(tag Tag) (Tag, error) {
+	return a.store.saveTag(tag)
+}
+
+func (a *App) DeleteTag(id string) error {
+	return a.store.deleteTag(id)
+}
+
 func (a *App) QueryNotes(query NoteQuery) ([]Note, error) {
 	return a.store.queryNotes(query)
 }

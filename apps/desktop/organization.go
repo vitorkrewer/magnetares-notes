@@ -31,6 +31,7 @@ type Navigation struct {
 type Tag struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
+	Icon      string `json:"icon"`
 	NoteCount int64  `json:"noteCount"`
 }
 
@@ -78,16 +79,16 @@ func (s *noteStore) listNavigation() (Navigation, error) {
 		return Navigation{}, fmt.Errorf("close folders: %w", err)
 	}
 
-	tagRows, err := s.db.Query(`SELECT t.id, t.name, COUNT(nt.note_id)
+	tagRows, err := s.db.Query(`SELECT t.id, t.name, COALESCE(t.icon, 'tag'), COUNT(nt.note_id)
 		FROM tags t LEFT JOIN note_tags nt ON nt.tag_id = t.id
-		GROUP BY t.id, t.name ORDER BY t.normalized_name`)
+		GROUP BY t.id, t.name, t.icon ORDER BY t.normalized_name`)
 	if err != nil {
 		return Navigation{}, fmt.Errorf("list tags: %w", err)
 	}
 	navigation.Tags = make([]Tag, 0)
 	for tagRows.Next() {
 		var tag Tag
-		if err := tagRows.Scan(&tag.ID, &tag.Name, &tag.NoteCount); err != nil {
+		if err := tagRows.Scan(&tag.ID, &tag.Name, &tag.Icon, &tag.NoteCount); err != nil {
 			return Navigation{}, fmt.Errorf("scan tag: %w", err)
 		}
 		navigation.Tags = append(navigation.Tags, tag)
@@ -186,6 +187,65 @@ func (s *noteStore) saveFolder(folder Folder) (Folder, error) {
 	}
 
 	return folder, nil
+}
+
+func (s *noteStore) saveTag(tag Tag) (Tag, error) {
+	name, normalized := normalizeTagName(tag.Name)
+	if name == "" {
+		return Tag{}, errors.New("tag name is required")
+	}
+	if tag.ID == "" {
+		tag.ID = uuid.NewString()
+	}
+	if strings.TrimSpace(tag.Icon) == "" {
+		tag.Icon = "tag"
+	}
+
+	result, err := s.db.Exec(`INSERT INTO tags(id, name, normalized_name, icon, managed, created_at)
+		VALUES (?, ?, ?, ?, 1, ?)
+		ON CONFLICT(id) DO UPDATE SET name = excluded.name, normalized_name = excluded.normalized_name, icon = excluded.icon, managed = 1`,
+		tag.ID, name, normalized, tag.Icon, time.Now().UTC().UnixMilli())
+	if err != nil {
+		return Tag{}, fmt.Errorf("save tag: %w", err)
+	}
+	if _, err := result.RowsAffected(); err != nil {
+		return Tag{}, err
+	}
+	tag.Name = name
+	return s.getTag(tag.ID)
+}
+
+func (s *noteStore) getTag(id string) (Tag, error) {
+	var tag Tag
+	err := s.db.QueryRow(`SELECT t.id, t.name, COALESCE(t.icon, 'tag'), COUNT(nt.note_id)
+		FROM tags t LEFT JOIN note_tags nt ON nt.tag_id = t.id WHERE t.id = ?
+		GROUP BY t.id, t.name, t.icon`, id).Scan(&tag.ID, &tag.Name, &tag.Icon, &tag.NoteCount)
+	if err != nil {
+		return Tag{}, fmt.Errorf("get tag: %w", err)
+	}
+	return tag, nil
+}
+
+func (s *noteStore) deleteTag(id string) error {
+	var smartFolderCount int
+	if err := s.db.QueryRow("SELECT COUNT(*) FROM smart_folders WHERE tag_id = ?", id).Scan(&smartFolderCount); err != nil {
+		return fmt.Errorf("check tag usage: %w", err)
+	}
+	if smartFolderCount > 0 {
+		return errors.New("a etiqueta está sendo usada por uma pasta inteligente")
+	}
+	result, err := s.db.Exec("DELETE FROM tags WHERE id = ?", id)
+	if err != nil {
+		return fmt.Errorf("delete tag: %w", err)
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }
 
 func (s *noteStore) deleteFolder(id string) error {
@@ -322,7 +382,8 @@ func (s *noteStore) setNoteTags(noteID string, values []string) (Note, error) {
 		}
 	}
 	if _, err := tx.Exec(`DELETE FROM tags
-		WHERE NOT EXISTS (SELECT 1 FROM note_tags WHERE note_tags.tag_id = tags.id)
+		WHERE managed = 0
+		AND NOT EXISTS (SELECT 1 FROM note_tags WHERE note_tags.tag_id = tags.id)
 		AND NOT EXISTS (SELECT 1 FROM smart_folders WHERE smart_folders.tag_id = tags.id)`); err != nil {
 		return Note{}, fmt.Errorf("remove unused tags: %w", err)
 	}

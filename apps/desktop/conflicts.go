@@ -274,7 +274,8 @@ func replaceNoteTagsTx(tx *sql.Tx, noteID string, values []string) error {
 		}
 	}
 	_, err := tx.Exec(`DELETE FROM tags
-		WHERE NOT EXISTS (SELECT 1 FROM note_tags WHERE note_tags.tag_id = tags.id)
+		WHERE managed = 0
+		AND NOT EXISTS (SELECT 1 FROM note_tags WHERE note_tags.tag_id = tags.id)
 		AND NOT EXISTS (SELECT 1 FROM smart_folders WHERE smart_folders.tag_id = tags.id)`)
 	return err
 }

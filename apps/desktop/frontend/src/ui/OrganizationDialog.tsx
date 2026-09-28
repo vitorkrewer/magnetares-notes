@@ -1,16 +1,17 @@
-import { useState, type FormEvent } from "react";
-import { FolderPlus, Sparkles, X, Folder, Briefcase, Code, BookOpen, Star, Heart, Archive, User, Check, Edit2 } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
+import { FolderPlus, Sparkles, X, Folder, Briefcase, Code, BookOpen, Star, Heart, Archive, User, Check, Edit2, Tag as TagIcon, Hash, Bookmark, Flag, Zap, CircleDot } from "lucide-react";
 import { FolderRecord, NavigationRecord, SmartFolderRecord, TagRecord } from "./types";
 
 export type { FolderRecord, NavigationRecord, SmartFolderRecord, TagRecord };
 
-type DialogMode = { kind: "folder"; parentId?: string; folderToEdit?: FolderRecord } | { kind: "smart" };
+type DialogMode = { kind: "folder"; parentId?: string; folderToEdit?: FolderRecord } | { kind: "tag"; tagToEdit?: TagRecord } | { kind: "smart" };
 
 type OrganizationDialogProps = {
   mode: DialogMode;
   navigation: NavigationRecord;
   onClose: () => void;
   onSaveFolder: (folder: FolderRecord) => Promise<void>;
+  onSaveTag: (tag: TagRecord) => Promise<void>;
   onSaveSmartFolder: (smartFolder: SmartFolderRecord) => Promise<void>;
 };
 
@@ -23,6 +24,15 @@ export const FOLDER_ICONS = [
   { id: "heart", label: "Pessoal", Icon: Heart },
   { id: "archive", label: "Arquivo", Icon: Archive },
   { id: "user", label: "Perfil", Icon: User },
+] as const;
+
+export const TAG_ICONS = [
+  { id: "tag", label: "Etiqueta", Icon: TagIcon },
+  { id: "hash", label: "Hashtag", Icon: Hash },
+  { id: "bookmark", label: "Marcador", Icon: Bookmark },
+  { id: "flag", label: "Sinalizador", Icon: Flag },
+  { id: "zap", label: "Destaque", Icon: Zap },
+  { id: "dot", label: "Ponto", Icon: CircleDot },
 ] as const;
 
 export const FOLDER_COLORS = [
@@ -41,11 +51,18 @@ export function getFolderIconComponent(iconId?: string) {
   return item ? item.Icon : Folder;
 }
 
-export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, onSaveSmartFolder }: OrganizationDialogProps) {
+export function getTagIconComponent(iconId?: string) {
+  const item = TAG_ICONS.find((i) => i.id === iconId);
+  return item ? item.Icon : TagIcon;
+}
+
+export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, onSaveTag, onSaveSmartFolder }: OrganizationDialogProps) {
   const folderToEdit = mode.kind === "folder" ? mode.folderToEdit : undefined;
-  const [name, setName] = useState(folderToEdit ? folderToEdit.name : "");
+  const tagToEdit = mode.kind === "tag" ? mode.tagToEdit : undefined;
+  const [name, setName] = useState(folderToEdit?.name || tagToEdit?.name || "");
   const [parentId, setParentId] = useState(mode.kind === "folder" ? (folderToEdit ? folderToEdit.parentId ?? "" : mode.parentId ?? "") : "");
   const [selectedIcon, setSelectedIcon] = useState<string>(folderToEdit?.icon || "folder");
+  const [selectedTagIcon, setSelectedTagIcon] = useState<string>(tagToEdit?.icon || "tag");
   const [selectedColor, setSelectedColor] = useState<string>(folderToEdit?.color || "#6366f1");
   const [ruleKind, setRuleKind] = useState<SmartFolderRecord["ruleKind"]>("tag");
   const [tagId, setTagId] = useState(navigation.tags[0]?.id ?? "");
@@ -54,6 +71,11 @@ export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, on
   const [checklistState, setChecklistState] = useState<NonNullable<SmartFolderRecord["checklistState"]>>("open");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setName(folderToEdit?.name || tagToEdit?.name || "");
+    setSelectedTagIcon(tagToEdit?.icon || "tag");
+  }, [folderToEdit?.name, tagToEdit?.name, tagToEdit?.icon]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -72,6 +94,13 @@ export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, on
           color: selectedColor,
           icon: selectedIcon,
           noteCount: folderToEdit ? folderToEdit.noteCount : 0
+        });
+      } else if (mode.kind === "tag") {
+        await onSaveTag({
+          id: tagToEdit ? tagToEdit.id : crypto.randomUUID(),
+          name: name.trim(),
+          icon: selectedTagIcon,
+          noteCount: tagToEdit?.noteCount ?? 0
         });
       } else {
         await onSaveSmartFolder({
@@ -96,17 +125,23 @@ export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, on
     <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <form className="organization-dialog" role="dialog" aria-modal="true" aria-labelledby="organization-dialog-title" onSubmit={submit}>
         <header>
-          {mode.kind === "folder" ? (folderToEdit ? <Edit2 aria-hidden="true" style={{ color: selectedColor }} /> : <FolderPlus aria-hidden="true" style={{ color: selectedColor }} />) : <Sparkles aria-hidden="true" />}
+          {mode.kind === "folder"
+            ? (folderToEdit ? <Edit2 aria-hidden="true" style={{ color: selectedColor }} /> : <FolderPlus aria-hidden="true" style={{ color: selectedColor }} />)
+            : mode.kind === "tag"
+              ? <TagIcon aria-hidden="true" style={{ color: "#b87800" }} />
+              : <Sparkles aria-hidden="true" />}
           <h2 id="organization-dialog-title">
             {mode.kind === "folder"
-              ? (folderToEdit ? "Editar pasta" : (mode.parentId ? "Nova subpasta" : "Nova pasta"))
-              : "Nova Pasta Inteligente"}
+                ? (folderToEdit ? "Editar pasta" : (mode.parentId ? "Nova subpasta" : "Nova pasta"))
+                : mode.kind === "tag"
+                  ? (tagToEdit ? "Editar etiqueta" : "Nova etiqueta")
+                  : "Nova Pasta Inteligente"}
           </h2>
           <button type="button" onClick={onClose} aria-label="Fechar" title="Fechar"><X aria-hidden="true" /></button>
         </header>
 
         <label>
-          Nome da pasta
+          {mode.kind === "folder" ? "Nome da pasta" : mode.kind === "tag" ? "Nome da etiqueta" : "Nome"}
           <input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex: Projetos 2026" />
         </label>
 
@@ -167,6 +202,28 @@ export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, on
               </div>
             </div>
           </>
+        ) : mode.kind === "tag" ? (
+          <div className="picker-section">
+            <span className="picker-label">Ícone da etiqueta</span>
+            <div className="icon-grid" role="radiogroup" aria-label="Ícone da etiqueta">
+              {TAG_ICONS.map(({ id, label, Icon }) => {
+                const isSelected = selectedTagIcon === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    title={label}
+                    className={`picker-btn icon-picker-btn ${isSelected ? "selected" : ""}`}
+                    onClick={() => setSelectedTagIcon(id)}
+                  >
+                    <Icon aria-hidden="true" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         ) : (
           <>
             <label>
@@ -192,7 +249,7 @@ export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, on
         <footer>
           <button type="button" onClick={onClose}>Cancelar</button>
           <button type="submit" disabled={saving || (mode.kind === "smart" && ruleKind === "tag" && !tagId)}>
-            {saving ? "Salvando…" : (folderToEdit ? "Salvar alterações" : "Criar")}
+            {saving ? "Salvando…" : (folderToEdit || tagToEdit ? "Salvar alterações" : "Criar")}
           </button>
         </footer>
       </form>
