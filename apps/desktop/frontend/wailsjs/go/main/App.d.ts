@@ -16,6 +16,8 @@ export function GetDatabasePath():Promise<string>;
 
 export function GetSyncConfiguration():Promise<main.SyncConfiguration>;
 
+export function GetSyncDiagnosticReport():Promise<main.SyncDiagnosticReport>;
+
 export function GetSyncProfileID():Promise<string>;
 
 export function IsWindowMaximized():Promise<boolean>;

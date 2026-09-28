@@ -30,6 +30,10 @@ export function GetSyncConfiguration() {
   return window['go']['main']['App']['GetSyncConfiguration']();
 }
 
+export function GetSyncDiagnosticReport() {
+  return window['go']['main']['App']['GetSyncDiagnosticReport']();
+}
+
 export function GetSyncProfileID() {
   return window['go']['main']['App']['GetSyncProfileID']();
 }

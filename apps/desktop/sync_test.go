@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -172,5 +173,346 @@ func TestTursoValueMarshaling(t *testing.T) {
 		if string(bytes) != tt.expected {
 			t.Errorf("expected %s, got %s", tt.expected, string(bytes))
 		}
+	}
+}
+
+func TestLocalOutboxAndCanonicalStateHash(t *testing.T) {
+	app, err := NewApp(filepath.Join(t.TempDir(), "outbox_test.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	// 1. Save note & verify outbox entry
+	note, err := app.SaveNote(Note{ID: "note-outbox-1", Title: "Outbox Test", Body: "Hello Outbox"})
+	if err != nil {
+		t.Fatalf("SaveNote error: %v", err)
+	}
+
+	var opCount int
+	if err := app.store.db.QueryRow("SELECT COUNT(*) FROM sync_outbox WHERE entity_id = ? AND entity_type = 'note'", note.ID).Scan(&opCount); err != nil {
+		t.Fatalf("query outbox error: %v", err)
+	}
+	if opCount == 0 {
+		t.Fatal("expected outbox operation for saved note, got 0")
+	}
+
+	// 2. Compute canonical hash
+	hash, err := app.store.ComputeCanonicalStateHash()
+	if err != nil {
+		t.Fatalf("ComputeCanonicalStateHash error: %v", err)
+	}
+	if hash == "" {
+		t.Fatal("expected non-empty canonical hash")
+	}
+
+	// 3. Delete note & verify outbox op and soft delete
+	if err := app.DeleteNote(note.ID); err != nil {
+		t.Fatalf("DeleteNote error: %v", err)
+	}
+
+	var delOpCount int
+	if err := app.store.db.QueryRow("SELECT COUNT(*) FROM sync_outbox WHERE entity_id = ? AND op_type = 'delete'", note.ID).Scan(&delOpCount); err != nil {
+		t.Fatalf("query outbox delete op error: %v", err)
+	}
+	if delOpCount == 0 {
+		t.Fatal("expected outbox delete op, got 0")
+	}
+
+	// Hash should change deterministically
+	newHash, err := app.store.ComputeCanonicalStateHash()
+	if err != nil {
+		t.Fatalf("ComputeCanonicalStateHash after delete error: %v", err)
+	}
+	if newHash == hash {
+		t.Fatal("expected canonical hash to change after deletion")
+	}
+}
+
+func TestFolderTombstonePropagation(t *testing.T) {
+	app, err := NewApp(filepath.Join(t.TempDir(), "tombstone_test.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	folder, err := app.SaveFolder(Folder{ID: "folder-tombstone-1", Name: "Projetos"})
+	if err != nil {
+		t.Fatalf("SaveFolder error: %v", err)
+	}
+
+	// Verify folder is listed in navigation
+	nav, err := app.ListNavigation()
+	if err != nil {
+		t.Fatalf("ListNavigation error: %v", err)
+	}
+	found := false
+	for _, f := range nav.Folders {
+		if f.ID == folder.ID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatal("folder not found in navigation before deletion")
+	}
+
+	// Delete folder (soft-delete / tombstone)
+	if err := app.DeleteFolder(folder.ID); err != nil {
+		t.Fatalf("DeleteFolder error: %v", err)
+	}
+
+	// Verify folder is no longer listed in navigation
+	navAfter, err := app.ListNavigation()
+	if err != nil {
+		t.Fatalf("ListNavigation after delete error: %v", err)
+	}
+	for _, f := range navAfter.Folders {
+		if f.ID == folder.ID {
+			t.Fatal("deleted folder still appeared in navigation!")
+		}
+	}
+
+	// Verify tombstone deleted_at exists in DB table
+	var deletedAt sql.NullInt64
+	if err := app.store.db.QueryRow("SELECT deleted_at FROM folders WHERE id = ?", folder.ID).Scan(&deletedAt); err != nil {
+		t.Fatalf("query folder tombstone error: %v", err)
+	}
+	if !deletedAt.Valid {
+		t.Fatal("expected deleted_at tombstone on folder row, got NULL")
+	}
+}
+
+// TestDualTombstoneConverges verifies that when both local and remote have deleted
+// the same note, applyRemoteNote converges cleanly without creating a conflict.
+func TestDualTombstoneConverges(t *testing.T) {
+	app, err := NewApp(filepath.Join(t.TempDir(), "dual_tombstone.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	// Create and save a note
+	note, err := app.SaveNote(Note{
+		ID:       "note-tombstone-dual",
+		Title:    "Delete Me",
+		Body:     `{"type":"doc","content":[{"type":"paragraph"}]}`,
+		BodyText: "Delete Me",
+	})
+	if err != nil {
+		t.Fatalf("SaveNote error: %v", err)
+	}
+
+	// Locally delete the note
+	if err := app.DeleteNote(note.ID); err != nil {
+		t.Fatalf("DeleteNote error: %v", err)
+	}
+
+	// Simulate server sending back a tombstone for the same note (different revision)
+	localDeletedTime := time.Now().UTC().Add(-1 * time.Second)
+	remoteDeletedTime := time.Now().UTC()
+	remote := syncRemoteNote{
+		ID:        "note-tombstone-dual",
+		Title:     "Delete Me",
+		Body:      `{"type":"doc","content":[{"type":"paragraph"}]}`,
+		BodyText:  "Delete Me",
+		FolderID:  "folder-default",
+		Folder:    "Notas",
+		Revision:  2,
+		DeletedAt: &remoteDeletedTime,
+		CreatedAt: localDeletedTime,
+		UpdatedAt: remoteDeletedTime,
+		Tags:      []string{},
+	}
+
+	conflict, err := app.store.applyRemoteNote(remote)
+	if err != nil {
+		t.Fatalf("applyRemoteNote (dual tombstone) error: %v", err)
+	}
+	if conflict {
+		t.Fatal("dual tombstone should NOT generate a conflict")
+	}
+
+	// Note should remain deleted (clean)
+	var syncState string
+	var deletedAt sql.NullInt64
+	if err := app.store.db.QueryRow("SELECT sync_state, deleted_at FROM notes WHERE id = ?", note.ID).Scan(&syncState, &deletedAt); err != nil {
+		t.Fatalf("query note state error: %v", err)
+	}
+	if syncState != "clean" {
+		t.Fatalf("expected sync_state=clean after dual tombstone, got %s", syncState)
+	}
+	if !deletedAt.Valid {
+		t.Fatal("expected note to remain deleted after dual tombstone convergence")
+	}
+}
+
+// TestRemoteResurrectsLocallyDeletedNote verifies that when a remote note is
+// updated AFTER the local deletion, the remote version wins (last-write-wins).
+func TestRemoteResurrectsLocallyDeletedNote(t *testing.T) {
+	app, err := NewApp(filepath.Join(t.TempDir(), "resurrect.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	note, err := app.SaveNote(Note{
+		ID:       "note-resurrect-1",
+		Title:    "Will be deleted locally",
+		Body:     `{"type":"doc","content":[{"type":"paragraph"}]}`,
+		BodyText: "Will be deleted locally",
+	})
+	if err != nil {
+		t.Fatalf("SaveNote error: %v", err)
+	}
+
+	// Locally delete — updated_at will be set to now
+	if err := app.DeleteNote(note.ID); err != nil {
+		t.Fatalf("DeleteNote error: %v", err)
+	}
+
+	// Remote has a newer edit (timestamp after local deletion)
+	remoteTime := time.Now().UTC().Add(5 * time.Second)
+	remote := syncRemoteNote{
+		ID:        "note-resurrect-1",
+		Title:     "Resurrected by remote",
+		Body:      `{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Resurrected"}]}]}`,
+		BodyText:  "Resurrected",
+		FolderID:  "folder-default",
+		Folder:    "Notas",
+		Revision:  3,
+		DeletedAt: nil,
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: remoteTime,
+		Tags:      []string{},
+	}
+
+	conflict, err := app.store.applyRemoteNote(remote)
+	if err != nil {
+		t.Fatalf("applyRemoteNote (resurrect) error: %v", err)
+	}
+	if conflict {
+		t.Fatal("remote resurrection with newer timestamp should NOT conflict — remote should win")
+	}
+
+	// Note should now be alive with remote content
+	fetched, err := app.store.getNote(note.ID)
+	if err != nil {
+		t.Fatalf("getNote after resurrection error: %v", err)
+	}
+	if fetched.DeletedAt != nil {
+		t.Fatal("note should NOT be deleted after remote resurrection")
+	}
+	if fetched.Title != "Resurrected by remote" {
+		t.Fatalf("expected resurrected title, got: %s", fetched.Title)
+	}
+}
+
+// TestLWWNotesWithSameBaseRevision verifies that when local and remote edits
+// have the same server_revision, the newer updated_at wins (Last-Write-Wins).
+func TestLWWNotesWithSameBaseRevision(t *testing.T) {
+	app, err := NewApp(filepath.Join(t.TempDir(), "lww_notes.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	// Create a clean baseline note
+	note, err := app.SaveNote(Note{
+		ID:       "note-lww-1",
+		Title:    "Baseline",
+		Body:     `{"type":"doc","content":[{"type":"paragraph"}]}`,
+		BodyText: "Baseline",
+	})
+	if err != nil {
+		t.Fatalf("SaveNote error: %v", err)
+	}
+
+	// Simulate it being synced (clean at revision 1)
+	_, _ = app.store.db.Exec("UPDATE notes SET sync_state = 'clean', server_revision = 1 WHERE id = ?", note.ID)
+
+	// Local edit — makes it pending again
+	_, err = app.SaveNote(Note{
+		ID:       note.ID,
+		Title:    "Local Edit",
+		Body:     note.Body,
+		BodyText: "Local Edit",
+	})
+	if err != nil {
+		t.Fatalf("local SaveNote error: %v", err)
+	}
+
+	// Remote edit came in with the same server_revision but an OLDER updated_at
+	olderTime := time.Now().UTC().Add(-10 * time.Second)
+	remote := syncRemoteNote{
+		ID:        note.ID,
+		Title:     "Remote Old Edit",
+		Body:      note.Body,
+		BodyText:  "Remote Old Edit",
+		FolderID:  "folder-default",
+		Folder:    "Notas",
+		Revision:  1,
+		CreatedAt: olderTime,
+		UpdatedAt: olderTime, // older than local
+		Tags:      []string{},
+	}
+
+	conflict, err := app.store.applyRemoteNote(remote)
+	if err != nil {
+		t.Fatalf("applyRemoteNote (LWW same rev) error: %v", err)
+	}
+	if conflict {
+		t.Fatal("same-revision LWW should NOT conflict — local (newer) should win silently")
+	}
+
+	// Local edit should still be pending and preserved
+	var syncState, title string
+	if err := app.store.db.QueryRow("SELECT sync_state, title FROM notes WHERE id = ?", note.ID).Scan(&syncState, &title); err != nil {
+		t.Fatalf("query note LWW state error: %v", err)
+	}
+	if syncState != "pending" {
+		t.Fatalf("local edit should remain pending after remote LWW loss, got: %s", syncState)
+	}
+	if title != "Local Edit" {
+		t.Fatalf("local title should be preserved after LWW, got: %s", title)
+	}
+}
+
+// TestFolderSyncStateTracking verifies that folders are marked pending when
+// created/deleted, and that the sync layer can distinguish what needs to be pushed.
+func TestFolderSyncStateTracking(t *testing.T) {
+	app, err := NewApp(filepath.Join(t.TempDir(), "folder_sync_state.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	// Save a folder — must be marked pending
+	folder, err := app.SaveFolder(Folder{ID: "folder-sync-track", Name: "Track Me"})
+	if err != nil {
+		t.Fatalf("SaveFolder error: %v", err)
+	}
+
+	var syncState string
+	if err := app.store.db.QueryRow("SELECT sync_state FROM folders WHERE id = ?", folder.ID).Scan(&syncState); err != nil {
+		t.Fatalf("query folder sync_state error: %v", err)
+	}
+	if syncState != "pending" {
+		t.Fatalf("new folder should be pending, got: %s", syncState)
+	}
+
+	// Simulate successful push — mark as clean
+	_, _ = app.store.db.Exec("UPDATE folders SET sync_state = 'clean' WHERE id = ?", folder.ID)
+
+	// Delete the folder — should be marked pending again
+	if err := app.DeleteFolder(folder.ID); err != nil {
+		t.Fatalf("DeleteFolder error: %v", err)
+	}
+
+	if err := app.store.db.QueryRow("SELECT sync_state FROM folders WHERE id = ?", folder.ID).Scan(&syncState); err != nil {
+		t.Fatalf("query folder sync_state after delete error: %v", err)
+	}
+	if syncState != "pending" {
+		t.Fatalf("deleted folder should be pending for sync, got: %s", syncState)
 	}
 }

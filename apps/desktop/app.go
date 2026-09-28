@@ -139,6 +139,10 @@ func (a *App) RunComplianceAudit() (ComplianceReport, error) {
 	return a.store.EnsureDataCompliance()
 }
 
+func (a *App) GetSyncDiagnosticReport() (SyncDiagnosticReport, error) {
+	return a.store.GetSyncDiagnosticReport()
+}
+
 func (a *App) GetSyncProfileID() (string, error) {
 	profileID, _, err := a.store.syncMetadata()
 	return profileID, err

@@ -53,6 +53,7 @@ func (s *noteStore) listNavigation() (Navigation, error) {
 	rows, err := s.db.Query(`SELECT f.id, f.name, f.parent_id, COALESCE(f.color, ''), COALESCE(f.icon, ''), COUNT(n.id)
 		FROM folders f
 		LEFT JOIN notes n ON n.folder_id = f.id AND n.deleted_at IS NULL
+		WHERE f.deleted_at IS NULL
 		GROUP BY f.id, f.name, f.parent_id, f.color, f.icon
 		ORDER BY f.parent_id IS NOT NULL, f.name COLLATE NOCASE`)
 	if err != nil {
@@ -148,9 +149,9 @@ func (s *noteStore) saveFolder(folder Folder) (Folder, error) {
 		}
 		var createsCycle bool
 		err := s.db.QueryRow(`WITH RECURSIVE descendants(id) AS (
-			SELECT id FROM folders WHERE id = ?
+			SELECT id FROM folders WHERE id = ? AND deleted_at IS NULL
 			UNION ALL
-			SELECT child.id FROM folders child JOIN descendants parent ON child.parent_id = parent.id
+			SELECT child.id FROM folders child JOIN descendants parent ON child.parent_id = parent.id WHERE child.deleted_at IS NULL
 		)
 		SELECT EXISTS(SELECT 1 FROM descendants WHERE id = ?)`, folder.ID, *folder.ParentID).Scan(&createsCycle)
 		if err != nil {
@@ -161,14 +162,29 @@ func (s *noteStore) saveFolder(folder Folder) (Folder, error) {
 		}
 	}
 
+	tx, err := s.db.Begin()
+	if err != nil {
+		return Folder{}, fmt.Errorf("begin save folder tx: %w", err)
+	}
+	defer tx.Rollback()
+
 	now := time.Now().UTC().UnixMilli()
-	_, err := s.db.Exec(`INSERT INTO folders(id, name, parent_id, color, icon, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT(id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, color = excluded.color, icon = excluded.icon, updated_at = excluded.updated_at`,
+	_, err = tx.Exec(`INSERT INTO folders(id, name, parent_id, color, icon, deleted_at, created_at, updated_at, sync_state)
+		VALUES (?, ?, ?, ?, ?, NULL, ?, ?, 'pending')
+		ON CONFLICT(id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, color = excluded.color, icon = excluded.icon, deleted_at = NULL, updated_at = excluded.updated_at, sync_state = 'pending'`,
 		folder.ID, folder.Name, folder.ParentID, folder.Color, folder.Icon, now, now)
 	if err != nil {
 		return Folder{}, fmt.Errorf("save folder: %w", err)
 	}
+
+	if _, err := commitLocalOp(tx, "folder", folder.ID, "create", folder, 1); err != nil {
+		return Folder{}, fmt.Errorf("commit outbox folder op: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return Folder{}, fmt.Errorf("commit folder tx: %w", err)
+	}
+
 	return folder, nil
 }
 
@@ -192,8 +208,8 @@ func (s *noteStore) deleteFolder(id string) error {
 			sync_state = 'pending', pending_mutation_id = ?
 		WHERE folder_id IN (
 			WITH RECURSIVE descendants(id) AS (
-				SELECT id FROM folders WHERE id = ?
-				UNION ALL SELECT f.id FROM folders f JOIN descendants d ON f.parent_id = d.id
+				SELECT id FROM folders WHERE id = ? AND deleted_at IS NULL
+				UNION ALL SELECT f.id FROM folders f JOIN descendants d ON f.parent_id = d.id WHERE f.deleted_at IS NULL
 			) SELECT id FROM descendants)`, now, mutationID, id)
 	if err != nil {
 		return fmt.Errorf("reassign notes to default folder: %w", err)
@@ -204,8 +220,8 @@ func (s *noteStore) deleteFolder(id string) error {
 		return fmt.Errorf("unparent child folders: %w", err)
 	}
 
-	// 3. Delete the folder row
-	result, err := tx.Exec("DELETE FROM folders WHERE id = ?", id)
+	// 3. Soft-delete the folder row (tombstone) and mark as pending for sync
+	result, err := tx.Exec("UPDATE folders SET deleted_at = ?, updated_at = ?, sync_state = 'pending' WHERE id = ? AND deleted_at IS NULL", now, now, id)
 	if err != nil {
 		return fmt.Errorf("delete folder row: %w", err)
 	}
@@ -215,6 +231,10 @@ func (s *noteStore) deleteFolder(id string) error {
 	}
 	if affected == 0 {
 		return sql.ErrNoRows
+	}
+
+	if _, err := commitLocalOp(tx, "folder", id, "delete", map[string]any{"id": id}, 1); err != nil {
+		return fmt.Errorf("commit outbox folder delete op: %w", err)
 	}
 
 	return tx.Commit()

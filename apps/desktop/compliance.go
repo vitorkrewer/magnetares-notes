@@ -68,9 +68,13 @@ func (s *noteStore) EnsureDataCompliance() (ComplianceReport, error) {
 		}
 	}
 
-	// 4. Corrigir notas órfãs (folder_id nulo/vazio ou pasta inexistente no banco)
-	res, err = tx.Exec(`UPDATE notes SET folder_id = 'folder-default', folder = 'Notas', sync_state = 'pending', updated_at = ?
-		WHERE folder_id IS NULL OR folder_id = '' OR folder_id NOT IN (SELECT id FROM folders)`, now)
+	// 4. Corrigir notas órfãs (folder_id nulo/vazio ou pasta inexistente OU pasta excluída)
+	// Notas já sincronizadas (clean) ficam clean após realocação — evita re-upload desnecessário.
+	res, err = tx.Exec(`UPDATE notes SET folder_id = 'folder-default', folder = 'Notas',
+		sync_state = CASE WHEN sync_state = 'clean' THEN 'clean' ELSE 'pending' END,
+		updated_at = ?
+		WHERE folder_id IS NULL OR folder_id = ''
+		   OR folder_id NOT IN (SELECT id FROM folders WHERE deleted_at IS NULL)`, now)
 	if err == nil {
 		if affected, _ := res.RowsAffected(); affected > 0 {
 			report.OrphanNotesFixed += int(affected)

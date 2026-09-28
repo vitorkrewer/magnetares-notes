@@ -1,8 +1,10 @@
 package main
 
 import (
+	"crypto/sha256"
 	"database/sql"
 	"embed"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -256,6 +258,157 @@ func (s *noteStore) queryNotesWhere(condition string, args ...any) ([]Note, erro
 	return notes, nil
 }
 
+type SyncOp struct {
+	OpID          string `json:"opId"`
+	DeviceID      string `json:"deviceId"`
+	DeviceSeq     int64  `json:"deviceSeq"`
+	EntityType    string `json:"entityType"`
+	EntityID      string `json:"entityId"`
+	OpType        string `json:"opType"`
+	Payload       string `json:"payload"`
+	CausalVersion int64  `json:"causalVersion"`
+	Status        string `json:"status"`
+	CreatedAt     int64  `json:"createdAt"`
+}
+
+func getOrCreateDeviceInfo(tx *sql.Tx) (string, int64, error) {
+	var deviceID string
+	var currentSeq int64
+	err := tx.QueryRow("SELECT COALESCE(device_id, ''), COALESCE(device_seq, 0) FROM sync_metadata WHERE singleton = 1").Scan(&deviceID, &currentSeq)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return "", 0, err
+	}
+	if deviceID == "" {
+		deviceID = uuid.NewString()
+		if _, err := tx.Exec("UPDATE sync_metadata SET device_id = ? WHERE singleton = 1", deviceID); err != nil {
+			return "", 0, err
+		}
+	}
+	nextSeq := currentSeq + 1
+	if _, err := tx.Exec("UPDATE sync_metadata SET device_seq = ? WHERE singleton = 1", nextSeq); err != nil {
+		return "", 0, err
+	}
+	return deviceID, nextSeq, nil
+}
+
+func commitLocalOp(tx *sql.Tx, entityType, entityID, opType string, payload any, causalVer int64) (string, error) {
+	deviceID, deviceSeq, err := getOrCreateDeviceInfo(tx)
+	if err != nil {
+		return "", fmt.Errorf("get device info: %w", err)
+	}
+	opID := uuid.NewString()
+	now := time.Now().UTC().UnixMilli()
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("marshal op payload: %w", err)
+	}
+
+	_, err = tx.Exec(`INSERT INTO sync_outbox(op_id, device_id, device_seq, entity_type, entity_id, op_type, payload, causal_version, status, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
+		opID, deviceID, deviceSeq, entityType, entityID, opType, string(payloadBytes), causalVer, now)
+	if err != nil {
+		return "", fmt.Errorf("insert outbox op: %w", err)
+	}
+	return opID, nil
+}
+
+type canonicalEntity struct {
+	Type      string   `json:"type"`
+	ID        string   `json:"id"`
+	Title     string   `json:"title,omitempty"`
+	Body      string   `json:"body,omitempty"`
+	FolderID  string   `json:"folderId,omitempty"`
+	Name      string   `json:"name,omitempty"`
+	ParentID  *string  `json:"parentId,omitempty"`
+	Color     string   `json:"color,omitempty"`
+	Icon      string   `json:"icon,omitempty"`
+	Revision  int64    `json:"revision,omitempty"`
+	DeletedAt *int64   `json:"deletedAt,omitempty"`
+	PinnedAt  *int64   `json:"pinnedAt,omitempty"`
+	Tags      []string `json:"tags,omitempty"`
+}
+
+func (s *noteStore) ComputeCanonicalStateHash() (string, error) {
+	var entities []canonicalEntity
+
+	// 1. Folders
+	fRows, err := s.db.Query(`SELECT id, name, parent_id, COALESCE(color, ''), COALESCE(icon, ''), deleted_at FROM folders ORDER BY id ASC`)
+	if err == nil {
+		defer fRows.Close()
+		for fRows.Next() {
+			var id, name, color, icon string
+			var parentID sql.NullString
+			var deletedAt sql.NullInt64
+			if err := fRows.Scan(&id, &name, &parentID, &color, &icon, &deletedAt); err == nil {
+				var pID *string
+				if parentID.Valid && parentID.String != "" {
+					pID = &parentID.String
+				}
+				var dAt *int64
+				if deletedAt.Valid {
+					dAt = &deletedAt.Int64
+				}
+				entities = append(entities, canonicalEntity{
+					Type:      "folder",
+					ID:        id,
+					Name:      name,
+					ParentID:  pID,
+					Color:     color,
+					Icon:      icon,
+					DeletedAt: dAt,
+				})
+			}
+		}
+	}
+
+	// 2. Notes
+	nRows, err := s.db.Query(`SELECT n.id, n.title, n.body, n.folder_id, n.revision, n.deleted_at, n.pinned_at,
+		COALESCE((SELECT group_concat(t.name, char(31)) FROM note_tags nt JOIN tags t ON t.id = nt.tag_id WHERE nt.note_id = n.id ORDER BY t.normalized_name), '')
+		FROM notes n ORDER BY n.id ASC`)
+	if err == nil {
+		defer nRows.Close()
+		for nRows.Next() {
+			var id, title, body, folderID, tagsStr string
+			var revision int64
+			var deletedAt, pinnedAt sql.NullInt64
+			if err := nRows.Scan(&id, &title, &body, &folderID, &revision, &deletedAt, &pinnedAt, &tagsStr); err == nil {
+				var dAt, pAt *int64
+				if deletedAt.Valid {
+					dAt = &deletedAt.Int64
+				}
+				if pinnedAt.Valid {
+					pAt = &pinnedAt.Int64
+				}
+				var tags []string
+				if tagsStr != "" {
+					tags = strings.Split(tagsStr, string(rune(31)))
+				} else {
+					tags = make([]string, 0)
+				}
+				entities = append(entities, canonicalEntity{
+					Type:      "note",
+					ID:        id,
+					Title:     title,
+					Body:      body,
+					FolderID:  folderID,
+					Revision:  revision,
+					DeletedAt: dAt,
+					PinnedAt:  pAt,
+					Tags:      tags,
+				})
+			}
+		}
+	}
+
+	data, err := json.Marshal(entities)
+	if err != nil {
+		return "", err
+	}
+	hash := sha256.Sum256(data)
+	return hex.EncodeToString(hash[:]), nil
+}
+
 func (s *noteStore) saveNote(note Note) (Note, error) {
 	if strings.TrimSpace(note.ID) == "" {
 		return Note{}, errors.New("note id is required")
@@ -269,21 +422,43 @@ func (s *noteStore) saveNote(note Note) (Note, error) {
 	note.ChecklistTotal, note.ChecklistOpen = countChecklistItems(note.Body)
 	now := time.Now().UTC().UnixMilli()
 	mutationID := uuid.NewString()
-	_, err := s.db.Exec(`INSERT INTO notes(id, title, body, body_text, folder, folder_id, revision, checklist_total, checklist_open, sync_state, pending_mutation_id, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, 'pending', ?, ?, ?)
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return Note{}, fmt.Errorf("begin save note tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	var currentRev int64 = 0
+	_ = tx.QueryRow("SELECT revision FROM notes WHERE id = ?", note.ID).Scan(&currentRev)
+	nextRev := currentRev + 1
+
+	_, err = tx.Exec(`INSERT INTO notes(id, title, body, body_text, folder, folder_id, revision, checklist_total, checklist_open, sync_state, pending_mutation_id, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
 			title = excluded.title,
 			body = excluded.body,
 			body_text = excluded.body_text,
+			folder = excluded.folder,
+			folder_id = excluded.folder_id,
 			checklist_total = excluded.checklist_total,
 			checklist_open = excluded.checklist_open,
 			sync_state = 'pending',
 			pending_mutation_id = excluded.pending_mutation_id,
 			revision = notes.revision + 1,
-			updated_at = excluded.updated_at`, note.ID, note.Title, note.Body, note.BodyText, note.Folder, note.FolderID, note.ChecklistTotal, note.ChecklistOpen, mutationID, now, now)
+			updated_at = excluded.updated_at`, note.ID, note.Title, note.Body, note.BodyText, note.Folder, note.FolderID, nextRev, note.ChecklistTotal, note.ChecklistOpen, mutationID, now, now)
 	if err != nil {
 		return Note{}, fmt.Errorf("save note: %w", err)
 	}
+
+	if _, err := commitLocalOp(tx, "note", note.ID, "update", note, nextRev); err != nil {
+		return Note{}, fmt.Errorf("commit outbox op: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return Note{}, fmt.Errorf("commit save note tx: %w", err)
+	}
+
 	return s.getNote(note.ID)
 }
 
@@ -294,16 +469,26 @@ func (s *noteStore) getNote(id string) (Note, error) {
 }
 
 func (s *noteStore) setDeleted(id string, deleted bool) error {
-	var result sql.Result
-	var err error
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin deletion tx: %w", err)
+	}
+	defer tx.Rollback()
+
 	now := time.Now().UTC().UnixMilli()
 	mutationID := uuid.NewString()
+
+	var currentRev int64 = 0
+	_ = tx.QueryRow("SELECT revision FROM notes WHERE id = ?", id).Scan(&currentRev)
+	nextRev := currentRev + 1
+
+	var result sql.Result
 	if deleted {
-		result, err = s.db.Exec(`UPDATE notes SET deleted_at = ?, updated_at = ?, revision = revision + 1,
-			sync_state = 'pending', pending_mutation_id = ? WHERE id = ? AND deleted_at IS NULL`, now, now, mutationID, id)
+		result, err = tx.Exec(`UPDATE notes SET deleted_at = ?, updated_at = ?, revision = ?,
+			sync_state = 'pending', pending_mutation_id = ? WHERE id = ? AND deleted_at IS NULL`, now, now, nextRev, mutationID, id)
 	} else {
-		result, err = s.db.Exec(`UPDATE notes SET deleted_at = NULL, updated_at = ?, revision = revision + 1,
-			sync_state = 'pending', pending_mutation_id = ? WHERE id = ? AND deleted_at IS NOT NULL`, now, mutationID, id)
+		result, err = tx.Exec(`UPDATE notes SET deleted_at = NULL, updated_at = ?, revision = ?,
+			sync_state = 'pending', pending_mutation_id = ? WHERE id = ? AND deleted_at IS NOT NULL`, now, nextRev, mutationID, id)
 	}
 	if err != nil {
 		return fmt.Errorf("update note deletion: %w", err)
@@ -315,7 +500,16 @@ func (s *noteStore) setDeleted(id string, deleted bool) error {
 	if affected == 0 {
 		return sql.ErrNoRows
 	}
-	return nil
+
+	opType := "delete"
+	if !deleted {
+		opType = "update"
+	}
+	if _, err := commitLocalOp(tx, "note", id, opType, map[string]any{"id": id, "deleted": deleted}, nextRev); err != nil {
+		return fmt.Errorf("commit outbox delete op: %w", err)
+	}
+
+	return tx.Commit()
 }
 
 type noteScanner interface {

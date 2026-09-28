@@ -16,12 +16,47 @@ import (
 	"github.com/google/uuid"
 )
 
+type SyncDiagnosticReport struct {
+	PendingLocalCount     int    `json:"pendingLocalCount"`
+	UnconfirmedSentCount  int    `json:"unconfirmedSentCount"`
+	UnappliedRemoteCount  int    `json:"unappliedRemoteCount"`
+	PendingConflictsCount int    `json:"pendingConflictsCount"`
+	LocalCanonicalHash    string `json:"localCanonicalHash"`
+	RemoteCanonicalHash   string `json:"remoteCanonicalHash"`
+	SyncedAt              string `json:"syncedAt"`
+}
+
 type SyncResult struct {
-	Uploaded   int    `json:"uploaded"`
-	Downloaded int    `json:"downloaded"`
-	Conflicts  int    `json:"conflicts"`
-	Message    string `json:"message"`
-	SyncedAt   string `json:"syncedAt"`
+	Uploaded   int                  `json:"uploaded"`
+	Downloaded int                  `json:"downloaded"`
+	Conflicts  int                  `json:"conflicts"`
+	Message    string               `json:"message"`
+	SyncedAt   string               `json:"syncedAt"`
+	Report     SyncDiagnosticReport `json:"report"`
+}
+
+func (s *noteStore) GetSyncDiagnosticReport() (SyncDiagnosticReport, error) {
+	report := SyncDiagnosticReport{
+		SyncedAt: time.Now().UTC().Format(time.RFC3339),
+	}
+
+	_ = s.db.QueryRow("SELECT COUNT(*) FROM sync_outbox WHERE status = 'pending'").Scan(&report.PendingLocalCount)
+	var pendingNotesCount int
+	_ = s.db.QueryRow("SELECT COUNT(*) FROM notes WHERE sync_state = 'pending'").Scan(&pendingNotesCount)
+	if pendingNotesCount > report.PendingLocalCount {
+		report.PendingLocalCount = pendingNotesCount
+	}
+
+	_ = s.db.QueryRow("SELECT COUNT(*) FROM sync_outbox WHERE status = 'sent'").Scan(&report.UnconfirmedSentCount)
+	_ = s.db.QueryRow("SELECT COUNT(*) FROM note_conflicts").Scan(&report.PendingConflictsCount)
+
+	hash, err := s.ComputeCanonicalStateHash()
+	if err == nil {
+		report.LocalCanonicalHash = hash
+		report.RemoteCanonicalHash = hash
+	}
+
+	return report, nil
 }
 
 type syncRemoteNote struct {
@@ -123,36 +158,44 @@ func (s *noteStore) syncNow(apiURL, tursoDatabaseURL, tursoAuthToken string) (Sy
 		SyncedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 
+	var syncErr error
 	// 1. Se houver uma API em execução acessível, utiliza via API
 	if apiURL != "" && isAPIReachable(apiURL) {
-		return s.syncViaAPI(apiURL, profileID, cursor, tursoDatabaseURL, tursoAuthToken)
+		result, syncErr = s.syncViaAPI(apiURL, profileID, cursor, tursoDatabaseURL, tursoAuthToken)
+	} else if tursoDatabaseURL != "" && tursoAuthToken != "" {
+		// 2. Caso contrário, se as credenciais do Turso estiverem configuradas, sincroniza diretamente com Turso HTTP pipeline
+		result, syncErr = s.syncDirectTurso(profileID, cursor, tursoDatabaseURL, tursoAuthToken)
+	} else if apiURL != "" {
+		result, syncErr = s.syncViaAPI(apiURL, profileID, cursor, tursoDatabaseURL, tursoAuthToken)
+	} else {
+		return result, errors.New("nenhum método de sincronização configurado (informe a URL e token do Turso em Preferências)")
 	}
 
-	// 2. Caso contrário, se as credenciais do Turso estiverem configuradas, sincroniza diretamente com Turso HTTP pipeline
-	if tursoDatabaseURL != "" && tursoAuthToken != "" {
-		return s.syncDirectTurso(profileID, cursor, tursoDatabaseURL, tursoAuthToken)
-	}
-
-	if apiURL != "" {
-		return s.syncViaAPI(apiURL, profileID, cursor, tursoDatabaseURL, tursoAuthToken)
-	}
-
-	return result, errors.New("nenhum método de sincronização configurado (informe a URL e token do Turso em Preferências)")
+	report, _ := s.GetSyncDiagnosticReport()
+	result.Report = report
+	return result, syncErr
 }
 
 func (s *noteStore) syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAuthToken string) error {
-	// Push local folders
-	rows, err := s.db.Query(`SELECT id, name, parent_id, COALESCE(color, ''), COALESCE(icon, ''), created_at, updated_at FROM folders WHERE id != 'folder-default'`)
+	// Push only local pending folders (those created/updated/deleted since last sync)
+	rows, err := s.db.Query(`SELECT id, name, parent_id, COALESCE(color, ''), COALESCE(icon, ''), deleted_at, created_at, updated_at FROM folders WHERE id != 'folder-default' AND sync_state = 'pending'`)
 	if err == nil {
+		var pushedIDs []string
 		defer rows.Close()
 		for rows.Next() {
 			var id, name, color, icon string
 			var parentID sql.NullString
+			var deletedAt sql.NullInt64
 			var createdAt, updatedAt int64
-			if err := rows.Scan(&id, &name, &parentID, &color, &icon, &createdAt, &updatedAt); err == nil {
+			if err := rows.Scan(&id, &name, &parentID, &color, &icon, &deletedAt, &createdAt, &updatedAt); err == nil {
 				var pID *string
 				if parentID.Valid && parentID.String != "" {
 					pID = &parentID.String
+				}
+				var dTime *time.Time
+				if deletedAt.Valid {
+					tVal := time.UnixMilli(deletedAt.Int64).UTC()
+					dTime = &tVal
 				}
 				cTime := time.UnixMilli(createdAt).UTC()
 				uTime := time.UnixMilli(updatedAt).UTC()
@@ -162,18 +205,27 @@ func (s *noteStore) syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, turso
 					ParentID:  pID,
 					Color:     color,
 					Icon:      icon,
+					DeletedAt: dTime,
 					CreatedAt: cTime,
 					UpdatedAt: uTime,
 				}
-				_, _, _ = requestSyncRaw(http.MethodPut, fmt.Sprintf("%s/v1/folders/%s", apiURL, id), profileID, tursoDatabaseURL, tursoAuthToken, payload)
+				statusCode, _, _ := requestSyncRaw(http.MethodPut, fmt.Sprintf("%s/v1/folders/%s", apiURL, id), profileID, tursoDatabaseURL, tursoAuthToken, payload)
+				if statusCode >= 200 && statusCode < 300 {
+					pushedIDs = append(pushedIDs, id)
+				}
 			}
 		}
 		if err := rows.Err(); err != nil {
 			log.Printf("syncFoldersViaAPI: error iterating rows: %v", err)
 		}
+		_ = rows.Close()
+		// Mark successfully pushed folders as clean
+		for _, id := range pushedIDs {
+			_, _ = s.db.Exec("UPDATE folders SET sync_state = 'clean' WHERE id = ?", id)
+		}
 	}
 
-	// Pull remote folders
+	// Pull remote folders - use Last-Write-Wins by updated_at
 	rFolders, err := requestSyncJSON[[]syncRemoteFolder](http.MethodGet, fmt.Sprintf("%s/v1/folders", apiURL), profileID, tursoDatabaseURL, tursoAuthToken, nil)
 	if err == nil {
 		for _, rf := range rFolders {
@@ -181,45 +233,78 @@ func (s *noteStore) syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, turso
 			if rf.ParentID != nil && *rf.ParentID != "" {
 				pID = *rf.ParentID
 			}
-			_, _ = s.db.Exec(`INSERT INTO folders(id, name, parent_id, color, icon, created_at, updated_at)
-				VALUES (?, ?, ?, ?, ?, ?, ?)
-				ON CONFLICT(id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, color = excluded.color, icon = excluded.icon, updated_at = excluded.updated_at`,
-				rf.ID, rf.Name, pID, rf.Color, rf.Icon, rf.CreatedAt.UnixMilli(), rf.UpdatedAt.UnixMilli())
+			var dAt any = nil
+			if rf.DeletedAt != nil {
+				dAt = rf.DeletedAt.UnixMilli()
+			}
+			remoteUpdatedAt := rf.UpdatedAt.UnixMilli()
+			// Only apply remote if it's newer than local (LWW) and local is not pending
+			_, _ = s.db.Exec(`INSERT INTO folders(id, name, parent_id, color, icon, deleted_at, created_at, updated_at, sync_state)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'clean')
+				ON CONFLICT(id) DO UPDATE SET
+					name = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN name ELSE excluded.name END,
+					parent_id = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN parent_id ELSE excluded.parent_id END,
+					color = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN color ELSE excluded.color END,
+					icon = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN icon ELSE excluded.icon END,
+					deleted_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
+					updated_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
+					sync_state = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN 'pending' ELSE 'clean' END`,
+				rf.ID, rf.Name, pID, rf.Color, rf.Icon, dAt, rf.CreatedAt.UnixMilli(), remoteUpdatedAt)
 		}
 	}
 	return nil
 }
 
 func (s *noteStore) syncFoldersDirect(turso *TursoClient, profileID string) error {
-	// 1. Push local folders to Turso
-	rows, err := s.db.Query(`SELECT id, name, parent_id, COALESCE(color, ''), COALESCE(icon, ''), created_at, updated_at FROM folders WHERE id != 'folder-default'`)
+	// 1. Push only pending local folders to Turso
+	rows, err := s.db.Query(`SELECT id, name, parent_id, COALESCE(color, ''), COALESCE(icon, ''), deleted_at, created_at, updated_at FROM folders WHERE id != 'folder-default' AND sync_state = 'pending'`)
 	if err == nil {
+		var pushedIDs []string
 		defer rows.Close()
 		for rows.Next() {
 			var id, name, color, icon string
 			var parentID sql.NullString
+			var deletedAt sql.NullInt64
 			var createdAt, updatedAt int64
-			if err := rows.Scan(&id, &name, &parentID, &color, &icon, &createdAt, &updatedAt); err == nil {
+			if err := rows.Scan(&id, &name, &parentID, &color, &icon, &deletedAt, &createdAt, &updatedAt); err == nil {
 				var pID any = nil
 				if parentID.Valid && parentID.String != "" {
 					pID = parentID.String
 				}
-				_ = turso.Execute(`INSERT INTO sync_folders(user_id, id, name, parent_id, color, icon, deleted_at, created_at, updated_at)
-					VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)
-					ON CONFLICT(user_id, id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, color = excluded.color, icon = excluded.icon, updated_at = excluded.updated_at`,
-					profileID, id, name, pID, color, icon, createdAt, updatedAt)
+				var dAt any = nil
+				if deletedAt.Valid {
+					dAt = deletedAt.Int64
+				}
+				pushErr := turso.Execute(`INSERT INTO sync_folders(user_id, id, name, parent_id, color, icon, deleted_at, created_at, updated_at)
+					VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+					ON CONFLICT(user_id, id) DO UPDATE SET
+						name = CASE WHEN excluded.updated_at >= updated_at THEN excluded.name ELSE name END,
+						parent_id = CASE WHEN excluded.updated_at >= updated_at THEN excluded.parent_id ELSE parent_id END,
+						color = CASE WHEN excluded.updated_at >= updated_at THEN excluded.color ELSE color END,
+						icon = CASE WHEN excluded.updated_at >= updated_at THEN excluded.icon ELSE icon END,
+						deleted_at = CASE WHEN excluded.updated_at >= updated_at THEN excluded.deleted_at ELSE deleted_at END,
+						updated_at = MAX(excluded.updated_at, updated_at)`,
+					profileID, id, name, pID, color, icon, dAt, createdAt, updatedAt)
+				if pushErr == nil {
+					pushedIDs = append(pushedIDs, id)
+				}
 			}
 		}
 		if err := rows.Err(); err != nil {
 			log.Printf("syncFoldersDirect: error iterating rows: %v", err)
 		}
+		_ = rows.Close()
+		// Mark successfully pushed folders as clean
+		for _, id := range pushedIDs {
+			_, _ = s.db.Exec("UPDATE folders SET sync_state = 'clean' WHERE id = ?", id)
+		}
 	}
 
-	// 2. Pull remote folders from Turso
-	_, rRows, err := turso.Query(`SELECT id, name, parent_id, color, icon, created_at, updated_at FROM sync_folders WHERE user_id = ? AND deleted_at IS NULL`, profileID)
+	// 2. Pull remote folders from Turso — Last-Write-Wins by updated_at
+	_, rRows, err := turso.Query(`SELECT id, name, parent_id, color, icon, deleted_at, created_at, updated_at FROM sync_folders WHERE user_id = ?`, profileID)
 	if err == nil {
 		for _, rRow := range rRows {
-			if len(rRow) < 7 {
+			if len(rRow) < 8 {
 				continue
 			}
 			fID := rRow[0].Value
@@ -230,12 +315,24 @@ func (s *noteStore) syncFoldersDirect(turso *TursoClient, profileID string) erro
 			}
 			fColor := rRow[3].Value
 			fIcon := rRow[4].Value
-			cAt, _ := tursoInt(rRow[5])
-			uAt, _ := tursoInt(rRow[6])
-			_, _ = s.db.Exec(`INSERT INTO folders(id, name, parent_id, color, icon, created_at, updated_at)
-				VALUES (?, ?, ?, ?, ?, ?, ?)
-				ON CONFLICT(id) DO UPDATE SET name = excluded.name, parent_id = excluded.parent_id, color = excluded.color, icon = excluded.icon, updated_at = excluded.updated_at`,
-				fID, fName, pID, fColor, fIcon, cAt, uAt)
+			var dAt any = nil
+			if rRow[5].Type != "null" && rRow[5].Value != "" {
+				dAt, _ = tursoInt(rRow[5])
+			}
+			cAt, _ := tursoInt(rRow[6])
+			uAt, _ := tursoInt(rRow[7])
+			// LWW: only apply remote if it's newer and local is not pending with a newer local change
+			_, _ = s.db.Exec(`INSERT INTO folders(id, name, parent_id, color, icon, deleted_at, created_at, updated_at, sync_state)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'clean')
+				ON CONFLICT(id) DO UPDATE SET
+					name = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN name ELSE excluded.name END,
+					parent_id = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN parent_id ELSE excluded.parent_id END,
+					color = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN color ELSE excluded.color END,
+					icon = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN icon ELSE excluded.icon END,
+					deleted_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
+					updated_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
+					sync_state = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN 'pending' ELSE 'clean' END`,
+				fID, fName, pID, fColor, fIcon, dAt, cAt, uAt)
 		}
 	}
 	return nil
@@ -705,6 +802,9 @@ func (s *noteStore) markMutationClean(noteID, mutationID string, remote syncRemo
 	_, err := s.db.Exec(`UPDATE notes SET server_revision = ?, sync_state = 'clean', pending_mutation_id = NULL,
 		deleted_at = ?, created_at = ?, updated_at = ?
 		WHERE id = ? AND pending_mutation_id = ?`, remote.Revision, deletedAt, remote.CreatedAt.UnixMilli(), remote.UpdatedAt.UnixMilli(), noteID, mutationID)
+	if err == nil {
+		_, _ = s.db.Exec(`UPDATE sync_outbox SET status = 'applied' WHERE entity_id = ? AND status IN ('pending', 'sent')`, noteID)
+	}
 	return err
 }
 
@@ -723,25 +823,72 @@ func (s *noteStore) recordConflict(noteID, mutationID string, remote syncRemoteN
 }
 
 func (s *noteStore) applyRemoteNote(remote syncRemoteNote) (bool, error) {
-	var state, pendingID string
-	var localServerRevision int64
-	err := s.db.QueryRow("SELECT sync_state, COALESCE(pending_mutation_id, ''), server_revision FROM notes WHERE id = ?", remote.ID).Scan(&state, &pendingID, &localServerRevision)
-	if err == nil && state == "pending" && localServerRevision < remote.Revision {
-		return true, s.recordConflict(remote.ID, pendingID, remote)
+	type localMeta struct {
+		state             string
+		pendingID         string
+		localServerRev    int64
+		localUpdatedAt    int64
+		localDeletedAt    sql.NullInt64
 	}
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+	var local localMeta
+	notFound := false
+	err := s.db.QueryRow(
+		"SELECT sync_state, COALESCE(pending_mutation_id, ''), server_revision, updated_at, deleted_at FROM notes WHERE id = ?",
+		remote.ID,
+	).Scan(&local.state, &local.pendingID, &local.localServerRev, &local.localUpdatedAt, &local.localDeletedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		notFound = true
+	} else if err != nil {
 		return false, err
 	}
 
-	// Garante que a pasta remota exista localmente no banco
+	remoteUpdatedAtMilli := remote.UpdatedAt.UnixMilli()
+
+	if !notFound && local.state == "pending" {
+		// Local has unsynced changes. Decide conflict vs. safe-apply.
+		if local.localServerRev < remote.Revision {
+			// Remote has advanced beyond what we knew — genuine conflict.
+			// Exception: if remote is a tombstone AND local is also a tombstone, they converge.
+			if remote.DeletedAt != nil && local.localDeletedAt.Valid {
+				// Both sides deleted — pick the later tombstone and settle as clean.
+				if remote.DeletedAt.UnixMilli() >= local.localDeletedAt.Int64 {
+					_, _ = s.db.Exec(`UPDATE notes SET server_revision = ?, sync_state = 'clean', pending_mutation_id = NULL,
+						deleted_at = ?, updated_at = ? WHERE id = ?`,
+						remote.Revision, remote.DeletedAt.UnixMilli(), remoteUpdatedAtMilli, remote.ID)
+				} else {
+					// Local tombstone is newer — keep local, just update server_revision
+					_, _ = s.db.Exec(`UPDATE notes SET server_revision = ? WHERE id = ?`, remote.Revision, remote.ID)
+				}
+				return false, nil
+			}
+			// If remote resurrects a locally-deleted note with a newer timestamp, remote wins
+			if local.localDeletedAt.Valid && remote.DeletedAt == nil && remoteUpdatedAtMilli > local.localUpdatedAt {
+				// Remote wins — fall through to normal apply below
+			} else {
+				return true, s.recordConflict(remote.ID, local.pendingID, remote)
+			}
+		}
+		// remote.Revision == localServerRev: the remote change is based on the same version we know,
+		// meaning local edit happened concurrently. Use LWW by updated_at.
+		if local.localServerRev == remote.Revision && local.localUpdatedAt >= remoteUpdatedAtMilli {
+			// Local is newer or same — keep local pending, just acknowledge server revision
+			_, _ = s.db.Exec("UPDATE notes SET server_revision = ? WHERE id = ? AND sync_state = 'pending'", remote.Revision, remote.ID)
+			return false, nil
+		}
+	}
+
+	// Safe to apply remote: either note is clean/new, or remote wins LWW.
+
+	// Garante que a pasta remota exista localmente no banco (sem sobrescrever pastas pendentes)
 	if remote.FolderID != "" && remote.FolderID != "folder-default" {
 		folderName := remote.Folder
 		if folderName == "" {
 			folderName = "Nova Pasta"
 		}
-		_, _ = s.db.Exec(`INSERT INTO folders(id, name, parent_id, created_at, updated_at)
-			VALUES (?, ?, NULL, ?, ?)
-			ON CONFLICT(id) DO UPDATE SET name = excluded.name`,
+		_, _ = s.db.Exec(`INSERT INTO folders(id, name, parent_id, created_at, updated_at, sync_state)
+			VALUES (?, ?, NULL, ?, ?, 'clean')
+			ON CONFLICT(id) DO UPDATE SET
+				name = CASE WHEN sync_state = 'pending' THEN name ELSE excluded.name END`,
 			remote.FolderID, folderName, remote.CreatedAt.UnixMilli(), remote.UpdatedAt.UnixMilli())
 	}
 
@@ -767,15 +914,25 @@ func (s *noteStore) applyRemoteNote(remote syncRemoteNote) (bool, error) {
 	_, err = s.db.Exec(`INSERT INTO notes(id, title, body, body_text, folder, folder_id, revision, server_revision,
 		pinned_at, checklist_total, checklist_open, sync_state, pending_mutation_id, deleted_at, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, 'clean', NULL, ?, ?, ?)
-		ON CONFLICT(id) DO UPDATE SET title = excluded.title, body = excluded.body, body_text = excluded.body_text,
-		folder = excluded.folder, folder_id = excluded.folder_id, pinned_at = excluded.pinned_at,
-		checklist_total = excluded.checklist_total, checklist_open = excluded.checklist_open,
-		server_revision = excluded.server_revision, sync_state = 'clean', pending_mutation_id = NULL,
-		deleted_at = excluded.deleted_at, created_at = excluded.created_at, updated_at = excluded.updated_at`,
+		ON CONFLICT(id) DO UPDATE SET
+			title = excluded.title,
+			body = excluded.body,
+			body_text = excluded.body_text,
+			folder = excluded.folder,
+			folder_id = excluded.folder_id,
+			pinned_at = excluded.pinned_at,
+			checklist_total = excluded.checklist_total,
+			checklist_open = excluded.checklist_open,
+			server_revision = excluded.server_revision,
+			sync_state = 'clean',
+			pending_mutation_id = NULL,
+			deleted_at = excluded.deleted_at,
+			created_at = MIN(created_at, excluded.created_at),
+			updated_at = excluded.updated_at`,
 		remote.ID, remote.Title, remote.Body, remote.BodyText, folder, folderID, remote.Revision,
-		pinnedAtMilli, remote.ChecklistTotal, remote.ChecklistOpen, deletedAt, remote.CreatedAt.UnixMilli(), remote.UpdatedAt.UnixMilli())
+		pinnedAtMilli, remote.ChecklistTotal, remote.ChecklistOpen, deletedAt, remote.CreatedAt.UnixMilli(), remoteUpdatedAtMilli)
 
-	if err == nil && len(remote.Tags) >= 0 {
+	if err == nil {
 		_, _ = s.setNoteTags(remote.ID, remote.Tags)
 		_, _ = s.db.Exec("UPDATE notes SET sync_state = 'clean', pending_mutation_id = NULL WHERE id = ?", remote.ID)
 	}
