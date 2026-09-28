@@ -26,6 +26,8 @@ export function ListDeletedNotes():Promise<Array<main.Note>>;
 
 export function ListNavigation():Promise<main.Navigation>;
 
+export function ListNoteConflicts():Promise<Array<main.SyncConflict>>;
+
 export function ListNotes():Promise<Array<main.Note>>;
 
 export function MinimizeWindow():Promise<void>;
@@ -33,6 +35,8 @@ export function MinimizeWindow():Promise<void>;
 export function MoveNote(arg1:string,arg2:string):Promise<void>;
 
 export function QueryNotes(arg1:main.NoteQuery):Promise<Array<main.Note>>;
+
+export function ResolveNoteConflict(arg1:string,arg2:string):Promise<void>;
 
 export function RestoreNote(arg1:string):Promise<void>;
 

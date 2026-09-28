@@ -176,6 +176,67 @@ func TestTursoValueMarshaling(t *testing.T) {
 	}
 }
 
+func TestTursoRunTransactionSendsSinglePipeline(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body TursoPipelineBody
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		if len(body.Requests) != 4 || body.Requests[0].Stmt.SQL != "BEGIN" || body.Requests[2].Stmt.SQL != "COMMIT" {
+			t.Fatalf("unexpected transaction pipeline: %#v", body.Requests)
+		}
+		results := make([]TursoPipelineResult, len(body.Requests))
+		for index := range results {
+			results[index].Type = "ok"
+		}
+		results[1].Response.Result.AffectedRowCount = 1
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(TursoPipelineResponse{Results: results})
+	}))
+	defer server.Close()
+
+	client := NewTursoClient(server.URL, "test-token")
+	results, err := client.RunTransaction([]TursoStatement{{SQL: "UPDATE notes SET title = ?", Args: []any{"updated"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(results) != 4 || results[1].Response.Result.AffectedRowCount != 1 {
+		t.Fatalf("unexpected transaction result: %#v", results)
+	}
+}
+
+func TestSyncRemoteNoteFromChangeRowUsesHistoricalSnapshot(t *testing.T) {
+	updatedAt := time.Now().UTC().Truncate(time.Millisecond)
+	want := syncRemoteNote{
+		ID:        "note-history",
+		Title:     "Snapshot da revisão antiga",
+		Body:      `{"type":"doc"}`,
+		BodyText:  "Conteúdo antigo",
+		Folder:    "Notas",
+		FolderID:  "folder-default",
+		Revision:  1,
+		CreatedAt: updatedAt,
+		UpdatedAt: updatedAt,
+		Tags:      []string{"histórico"},
+	}
+	snapshot, err := json.Marshal(want)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	row := make([]TursoValue, 16)
+	row[0] = TursoValue{Type: "integer", Value: "10"}
+	row[1] = TursoValue{Type: "text", Value: string(snapshot)}
+
+	got, err := syncRemoteNoteFromChangeRow(row)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.ID != want.ID || got.Title != want.Title || got.BodyText != want.BodyText || got.Revision != want.Revision {
+		t.Fatalf("historical snapshot was not used: got %#v", got)
+	}
+}
+
 func TestLocalOutboxAndCanonicalStateHash(t *testing.T) {
 	app, err := NewApp(filepath.Join(t.TempDir(), "outbox_test.db"))
 	if err != nil {
@@ -475,6 +536,209 @@ func TestLWWNotesWithSameBaseRevision(t *testing.T) {
 	}
 	if title != "Local Edit" {
 		t.Fatalf("local title should be preserved after LWW, got: %s", title)
+	}
+}
+
+func TestApplyRemoteNotePreservesLocalContentAfterConflict(t *testing.T) {
+	app, err := NewApp(filepath.Join(t.TempDir(), "conflict_preservation.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	note, err := app.SaveNote(Note{
+		ID:       "note-conflict-preserve",
+		Title:    "Minha versão",
+		Body:     `{"type":"doc"}`,
+		BodyText: "Minha versão",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = app.store.db.Exec(`UPDATE notes SET sync_state = 'conflict', server_revision = 1 WHERE id = ?`, note.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	remote := syncRemoteNote{
+		ID:        note.ID,
+		Title:     "Versão remota que não deve apagar a local",
+		Body:      `{"type":"doc","content":[{"type":"paragraph"}]}`,
+		BodyText:  "Remota",
+		Folder:    "Notas",
+		FolderID:  "folder-default",
+		Revision:  2,
+		CreatedAt: time.Now().UTC().Add(-time.Minute),
+		UpdatedAt: time.Now().UTC(),
+	}
+
+	conflict, err := app.store.applyRemoteNote(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !conflict {
+		t.Fatal("expected remote change to remain a conflict")
+	}
+
+	var state, title, bodyText string
+	if err := app.store.db.QueryRow("SELECT sync_state, title, body_text FROM notes WHERE id = ?", note.ID).Scan(&state, &title, &bodyText); err != nil {
+		t.Fatal(err)
+	}
+	if state != "conflict" {
+		t.Fatalf("expected conflict state to be preserved, got %s", state)
+	}
+	if title != "Minha versão" || bodyText != "Minha versão" {
+		t.Fatalf("local content was overwritten: title=%q bodyText=%q", title, bodyText)
+	}
+}
+
+func TestApplyRemoteNoteIgnoresOlderRevision(t *testing.T) {
+	app, err := NewApp(filepath.Join(t.TempDir(), "stale_remote.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	note, err := app.SaveNote(Note{
+		ID:       "note-stale-remote",
+		Title:    "Versão atual",
+		Body:     `{"type":"doc"}`,
+		BodyText: "Atual",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = app.store.db.Exec(`UPDATE notes SET sync_state = 'clean', server_revision = 3 WHERE id = ?`, note.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	remote := syncRemoteNote{
+		ID:        note.ID,
+		Title:     "Versão antiga",
+		Body:      `{"type":"doc"}`,
+		BodyText:  "Antiga",
+		Folder:    "Notas",
+		FolderID:  "folder-default",
+		Revision:  2,
+		CreatedAt: time.Now().UTC().Add(-time.Minute),
+		UpdatedAt: time.Now().UTC().Add(-time.Minute),
+	}
+
+	conflict, err := app.store.applyRemoteNote(remote)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if conflict {
+		t.Fatal("stale remote change should be ignored, not reported as a conflict")
+	}
+
+	var title, bodyText string
+	var revision int64
+	if err := app.store.db.QueryRow("SELECT title, body_text, server_revision FROM notes WHERE id = ?", note.ID).Scan(&title, &bodyText, &revision); err != nil {
+		t.Fatal(err)
+	}
+	if title != "Versão atual" || bodyText != "Atual" || revision != 3 {
+		t.Fatalf("stale remote change altered local state: title=%q bodyText=%q revision=%d", title, bodyText, revision)
+	}
+}
+
+func TestResolveNoteConflictKeepsChosenVersion(t *testing.T) {
+	app, err := NewApp(filepath.Join(t.TempDir(), "resolve_conflict.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	note, err := app.SaveNote(Note{ID: "note-resolve", Title: "Local", Body: `{"type":"doc"}`, BodyText: "Local"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	remoteTime := time.Now().UTC()
+	remote := syncRemoteNote{
+		ID:        note.ID,
+		Title:     "Remote",
+		Body:      `{"type":"doc","content":[{"type":"paragraph"}]}`,
+		BodyText:  "Remote",
+		Folder:    "Notas",
+		FolderID:  "folder-default",
+		Revision:  4,
+		Tags:      []string{"cloud"},
+		CreatedAt: remoteTime.Add(-time.Hour),
+		UpdatedAt: remoteTime,
+	}
+	if err := app.store.recordConflict(note.ID, note.ID, remote); err != nil {
+		t.Fatal(err)
+	}
+
+	conflicts, err := app.store.ListNoteConflicts()
+	if err != nil || len(conflicts) != 1 || conflicts[0].RemoteTitle != "Remote" {
+		t.Fatalf("unexpected conflict list: %#v, err=%v", conflicts, err)
+	}
+	if err := app.store.ResolveNoteConflict(note.ID, "remote"); err != nil {
+		t.Fatal(err)
+	}
+
+	resolved, err := app.store.getNote(note.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resolved.Title != "Remote" || resolved.UpdatedAt.UnixMilli() != remote.UpdatedAt.UnixMilli() {
+		t.Fatalf("remote resolution did not replace note: %#v", resolved)
+	}
+	var state string
+	var conflictCount int
+	if err := app.store.db.QueryRow("SELECT sync_state FROM notes WHERE id = ?", note.ID).Scan(&state); err != nil {
+		t.Fatal(err)
+	}
+	if err := app.store.db.QueryRow("SELECT COUNT(*) FROM note_conflicts WHERE note_id = ?", note.ID).Scan(&conflictCount); err != nil {
+		t.Fatal(err)
+	}
+	if state != "clean" || conflictCount != 0 {
+		t.Fatalf("remote resolution left invalid state: state=%s conflicts=%d", state, conflictCount)
+	}
+}
+
+func TestResolveNoteConflictRebasesLocalVersion(t *testing.T) {
+	app, err := NewApp(filepath.Join(t.TempDir(), "resolve_local_conflict.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	note, err := app.SaveNote(Note{ID: "note-resolve-local", Title: "Keep local", Body: `{"type":"doc"}`, BodyText: "Local"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var originalMutationID string
+	if err := app.store.db.QueryRow("SELECT pending_mutation_id FROM notes WHERE id = ?", note.ID).Scan(&originalMutationID); err != nil {
+		t.Fatal(err)
+	}
+	remote := syncRemoteNote{
+		ID:        note.ID,
+		Title:     "Remote base",
+		Body:      `{"type":"doc"}`,
+		BodyText:  "Remote",
+		Folder:    "Notas",
+		FolderID:  "folder-default",
+		Revision:  5,
+		CreatedAt: time.Now().UTC().Add(-time.Hour),
+		UpdatedAt: time.Now().UTC(),
+	}
+	if err := app.store.recordConflict(note.ID, originalMutationID, remote); err != nil {
+		t.Fatal(err)
+	}
+	if err := app.store.ResolveNoteConflict(note.ID, "local"); err != nil {
+		t.Fatal(err)
+	}
+
+	var state, mutationID string
+	var serverRevision int64
+	if err := app.store.db.QueryRow("SELECT sync_state, pending_mutation_id, server_revision FROM notes WHERE id = ?", note.ID).Scan(&state, &mutationID, &serverRevision); err != nil {
+		t.Fatal(err)
+	}
+	if state != "pending" || mutationID == "" || serverRevision != remote.Revision {
+		t.Fatalf("local resolution was not rebased: state=%s mutation=%q serverRevision=%d", state, mutationID, serverRevision)
 	}
 }
 

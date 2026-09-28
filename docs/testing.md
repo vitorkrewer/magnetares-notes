@@ -30,7 +30,26 @@ Set-Location apps/api
 go test ./...
 ```
 
-No estado atual, o comando verifica compilação porque a API ainda não possui testes unitários ou de integração próprios.
+Além dos testes do pacote, há um laboratório de integração em `tests/` que inicia a API real e um Turso fake baseado em SQLite:
+
+```powershell
+Set-Location tests
+go test -v -count=1 -timeout=2m .
+```
+
+Ou, no Windows:
+
+```powershell
+./run-five-computers.ps1
+```
+
+No Linux/macOS:
+
+```bash
+sh ./run-five-computers.sh
+```
+
+O cenário `TestFiveComputersConcurrentEdits` simula cinco computadores usando o mesmo perfil remoto. Todos fazem pull da revisão 1 e enviam edições diferentes ao mesmo tempo. O teste exige uma única aceitação na revisão 2, quatro conflitos HTTP 409, retry idempotente, snapshots distintos nos cursores e uma resolução posterior na revisão 3. Nenhum token ou banco Turso real é necessário.
 
 ## Frontend
 
@@ -73,9 +92,7 @@ O build valida TypeScript e Vite. A interface deve ser conferida manualmente ou 
 
 ## Lacunas de teste
 
-- Não há testes do protocolo Turso contra um banco de teste.
 - Não há testes E2E versionados para frontend.
-- Não há simulação de conflito, cursor ou sync bidirecional.
 - Não há teste de build de release em todos os sistemas fora do GitHub Actions.
 
 Essas lacunas devem ser reduzidas antes de classificar o produto como sincronização de produção.

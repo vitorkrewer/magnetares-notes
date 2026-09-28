@@ -27,12 +27,13 @@ type SyncDiagnosticReport struct {
 }
 
 type SyncResult struct {
-	Uploaded   int                  `json:"uploaded"`
-	Downloaded int                  `json:"downloaded"`
-	Conflicts  int                  `json:"conflicts"`
-	Message    string               `json:"message"`
-	SyncedAt   string               `json:"syncedAt"`
-	Report     SyncDiagnosticReport `json:"report"`
+	Uploaded      int                  `json:"uploaded"`
+	Downloaded    int                  `json:"downloaded"`
+	Conflicts     int                  `json:"conflicts"`
+	ConflictNotes []string             `json:"conflictNotes"`
+	Message       string               `json:"message"`
+	SyncedAt      string               `json:"syncedAt"`
+	Report        SyncDiagnosticReport `json:"report"`
 }
 
 func (s *noteStore) GetSyncDiagnosticReport() (SyncDiagnosticReport, error) {
@@ -173,7 +174,29 @@ func (s *noteStore) syncNow(apiURL, tursoDatabaseURL, tursoAuthToken string) (Sy
 
 	report, _ := s.GetSyncDiagnosticReport()
 	result.Report = report
+	result.ConflictNotes = s.pendingConflictNotes()
+	if len(result.ConflictNotes) > 0 && syncErr == nil {
+		result.Message += fmt.Sprintf(" Há %d conflito(s) preservado(s): %s. A versão local não foi sobrescrita.", len(result.ConflictNotes), strings.Join(result.ConflictNotes, ", "))
+	}
 	return result, syncErr
+}
+
+func (s *noteStore) pendingConflictNotes() []string {
+	rows, err := s.db.Query(`SELECT COALESCE(NULLIF(TRIM(n.title), ''), n.id)
+		FROM note_conflicts c JOIN notes n ON n.id = c.note_id ORDER BY c.detected_at DESC`)
+	if err != nil {
+		return []string{}
+	}
+	defer rows.Close()
+
+	notes := make([]string, 0)
+	for rows.Next() {
+		var title string
+		if err := rows.Scan(&title); err == nil {
+			notes = append(notes, title)
+		}
+	}
+	return notes
 }
 
 func (s *noteStore) syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAuthToken string) error {
@@ -416,7 +439,7 @@ func (s *noteStore) syncDirectTurso(profileID, cursor, tursoDatabaseURL, tursoAu
 	// Pull remote changes
 	intCursor, _ := strconv.ParseInt(cursor, 10, 64)
 	for {
-		_, rows, err := turso.Query(`SELECT c.cursor, n.id, n.title, n.body, n.body_text, n.folder, n.folder_id, n.pinned_at, n.checklist_total, n.checklist_open, n.tags, n.revision, n.deleted_at, n.created_at, n.updated_at
+		_, rows, err := turso.Query(`SELECT c.cursor, c.snapshot_json, n.id, n.title, n.body, n.body_text, n.folder, n.folder_id, n.pinned_at, n.checklist_total, n.checklist_open, n.tags, n.revision, n.deleted_at, n.created_at, n.updated_at
 			FROM sync_note_changes c JOIN sync_notes n ON n.user_id = c.user_id AND n.id = c.note_id
 			WHERE c.user_id = ? AND c.cursor > ? ORDER BY c.cursor ASC LIMIT 201`, profileID, intCursor)
 		if err != nil {
@@ -434,7 +457,7 @@ func (s *noteStore) syncDirectTurso(profileID, cursor, tursoDatabaseURL, tursoAu
 			if err != nil {
 				return result, err
 			}
-			remote, err := syncRemoteNoteFromRow(row[1:])
+			remote, err := syncRemoteNoteFromChangeRow(row)
 			if err != nil {
 				return result, err
 			}
@@ -481,7 +504,11 @@ func (s *noteStore) pushPendingNoteDirect(turso *TursoClient, profileID string, 
 	}
 
 	if found && existing.Revision != note.ServerRev {
-		return s.recordConflict(note.ID, note.MutationID, existing)
+		err := s.recordConflict(note.ID, note.MutationID, existing)
+		if err == nil {
+			result.Conflicts++
+		}
+		return err
 	}
 
 	now := time.Now().UTC()
@@ -491,18 +518,6 @@ func (s *noteStore) pushPendingNoteDirect(turso *TursoClient, profileID string, 
 		nextRevision = existing.Revision + 1
 		createdAt = existing.CreatedAt
 	}
-
-	var deletedAtMilli any = nil
-	if note.DeletedAt != nil {
-		deletedAtMilli = note.DeletedAt.UnixMilli()
-	}
-
-	var pinnedAtMilli any = nil
-	if note.PinnedAt != nil {
-		pinnedAtMilli = note.PinnedAt.UnixMilli()
-	}
-
-	tagsJSON, _ := json.Marshal(note.Tags)
 
 	remoteNote := syncRemoteNote{
 		ID:             note.ID,
@@ -521,38 +536,23 @@ func (s *noteStore) pushPendingNoteDirect(turso *TursoClient, profileID string, 
 		UpdatedAt:      now,
 	}
 
-	if note.DeletedAt != nil {
-		if err := turso.Execute(`UPDATE sync_notes SET revision = ?, deleted_at = ?, updated_at = ?
-			WHERE user_id = ? AND id = ?`, nextRevision, deletedAtMilli, now.UnixMilli(), profileID, note.ID); err != nil {
-			return err
-		}
-	} else {
-		if err := turso.Execute(`INSERT INTO sync_notes(user_id, id, title, body, body_text, folder, folder_id, pinned_at, checklist_total, checklist_open, tags, revision, deleted_at, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
-			ON CONFLICT(user_id, id) DO UPDATE SET title = excluded.title, body = excluded.body, body_text = excluded.body_text,
-			folder = excluded.folder, folder_id = excluded.folder_id, pinned_at = excluded.pinned_at,
-			checklist_total = excluded.checklist_total, checklist_open = excluded.checklist_open, tags = excluded.tags,
-			revision = excluded.revision, deleted_at = NULL, updated_at = excluded.updated_at`,
-			profileID, note.ID, note.Title, note.Body, note.BodyText, note.Folder, note.FolderID, pinnedAtMilli, note.ChecklistTotal, note.ChecklistOpen, string(tagsJSON), nextRevision, createdAt.UnixMilli(), now.UnixMilli()); err != nil {
-			return err
-		}
-	}
-
-	if err := turso.Execute(`INSERT INTO sync_note_changes(user_id, note_id, revision, changed_at) VALUES (?, ?, ?, ?)`, profileID, note.ID, nextRevision, now.UnixMilli()); err != nil {
-		return err
-	}
-
-	_, cRows, err := turso.Query(`SELECT cursor FROM sync_note_changes WHERE user_id = ? AND note_id = ? AND revision = ? ORDER BY cursor DESC LIMIT 1`, profileID, note.ID, nextRevision)
-	if err != nil || len(cRows) == 0 {
-		return fmt.Errorf("ler cursor de sync: %w", err)
-	}
-	cursor, err := tursoInt(cRows[0][0])
+	_, applied, err := s.commitDirectRemoteMutation(turso, profileID, note.MutationID, remoteNote, note.ServerRev)
 	if err != nil {
 		return err
 	}
-
-	if err := turso.Execute(`INSERT INTO sync_mutations(user_id, mutation_id, note_id, revision, cursor) VALUES (?, ?, ?, ?, ?)`, profileID, note.MutationID, note.ID, nextRevision, cursor); err != nil {
-		return err
+	if !applied {
+		latest, latestFound, readErr := s.remoteNoteFromTurso(turso, profileID, note.ID)
+		if readErr != nil {
+			return readErr
+		}
+		if latestFound {
+			err := s.recordConflict(note.ID, note.MutationID, latest)
+			if err == nil {
+				result.Conflicts++
+			}
+			return err
+		}
+		return errors.New("mutação remota rejeitada por revisão concorrente")
 	}
 
 	if err := s.markMutationClean(note.ID, note.MutationID, remoteNote); err != nil {
@@ -560,6 +560,81 @@ func (s *noteStore) pushPendingNoteDirect(turso *TursoClient, profileID string, 
 	}
 	result.Uploaded++
 	return nil
+}
+
+func (s *noteStore) commitDirectRemoteMutation(turso *TursoClient, profileID, mutationID string, note syncRemoteNote, baseRevision int64) (int64, bool, error) {
+	tagsJSON, err := json.Marshal(note.Tags)
+	if err != nil {
+		return 0, false, err
+	}
+	snapshotJSON, err := json.Marshal(note)
+	if err != nil {
+		return 0, false, err
+	}
+
+	var noteStatement TursoStatement
+	if note.DeletedAt != nil {
+		deletedAt := note.DeletedAt.UnixMilli()
+		noteStatement = TursoStatement{
+			SQL: `UPDATE sync_notes SET revision = ?, deleted_at = ?, updated_at = ?
+				WHERE user_id = ? AND id = ? AND revision = ?`,
+			Args: []any{note.Revision, deletedAt, note.UpdatedAt.UnixMilli(), profileID, note.ID, baseRevision},
+		}
+	} else {
+		var pinnedAt any
+		if note.PinnedAt != nil {
+			pinnedAt = note.PinnedAt.UnixMilli()
+		}
+		noteStatement = TursoStatement{
+			SQL: `INSERT INTO sync_notes(user_id, id, title, body, body_text, folder, folder_id, pinned_at, checklist_total, checklist_open, tags, revision, deleted_at, created_at, updated_at)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
+				ON CONFLICT(user_id, id) DO UPDATE SET title = excluded.title, body = excluded.body, body_text = excluded.body_text,
+				folder = excluded.folder, folder_id = excluded.folder_id, pinned_at = excluded.pinned_at,
+				checklist_total = excluded.checklist_total, checklist_open = excluded.checklist_open, tags = excluded.tags,
+				revision = excluded.revision, deleted_at = NULL, updated_at = excluded.updated_at
+				WHERE sync_notes.revision = ?`,
+			Args: []any{profileID, note.ID, note.Title, note.Body, note.BodyText, note.Folder, note.FolderID, pinnedAt, note.ChecklistTotal, note.ChecklistOpen, string(tagsJSON), note.Revision, note.CreatedAt.UnixMilli(), note.UpdatedAt.UnixMilli(), baseRevision},
+		}
+	}
+
+	statements := []TursoStatement{
+		noteStatement,
+		{
+			SQL: `INSERT INTO sync_note_changes(user_id, note_id, revision, changed_at, snapshot_json)
+				SELECT ?, ?, ?, ?, ? WHERE changes() > 0`,
+			Args: []any{profileID, note.ID, note.Revision, note.UpdatedAt.UnixMilli(), string(snapshotJSON)},
+		},
+		{
+			SQL: `INSERT INTO sync_mutations(user_id, mutation_id, note_id, revision, cursor)
+				SELECT ?, ?, ?, ?, c.cursor FROM sync_note_changes c
+				WHERE c.user_id = ? AND c.note_id = ? AND c.revision = ? AND changes() > 0
+				ORDER BY c.cursor DESC LIMIT 1`,
+			Args: []any{profileID, mutationID, note.ID, note.Revision, profileID, note.ID, note.Revision},
+		},
+		{
+			SQL:  `SELECT cursor FROM sync_mutations WHERE user_id = ? AND mutation_id = ?`,
+			Args: []any{profileID, mutationID},
+		},
+	}
+	results, err := turso.RunTransaction(statements)
+	if err != nil {
+		return 0, false, err
+	}
+	if len(results) < len(statements)+3 {
+		return 0, false, errors.New("resposta incompleta da transação Turso")
+	}
+	if results[1].Response.Result.AffectedRowCount == 0 {
+		return 0, false, nil
+	}
+	cursorRows := results[1+len(statements)-1].Response.Result.Rows
+	if len(cursorRows) == 0 || len(cursorRows[0]) == 0 {
+		return 0, false, errors.New("transação Turso não registrou cursor")
+	}
+	cursor, err := tursoInt(cursorRows[0][0])
+	if err != nil {
+		return 0, false, err
+	}
+	return cursor, true, nil
 }
 
 func (s *noteStore) remoteNoteFromTurso(turso *TursoClient, profileID, id string) (syncRemoteNote, bool, error) {
@@ -643,6 +718,20 @@ func syncRemoteNoteFromRow(row []TursoValue) (syncRemoteNote, error) {
 		CreatedAt:      createdAt,
 		UpdatedAt:      updatedAt,
 	}, nil
+}
+
+func syncRemoteNoteFromChangeRow(row []TursoValue) (syncRemoteNote, error) {
+	if len(row) < 16 {
+		return syncRemoteNote{}, errors.New("linha de alteração remota inválida")
+	}
+	if row[1].Type != "null" && row[1].Value != "" {
+		var note syncRemoteNote
+		if err := json.Unmarshal([]byte(row[1].Value), &note); err != nil {
+			return syncRemoteNote{}, fmt.Errorf("decodificar snapshot remoto: %w", err)
+		}
+		return note, nil
+	}
+	return syncRemoteNoteFromRow(row[2:])
 }
 
 func (s *noteStore) syncMetadata() (string, string, error) {
@@ -778,7 +867,11 @@ func (s *noteStore) pushPendingNote(apiURL, profileID, tursoDatabaseURL, tursoAu
 		if err := json.Unmarshal(body, &conflict); err != nil {
 			return err
 		}
-		return s.recordConflict(note.ID, note.MutationID, conflict.Note)
+		err := s.recordConflict(note.ID, note.MutationID, conflict.Note)
+		if err == nil {
+			result.Conflicts++
+		}
+		return err
 	}
 	if status < 200 || status >= 300 {
 		return fmt.Errorf("sync push falhou com status %d: %s", status, string(body))
@@ -824,11 +917,11 @@ func (s *noteStore) recordConflict(noteID, mutationID string, remote syncRemoteN
 
 func (s *noteStore) applyRemoteNote(remote syncRemoteNote) (bool, error) {
 	type localMeta struct {
-		state             string
-		pendingID         string
-		localServerRev    int64
-		localUpdatedAt    int64
-		localDeletedAt    sql.NullInt64
+		state          string
+		pendingID      string
+		localServerRev int64
+		localUpdatedAt int64
+		localDeletedAt sql.NullInt64
 	}
 	var local localMeta
 	notFound := false
@@ -843,6 +936,21 @@ func (s *noteStore) applyRemoteNote(remote syncRemoteNote) (bool, error) {
 	}
 
 	remoteUpdatedAtMilli := remote.UpdatedAt.UnixMilli()
+
+	if !notFound {
+		if local.state == "conflict" {
+			if remote.Revision > local.localServerRev {
+				return true, s.recordConflict(remote.ID, local.pendingID, remote)
+			}
+			return false, nil
+		}
+		if local.state == "clean" && remote.Revision <= local.localServerRev {
+			return false, nil
+		}
+		if remote.Revision < local.localServerRev {
+			return false, nil
+		}
+	}
 
 	if !notFound && local.state == "pending" {
 		// Local has unsynced changes. Decide conflict vs. safe-apply.
@@ -874,6 +982,9 @@ func (s *noteStore) applyRemoteNote(remote syncRemoteNote) (bool, error) {
 			// Local is newer or same — keep local pending, just acknowledge server revision
 			_, _ = s.db.Exec("UPDATE notes SET server_revision = ? WHERE id = ? AND sync_state = 'pending'", remote.Revision, remote.ID)
 			return false, nil
+		}
+		if local.localServerRev == remote.Revision {
+			return true, s.recordConflict(remote.ID, local.pendingID, remote)
 		}
 	}
 

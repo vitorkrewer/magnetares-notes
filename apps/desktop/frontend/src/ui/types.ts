@@ -51,10 +51,22 @@ export type NoteQuery = {
   id?: string;
 };
 
+export type SyncConflict = {
+  noteId: string;
+  localTitle: string;
+  localBodyText: string;
+  remoteTitle: string;
+  remoteBodyText: string;
+  remoteRevision: number;
+  remoteUpdatedAt: string;
+  detectedAt: string;
+};
+
 export type SyncResult = {
   uploaded: number;
   downloaded: number;
   conflicts: number;
+  conflictNotes?: string[];
   message?: string;
   syncedAt?: string;
 };
@@ -78,6 +90,8 @@ export type ComplianceReport = {
 export type DesktopBridge = {
   ListNotes?: () => Promise<Note[]>;
   ListDeletedNotes?: () => Promise<Note[]>;
+  ListNoteConflicts?: () => Promise<SyncConflict[]>;
+  ResolveNoteConflict?: (noteID: string, resolution: "local" | "remote") => Promise<void>;
   SaveNote?: (note: Note) => Promise<Note>;
   DeleteNote?: (id: string) => Promise<void>;
   RestoreNote?: (id: string) => Promise<void>;

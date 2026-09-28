@@ -46,6 +46,11 @@ type TursoStmt struct {
 	Args []TursoValue `json:"args,omitempty"`
 }
 
+type TursoStatement struct {
+	SQL  string
+	Args []any
+}
+
 type TursoValue struct {
 	Type  string `json:"type"`
 	Value string `json:"value,omitempty"`
@@ -101,6 +106,14 @@ func (t *TursoClient) Execute(sql string, args ...any) error {
 	return err
 }
 
+func (t *TursoClient) ExecuteAffectedRows(sql string, args ...any) (int64, error) {
+	result, err := t.run(sql, args...)
+	if err != nil {
+		return 0, err
+	}
+	return result.Response.Result.AffectedRowCount, nil
+}
+
 func (t *TursoClient) Query(sql string, args ...any) ([]string, [][]TursoValue, error) {
 	result, err := t.run(sql, args...)
 	if err != nil {
@@ -113,53 +126,77 @@ func (t *TursoClient) Query(sql string, args ...any) ([]string, [][]TursoValue, 
 	return columns, result.Response.Result.Rows, nil
 }
 
+func (t *TursoClient) RunTransaction(statements []TursoStatement) ([]TursoPipelineResult, error) {
+	requests := make([]TursoRequest, 0, len(statements)+3)
+	requests = append(requests, TursoRequest{Type: "execute", Stmt: &TursoStmt{SQL: "BEGIN"}})
+	for _, statement := range statements {
+		args, err := tursoArguments(statement.Args)
+		if err != nil {
+			return nil, err
+		}
+		requests = append(requests, TursoRequest{Type: "execute", Stmt: &TursoStmt{SQL: statement.SQL, Args: args}})
+	}
+	requests = append(requests,
+		TursoRequest{Type: "execute", Stmt: &TursoStmt{SQL: "COMMIT"}},
+		TursoRequest{Type: "close"},
+	)
+	return t.runPipeline(requests)
+}
+
 func (t *TursoClient) run(sql string, args ...any) (TursoPipelineResult, error) {
 	typedArgs, err := tursoArguments(args)
 	if err != nil {
 		return TursoPipelineResult{}, err
 	}
-	body := TursoPipelineBody{
-		Requests: []TursoRequest{
-			{Type: "execute", Stmt: &TursoStmt{SQL: sql, Args: typedArgs}},
-			{Type: "close"},
-		},
+	results, err := t.runPipeline([]TursoRequest{
+		{Type: "execute", Stmt: &TursoStmt{SQL: sql, Args: typedArgs}},
+		{Type: "close"},
+	})
+	if err != nil {
+		return TursoPipelineResult{}, err
 	}
+	return results[0], nil
+}
+
+func (t *TursoClient) runPipeline(requests []TursoRequest) ([]TursoPipelineResult, error) {
+	body := TursoPipelineBody{Requests: requests}
 
 	jsonBytes, err := json.Marshal(body)
 	if err != nil {
-		return TursoPipelineResult{}, err
+		return nil, err
 	}
 
 	req, err := http.NewRequest("POST", t.httpEndpoint, bytes.NewReader(jsonBytes))
 	if err != nil {
-		return TursoPipelineResult{}, err
+		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+t.authToken)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := t.client.Do(req)
 	if err != nil {
-		return TursoPipelineResult{}, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
 		respBody, _ := io.ReadAll(resp.Body)
-		return TursoPipelineResult{}, fmt.Errorf("turso error %d: %s", resp.StatusCode, string(respBody))
+		return nil, fmt.Errorf("turso error %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	var response TursoPipelineResponse
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return TursoPipelineResult{}, fmt.Errorf("decode Turso response: %w", err)
+		return nil, fmt.Errorf("decode Turso response: %w", err)
 	}
 	if len(response.Results) == 0 {
-		return TursoPipelineResult{}, errors.New("empty Turso response")
+		return nil, errors.New("empty Turso response")
 	}
-	result := response.Results[0]
-	if result.Type != "ok" {
-		return TursoPipelineResult{}, fmt.Errorf("turso pipeline error: %s", string(result.Error))
+	for _, result := range response.Results {
+		if result.Type != "ok" {
+			return nil, fmt.Errorf("turso pipeline error: %s", string(result.Error))
+		}
 	}
-	return result, nil
+	return response.Results, nil
 }
 
 func tursoArguments(args []any) ([]TursoValue, error) {
@@ -250,7 +287,8 @@ func (t *TursoClient) InitSchema() error {
 			user_id TEXT NOT NULL,
 			note_id TEXT NOT NULL,
 			revision INTEGER NOT NULL,
-			changed_at INTEGER NOT NULL
+			changed_at INTEGER NOT NULL,
+			snapshot_json TEXT NOT NULL DEFAULT ''
 		)`,
 		`CREATE INDEX IF NOT EXISTS sync_note_changes_by_user_cursor
 			ON sync_note_changes(user_id, cursor)`,
@@ -278,6 +316,7 @@ func (t *TursoClient) InitSchema() error {
 		`ALTER TABLE sync_notes ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'`,
 		`ALTER TABLE sync_folders ADD COLUMN color TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE sync_folders ADD COLUMN icon TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE sync_note_changes ADD COLUMN snapshot_json TEXT NOT NULL DEFAULT ''`,
 	}
 	for _, statement := range alterStatements {
 		_ = t.Execute(statement)

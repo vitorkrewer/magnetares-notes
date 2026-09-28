@@ -50,6 +50,10 @@ export function ListNavigation() {
   return window['go']['main']['App']['ListNavigation']();
 }
 
+export function ListNoteConflicts() {
+  return window['go']['main']['App']['ListNoteConflicts']();
+}
+
 export function ListNotes() {
   return window['go']['main']['App']['ListNotes']();
 }
@@ -64,6 +68,10 @@ export function MoveNote(arg1, arg2) {
 
 export function QueryNotes(arg1) {
   return window['go']['main']['App']['QueryNotes'](arg1);
+}
+
+export function ResolveNoteConflict(arg1, arg2) {
+  return window['go']['main']['App']['ResolveNoteConflict'](arg1, arg2);
 }
 
 export function RestoreNote(arg1) {

@@ -1,0 +1,1 @@
+ALTER TABLE sync_note_changes ADD COLUMN snapshot_json TEXT NOT NULL DEFAULT '';

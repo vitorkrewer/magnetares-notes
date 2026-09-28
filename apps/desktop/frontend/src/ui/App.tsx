@@ -4,7 +4,8 @@ import { StructuredEditor } from "./StructuredEditor";
 import { TitleBar } from "./TitleBar";
 import { OrganizationDialog, getFolderIconComponent } from "./OrganizationDialog";
 import { SettingsDialog, type ThemeOption } from "./SettingsDialog";
-import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, SyncConfiguration } from "./types";
+import { ConflictDialog } from "./ConflictDialog";
+import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, SyncConfiguration, SyncConflict } from "./types";
 import { downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
 
 type SaveState = "saved" | "saving" | "error";
@@ -52,7 +53,9 @@ export function App() {
   const [tagInputOpen, setTagInputOpen] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [syncNotification, setSyncNotification] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
+  const [syncNotification, setSyncNotification] = useState<{ type: "success" | "warning" | "error" | "info"; message: string } | null>(null);
+  const [conflicts, setConflicts] = useState<SyncConflict[]>([]);
+  const [conflictsOpen, setConflictsOpen] = useState(false);
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(new Set());
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null);
   const [draggedFolderId, setDraggedFolderId] = useState<string | null>(null);
@@ -88,6 +91,9 @@ export function App() {
     }
     if (bridge?.GetSyncConfiguration) {
       void bridge.GetSyncConfiguration().then(setSyncConfiguration);
+    }
+    if (bridge?.ListNoteConflicts) {
+      void bridge.ListNoteConflicts().then(setConflicts);
     }
   }, []);
   const pendingNotes = useRef(new Map<string, Note>());
@@ -349,7 +355,34 @@ export function App() {
         return loadedNotes[0]?.id ?? "";
       });
     });
+    if (result?.conflictNotes?.length && bridge.ListNoteConflicts) {
+      const currentConflicts = await bridge.ListNoteConflicts();
+      setConflicts(currentConflicts);
+      setConflictsOpen(currentConflicts.length > 0);
+    }
     return result;
+  };
+
+  const handleResolveConflict = async (noteID: string, resolution: "local" | "remote") => {
+    const bridge = window.go?.main?.App;
+    if (!bridge?.ResolveNoteConflict) return;
+    await bridge.ResolveNoteConflict(noteID, resolution);
+    const [loadedNotes, loadedDeletedNotes, loadedNav, currentConflicts] = await Promise.all([
+      bridge.ListNotes?.() ?? Promise.resolve([]),
+      bridge.ListDeletedNotes?.() ?? Promise.resolve([]),
+      bridge.ListNavigation?.() ?? Promise.resolve({ folders: [], tags: [], smartFolders: [] }),
+      bridge.ListNoteConflicts?.() ?? Promise.resolve([])
+    ]);
+    setNotes(loadedNotes);
+    setDeletedNotes(loadedDeletedNotes);
+    setNavigation(loadedNav);
+    setConflicts(currentConflicts);
+    setConflictsOpen(currentConflicts.length > 0);
+    setSyncNotification({
+      type: "success",
+      message: resolution === "local" ? "Sua versão foi mantida e será enviada à nuvem." : "A versão da nuvem foi restaurada nesta máquina."
+    });
+    setTimeout(() => setSyncNotification(null), 5000);
   };
 
   const handleSaveSyncConfiguration = async (databaseURL: string, authToken: string) => {
@@ -370,7 +403,7 @@ export function App() {
       const msg = result?.message || (result?.uploaded !== undefined
         ? `Sincronização concluída: ${result.uploaded} enviadas, ${result.downloaded} recebidas, ${result.conflicts} conflitos.`
         : "Sincronização concluída com sucesso!");
-      setSyncNotification({ type: "success", message: msg });
+      setSyncNotification({ type: result?.conflictNotes?.length ? "warning" : "success", message: msg });
       setTimeout(() => setSyncNotification(null), 5000);
     } catch (err: any) {
       const errorMsg = err?.message || err?.toString() || "Falha ao sincronizar com a nuvem.";
@@ -745,7 +778,7 @@ export function App() {
   return (
     <div className="app-container">
       <TitleBar title={active?.title ? `${active.title} — Magnetares` : "Magnetares Notes"} />
-      {syncNotification && (
+      {syncNotification && !conflictsOpen && (
         <div className={`app-toast ${syncNotification.type}`} role="status">
           <span>{syncNotification.message}</span>
           <button type="button" onClick={() => setSyncNotification(null)} aria-label="Fechar notificação">
@@ -1015,6 +1048,17 @@ export function App() {
           onSaveSyncConfiguration={handleSaveSyncConfiguration}
           onSyncNow={handleSyncWithCloud}
           onClose={() => setSettingsOpen(false)}
+        />
+      )}
+
+      {conflictsOpen && conflicts.length > 0 && (
+        <ConflictDialog
+          conflicts={conflicts}
+          onResolve={handleResolveConflict}
+          onClose={() => {
+            setConflictsOpen(false);
+            setSyncNotification(null);
+          }}
         />
       )}
 
