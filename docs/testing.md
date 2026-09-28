@@ -22,6 +22,9 @@ go test -v -count=1 .
 | `TestFolderHierarchyAndRestrictedDeletion` | Pastas, subpastas, ciclo e exclusão restrita. |
 | `TestPinTagsAndChecklistProjectionSurviveAutosave` | Pin, tags, checklist e isolamento de metadados contra autosave atrasado. |
 | `TestSmartFolderRules` | Regras por tag, data/checklist, exclusão lógica e consulta inteligente. |
+| `TestEquivalentRemoteContentConvergesWithoutConflict` | Conteúdo igual com revisões diferentes converge sem duplicação. |
+| `TestResolveNoteConflictMergesLocalAndRemote` | Mesclagem estruturada de corpo, título remoto e tags. |
+| `TestTagCRUDAndIconProtection` | CRUD de etiquetas, ícones, contagem e proteção de Pastas Inteligentes. |
 
 ## Testes da API
 
@@ -66,7 +69,9 @@ O build valida TypeScript e Vite. A interface deve ser conferida manualmente ou 
 ### Notas e editor
 
 - Criar uma nota e confirmar **Salvo** após autosave.
-- Alternar título, negrito, itálico, destaque, listas, checklist, tabela e cálculo.
+- Alternar título, negrito, itálico, destaque, listas, checklist, tabela, link, bloco de código e cálculo.
+- Criar bloco de código, trocar a linguagem e confirmar o highlight visual.
+- Inserir uma tabela, selecionar células e excluir linha, coluna e tabela.
 - Alternar nota selecionada e retornar, verificando conteúdo e toolbar.
 - Mover para lixeira e restaurar.
 
@@ -76,12 +81,14 @@ O build valida TypeScript e Vite. A interface deve ser conferida manualmente ou 
 - Tentar criar ciclo de pasta e confirmar rejeição.
 - Fixar e desafixar nota.
 - Adicionar/remover etiqueta.
+- Criar, editar, trocar o ícone e excluir uma etiqueta vazia.
 - Criar uma Pasta Inteligente e confirmar a lista filtrada.
 
 ### Preferências
 
 - Alternar claro/escuro e reiniciar a página/app.
 - Conferir o caminho do banco local.
+- Configurar sync automático em 5 minutos, confirmar que aguarda autosave e desativá-lo novamente.
 - Validar que token não aparece em screenshots ou logs.
 
 ### Importação/exportação
@@ -92,7 +99,7 @@ O build valida TypeScript e Vite. A interface deve ser conferida manualmente ou 
 
 ## Lacunas de teste
 
-- Não há testes E2E versionados para frontend.
+- Não há testes E2E versionados para frontend; o build valida TypeScript/Vite e os fluxos principais têm checklist manual.
 - Não há teste de build de release em todos os sistemas fora do GitHub Actions.
 
 Essas lacunas devem ser reduzidas antes de classificar o produto como sincronização de produção.

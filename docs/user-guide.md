@@ -26,7 +26,9 @@ A barra do editor oferece:
 - Listas com marcadores e listas numeradas.
 - Checklists; marque a caixa para concluir um item.
 - Citações.
-- Tabelas com cabeçalho; dentro de uma tabela surgem controles para adicionar linha, coluna ou remover a tabela.
+- Hyperlinks: selecione um texto, use o botão de link e informe uma URL `http://` ou `https://`; o mesmo controle edita ou remove o link.
+- Bloco de código com highlight: ative o bloco e escolha a linguagem na toolbar. Linguagens comuns incluem JavaScript, TypeScript, Go, Python, JSON, HTML, CSS e Markdown.
+- Tabelas com cabeçalho; dentro de uma tabela surgem controles para adicionar/excluir linha, adicionar/excluir coluna ou remover a tabela inteira.
 - Cálculos: use o botão de cálculo, informe uma expressão matemática e insira o resultado; dê duplo clique no chip para editar.
 
 O editor persiste um documento estruturado Tiptap no banco local e gera `bodyText` para busca e prévias.
@@ -50,7 +52,10 @@ Use o ícone de alfinete no topo do editor. Notas fixadas aparecem primeiro nas 
 
 ### Etiquetas
 
-- Clique em **Etiqueta** abaixo do título.
+- Clique em `+` na seção **Etiquetas** da barra lateral para criar uma etiqueta; escolha o nome e um dos seis ícones disponíveis.
+- Passe o cursor sobre uma etiqueta para editar nome/ícone ou excluí-la.
+- Etiquetas usadas por uma Pasta Inteligente não podem ser excluídas até que a regra seja removida.
+- Clique em **Etiqueta** abaixo do título para associá-la à nota.
 - Escreva uma etiqueta e pressione `Enter`.
 - O caractere `#` é opcional; `trabalho` e `#trabalho` representam a mesma etiqueta.
 - Clique no `×` de um chip para removê-lo.
@@ -98,6 +103,18 @@ O app funciona sem configuração de nuvem. Para usar suas notas em outro comput
 3. Clique em **Conectar Turso**.
 4. Clique em **Sincronizar agora com a Nuvem**.
 5. No novo computador, informe a mesma URL e o mesmo token, conecte e sincronize para popular o banco local.
+
+Em **Preferências > Nuvem**, configure **Sincronização automática** como desativada, 5, 15, 30 minutos ou 1 hora. O aplicativo aguarda autosaves locais antes de iniciar uma rodada automática.
+
+### Conflitos
+
+Quando duas máquinas alteram uma nota a partir de revisões diferentes, a versão local não é apagada. O diálogo de conflitos oferece:
+
+- **Manter minha versão:** rebaseia a edição local sobre a revisão remota.
+- **Usar versão da nuvem:** substitui a cópia local pela versão remota.
+- **Mesclar conteúdo:** mantém o conteúdo local primeiro e anexa a versão da nuvem na mesma nota, com separador e título remoto.
+
+Se os conteúdos forem semanticamente iguais e apenas a revisão divergir, o aplicativo converge automaticamente sem criar conflito ou duplicar a nota.
 
 O token é guardado pelo cofre de credenciais do sistema. Consulte [API e sincronização](api-and-sync.md) e [Segurança](security.md).
 

@@ -43,12 +43,12 @@ flowchart LR
 
 | Área | Disponível hoje |
 | --- | --- |
-| **Editor** | Títulos, negrito, itálico, destaque, listas, citações, checklists, tabelas e cálculos inline. |
-| **Organização** | Pastas/subpastas com cores HSL e 8 ícones personalizáveis, edição de pastas legadas, notas fixadas, etiquetas e Pastas Inteligentes. |
+| **Editor** | Títulos, negrito, itálico, destaque, listas, citações, checklists, tabelas, cálculos inline, hyperlinks e blocos de código com syntax highlighting. |
+| **Organização** | Pastas/subpastas com cores HSL e 8 ícones personalizáveis, CRUD de etiquetas com 6 ícones, edição de pastas legadas, notas fixadas e Pastas Inteligentes. |
 | **Dados locais & Compliance** | SQLite com WAL, migrações automáticas, lixeira, auditoria de integridade (`EnsureDataCompliance`) e autorreparo em Preferências. |
 | **Portabilidade** | Importação Markdown/TXT, exportação Markdown/HTML/TXT e impressão limpa. |
 | **Experiência** | Tema claro/escuro, barra de título desktop, layout responsivo de três painéis e tratamento avançado de tags longas. |
-| **Sync Nuvem (Turso)** | Outbox local, cursor remoto, resolução de conflitos sem perdas (`!found` insert) e sync de pastas com cores/ícones. |
+| **Sync Nuvem (Turso)** | Outbox local, transações remotas, snapshots por cursor, sync automático configurável, resolução local/remota/merge e sync de pastas com cores/ícones. |
 
 > Confira a [matriz de funcionalidades](docs/feature-status.md) para status detalhado de recursos implementados, beta e planejados.
 
@@ -110,6 +110,10 @@ go test .
 wails dev -skipbindings
 wails build -skipbindings -clean -trimpath
 
+# Laboratório de sincronização com cinco computadores
+Set-Location ../../tests
+go test -v -count=1 -timeout=2m .
+
 # API
 Set-Location ../api
 go test ./...
@@ -136,7 +140,7 @@ O frontend acessa recursos locais por uma bridge Wails tipada. O banco Turso é 
 - Não versione `.env`, tokens, bancos `.db` ou arquivos de usuário.
 - O token Turso nunca deve aparecer no código, assets, release, logs ou screenshots.
 - O modo de sync atual é beta/self-managed; antes de operar como serviço público, adicione autenticação de usuário, HTTPS, CORS restrito e API hospedada.
-- Pastas, tags e Pastas Inteligentes continuam locais no primeiro corte de sincronização.
+- Nomes e ícones do catálogo de etiquetas continuam locais; as associações de tags das notas são sincronizadas.
 
 Leia [Segurança](docs/security.md) e [API e sincronização](docs/api-and-sync.md) antes de ativar a nuvem.
 

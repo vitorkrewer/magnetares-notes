@@ -2509,6 +2509,70 @@ textarea:focus-visible {
   text-decoration: line-through;
 }
 
+.structured-editor .tiptap a {
+  color: #896300;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.structured-editor .tiptap pre {
+  overflow-x: auto;
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid #37362f;
+  border-radius: 7px;
+  background: #25251f;
+  color: #f0eee4;
+  font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.structured-editor .tiptap pre code {
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.structured-editor .tiptap pre .hljs-comment,
+.structured-editor .tiptap pre .hljs-quote {
+  color: #8f927f;
+}
+
+.structured-editor .tiptap pre .hljs-keyword,
+.structured-editor .tiptap pre .hljs-selector-tag,
+.structured-editor .tiptap pre .hljs-literal,
+.structured-editor .tiptap pre .hljs-title,
+.structured-editor .tiptap pre .hljs-section {
+  color: #f6c85f;
+}
+
+.structured-editor .tiptap pre .hljs-string,
+.structured-editor .tiptap pre .hljs-attr,
+.structured-editor .tiptap pre .hljs-template-tag {
+  color: #a9d18e;
+}
+
+.structured-editor .tiptap pre .hljs-number,
+.structured-editor .tiptap pre .hljs-variable,
+.structured-editor .tiptap pre .hljs-symbol,
+.structured-editor .tiptap pre .hljs-bullet {
+  color: #f5a97f;
+}
+
+.code-language-select {
+  align-self: center;
+  height: 27px;
+  padding: 0 7px;
+  border: 1px solid #cbc7bb;
+  border-radius: 5px;
+  background: #fffefa;
+  color: #69675f;
+  font-size: 11px;
+}
+
 .structured-editor .tableWrapper {
   margin: 16px 0;
   overflow-x: auto;

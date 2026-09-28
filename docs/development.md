@@ -35,6 +35,8 @@ npm run lint
 
 `npm run build` executa `tsc --noEmit` e `vite build`.
 
+O editor usa Tiptap com `@tiptap/extension-link` e `@tiptap/extension-code-block-lowlight`. Depois de alterar extensões, valide links, blocos de código por linguagem e tabelas no checklist de [testes](testing.md).
+
 ### Desktop
 
 ```powershell
@@ -55,6 +57,17 @@ go run .
 ```
 
 Por padrão, a API escuta em `http://localhost:8080`.
+
+### Laboratório de sincronização
+
+O cenário de cinco computadores inicia um binário temporário da API e um Turso fake local:
+
+```powershell
+Set-Location tests
+go test -v -count=1 -timeout=2m .
+```
+
+No Linux/macOS, use `sh ./run-five-computers.sh`. O cenário não usa credenciais reais.
 
 ### Site estático
 
@@ -110,7 +123,7 @@ apps/
   desktop/
     app.go                 bridge Wails
     storage.go             SQLite, migrações e notas
-    organization.go        pastas, tags, regras
+    organization.go        pastas, etiquetas e regras
     localmigrations/       esquema local incremental
     frontend/src/ui/       React
   api/

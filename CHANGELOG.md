@@ -2,6 +2,37 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## [v1.2.0] - 2026-09-28
+
+### Added
+
+- **Editor Tiptap ampliado:** hyperlinks, blocos de código com syntax highlighting e seletor de linguagem para texto simples, JavaScript, TypeScript, Go, Python, JSON, HTML, CSS e Markdown.
+- **Tabelas:** exclusão de linhas e colunas, além da exclusão da tabela inteira.
+- **CRUD de etiquetas:** criação, edição, exclusão, contagem por nota e seis ícones personalizáveis.
+- **Sincronização automática:** frequência configurável de 5, 15, 30 ou 60 minutos, com opção de desativar.
+- **Resolução visual de conflitos:** versão local, versão da nuvem ou mesclagem das duas versões em uma única nota.
+- **Laboratório de integração:** simulação documentada de cinco computadores em `tests/`, usando a API real e um Turso fake local.
+
+### Improved
+
+- **Integridade de sincronização:** transações remotas, precondição de revisão, `mutationId` idempotente e snapshots históricos por cursor.
+- **Convergência por conteúdo:** revisões diferentes com conteúdo semanticamente igual não abrem conflito nem duplicam a nota.
+- **Autosave:** sincronização aguarda filas e timers locais; o editor é remontado ao trocar de nota para impedir vazamento de conteúdo.
+- **Pastas via API:** tombstones e ordenação por `updated_at` respeitam Last-Write-Wins.
+- **Recuperação:** snapshots remotos permitem restaurar uma nota corrompida com backup local antes da nova revisão.
+
+### Fixed
+
+- Sobrescrita silenciosa de notas locais em conflito.
+- Aplicação de revisões remotas antigas.
+- Perda de conteúdo causada pela reutilização do editor entre notas.
+- Remoção indevida de etiquetas criadas manualmente sem notas associadas.
+
+### Tests
+
+- Suíte Go cobrindo conflitos, snapshots, mesclagem, revisões antigas e CRUD de etiquetas.
+- `tests/TestFiveComputersConcurrentEdits` cobrindo uma aceitação, quatro conflitos, retry idempotente e resolução posterior.
+
 ## [v1.1.0] - 2026-09-25
 
 ### Added

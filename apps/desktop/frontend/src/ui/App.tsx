@@ -163,6 +163,14 @@ export function App() {
     return enqueueSave(note, saveVersions.current.get(id) ?? 0);
   };
 
+  const flushAllPendingNotes = async () => {
+    const pendingIDs = new Set([
+      ...pendingNotes.current.keys(),
+      ...saveTimers.current.keys()
+    ]);
+    await Promise.all([...pendingIDs].map((id) => flushNote(id)));
+  };
+
   const scheduleSave = (note: Note) => {
     const previousTimer = saveTimers.current.get(note.id);
     if (previousTimer !== undefined) window.clearTimeout(previousTimer);
@@ -351,6 +359,7 @@ export function App() {
     if (!syncConfiguration.configured) {
       throw new Error("Conecte o Turso em Preferências antes de sincronizar.");
     }
+    await flushAllPendingNotes();
     const result = await bridge.SyncNow(syncServiceURL);
     await Promise.all([
       bridge.ListNotes?.() ?? Promise.resolve([]),
@@ -1103,7 +1112,7 @@ export function App() {
                   </div>
                 )}
 
-                <StructuredEditor value={active.body} readOnly={view === "deleted"} onChange={(document, text) => save({ body: document, bodyText: text })} onBlur={() => void flushNote(active.id)} />
+                <StructuredEditor key={active.id} value={active.body} readOnly={view === "deleted"} onChange={(document, text) => save({ body: document, bodyText: text })} onBlur={() => void flushNote(active.id)} />
               </div>
             </div>
           </>

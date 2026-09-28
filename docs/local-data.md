@@ -54,6 +54,12 @@ Nunca altere uma migração já lançada. Crie uma nova migração com prefixo c
 | `0001_initial.sql` | Tabela de notas, revisão, lixeira e timestamps. |
 | `0002_structured_body.sql` | Coluna `body_text` e backfill do texto legado. |
 | `0003_organization.sql` | Pastas, `folder_id`, pin, projeção de checklist, tags, relação nota-tag e Pastas Inteligentes. |
+| `0004_sync_state.sql` | Estado local de sincronização, revisão remota e conflitos. |
+| `0005_folder_color_icon.sql` | Cor e ícone das pastas. |
+| `0006_sync_outbox_and_tombstones.sql` | Outbox local, dispositivo e lápides de exclusão. |
+| `0007_sync_folder_updated_at_index.sql` | Índice para sincronização de pastas. |
+| `0007_tag_icon.sql` | Ícone persistido no catálogo de etiquetas. |
+| `0008_managed_tags.sql` | Marca etiquetas criadas pelo usuário para preservar etiquetas vazias. |
 
 ## Modelo de dados local
 
@@ -76,7 +82,7 @@ Nunca altere uma migração já lançada. Crie uma nova migração com prefixo c
 ### Organização
 
 - `folders`: árvore por `parent_id`; não permite ciclos nem exclusão de pasta usada.
-- `tags`: nome normalizado e único.
+- `tags`: nome normalizado, único, ícone e marca de etiqueta gerenciada.
 - `note_tags`: associação N:N entre nota e tag.
 - `smart_folders`: regra única por pasta inteligente (`tag`, `date` ou `checklist`).
 
@@ -96,6 +102,18 @@ Para máxima consistência, use o app fechado ou um mecanismo de backup que comp
 2. Guarde uma cópia do banco atual.
 3. Substitua o arquivo configurado pelo arquivo de backup.
 4. Abra o app; as migrações pendentes serão aplicadas automaticamente.
+
+### Recuperação de nota sincronizada
+
+Quando uma nota for danificada por uma versão remota, não edite nem sincronize repetidamente antes de preservar o estado. O procedimento seguro é:
+
+1. Fechar o desktop.
+2. Copiar o banco local e os arquivos WAL para um local de backup.
+3. Identificar o último snapshot correto por cursor/revisão no Turso.
+4. Restaurar localmente usando a revisão remota atual como base.
+5. Publicar a restauração como uma nova revisão, sem apagar o histórico anterior.
+
+O laboratório de sincronização em `tests/` cobre cursores e snapshots. Backups de recuperação gerados pelo aplicativo ficam em `%LOCALAPPDATA%\Magnetares Notes\recovery` e devem ser mantidos até a validação do novo sync.
 
 ## Troca de local do banco
 
