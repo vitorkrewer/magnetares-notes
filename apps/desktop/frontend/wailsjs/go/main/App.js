@@ -26,6 +26,10 @@ export function DeleteTag(arg1) {
   return window['go']['main']['App']['DeleteTag'](arg1);
 }
 
+export function ExportNoteFile(arg1, arg2) {
+  return window['go']['main']['App']['ExportNoteFile'](arg1, arg2);
+}
+
 export function GetDatabasePath() {
   return window['go']['main']['App']['GetDatabasePath']();
 }

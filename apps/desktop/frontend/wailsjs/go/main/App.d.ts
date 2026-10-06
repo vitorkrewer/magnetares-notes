@@ -14,6 +14,8 @@ export function DeleteSmartFolder(arg1:string):Promise<void>;
 
 export function DeleteTag(arg1:string):Promise<void>;
 
+export function ExportNoteFile(arg1:string,arg2:string):Promise<string>;
+
 export function GetDatabasePath():Promise<string>;
 
 export function GetSyncConfiguration():Promise<main.SyncConfiguration>;

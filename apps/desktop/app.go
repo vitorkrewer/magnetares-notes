@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -188,4 +190,68 @@ func (a *App) CloseWindow() {
 	if a.ctx != nil {
 		runtime.Quit(a.ctx)
 	}
+}
+
+func (a *App) ExportNoteFile(defaultFilename, content string) (string, error) {
+	if a.ctx == nil {
+		return "", errors.New("janela da aplicação não inicializada")
+	}
+
+	defaultFilename = sanitizeFilename(defaultFilename)
+	ext := strings.ToLower(filepath.Ext(defaultFilename))
+	var filters []runtime.FileFilter
+	switch ext {
+	case ".md":
+		filters = []runtime.FileFilter{
+			{DisplayName: "Arquivo Markdown (*.md)", Pattern: "*.md"},
+			{DisplayName: "Todos os Arquivos (*.*)", Pattern: "*.*"},
+		}
+	case ".html":
+		filters = []runtime.FileFilter{
+			{DisplayName: "Arquivo HTML (*.html)", Pattern: "*.html"},
+			{DisplayName: "Todos os Arquivos (*.*)", Pattern: "*.*"},
+		}
+	case ".txt":
+		filters = []runtime.FileFilter{
+			{DisplayName: "Arquivo de Texto (*.txt)", Pattern: "*.txt"},
+			{DisplayName: "Todos os Arquivos (*.*)", Pattern: "*.*"},
+		}
+	default:
+		filters = []runtime.FileFilter{
+			{DisplayName: "Todos os Arquivos (*.*)", Pattern: "*.*"},
+		}
+	}
+
+	selectedPath, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:           "Exportar Nota",
+		DefaultFilename: defaultFilename,
+		Filters:         filters,
+	})
+	if err != nil {
+		return "", fmt.Errorf("abrir diálogo de salvamento: %w", err)
+	}
+	if strings.TrimSpace(selectedPath) == "" {
+		// Usuário cancelou a seleção do local
+		return "", nil
+	}
+
+	if err := os.WriteFile(selectedPath, []byte(content), 0644); err != nil {
+		return "", fmt.Errorf("salvar arquivo exportado: %w", err)
+	}
+
+	return selectedPath, nil
+}
+
+func sanitizeFilename(name string) string {
+	ext := filepath.Ext(name)
+	base := strings.TrimSuffix(name, ext)
+	invalidChars := []string{"\\", "/", ":", "*", "?", "\"", "<", ">", "|"}
+	for _, char := range invalidChars {
+		base = strings.ReplaceAll(base, char, "_")
+	}
+	base = strings.TrimSpace(base)
+	if base == "" {
+		base = "Nota"
+	}
+	return base + ext
 }

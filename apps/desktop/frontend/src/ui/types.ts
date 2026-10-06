@@ -122,6 +122,7 @@ export type DesktopBridge = {
   ToggleMaximizeWindow?: () => Promise<boolean>;
   IsWindowMaximized?: () => Promise<boolean>;
   CloseWindow?: () => Promise<void>;
+  ExportNoteFile?: (defaultFilename: string, content: string) => Promise<string>;
 };
 
 declare global {

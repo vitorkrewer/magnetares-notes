@@ -118,3 +118,35 @@ func TestStructuredBodyMigrationPreservesPlainText(t *testing.T) {
 		t.Fatalf("legacy body was not preserved: %#v", notes)
 	}
 }
+
+func TestSanitizeFilename(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"Relatório: Projeto / 2026?.md", "Relatório_ Projeto _ 2026_.md"},
+		{"nota<teste>|*.html", "nota_teste___.html"},
+		{"", "Nota"},
+		{"   .txt", "Nota.txt"},
+	}
+
+	for _, tt := range tests {
+		got := sanitizeFilename(tt.input)
+		if got != tt.expected {
+			t.Errorf("sanitizeFilename(%q) = %q, expected %q", tt.input, got, tt.expected)
+		}
+	}
+}
+
+func TestExportNoteFileRequiresContext(t *testing.T) {
+	app, err := NewApp(filepath.Join(t.TempDir(), "export.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	_, err = app.ExportNoteFile("test.md", "# Test")
+	if err == nil {
+		t.Fatal("expected error when app context is nil")
+	}
+}

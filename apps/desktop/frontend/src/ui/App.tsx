@@ -268,20 +268,51 @@ export function App() {
     window.print();
   };
 
-  const handleExport = (format: "md" | "html" | "txt") => {
+  const handleExport = async (format: "md" | "html" | "txt") => {
     if (!active) return;
-    const cleanTitle = active.title.trim() || "Nota";
+    const cleanTitle = active.title.replace(/[\\/:*?"<>|]/g, "_").trim() || "Nota";
+    let filename = "";
+    let content = "";
+    let mimeType = "";
+
     if (format === "md") {
-      const content = exportToMarkdown(active.title, active.body, active.bodyText);
-      downloadFile(`${cleanTitle}.md`, content, "text/markdown");
+      filename = `${cleanTitle}.md`;
+      content = exportToMarkdown(active.title, active.body, active.bodyText);
+      mimeType = "text/markdown";
     } else if (format === "html") {
-      const content = exportToHTML(active.title, active.body, active.bodyText);
-      downloadFile(`${cleanTitle}.html`, content, "text/html");
+      filename = `${cleanTitle}.html`;
+      content = exportToHTML(active.title, active.body, active.bodyText);
+      mimeType = "text/html";
     } else if (format === "txt") {
-      const content = `${cleanTitle}\n\n${active.bodyText || active.body}`;
-      downloadFile(`${cleanTitle}.txt`, content, "text/plain");
+      filename = `${cleanTitle}.txt`;
+      content = `${cleanTitle}\n\n${active.bodyText || active.body}`;
+      mimeType = "text/plain";
     }
+
     setExportMenuOpen(false);
+
+    const bridge = window.go?.main?.App;
+    if (bridge?.ExportNoteFile) {
+      try {
+        const savedPath = await bridge.ExportNoteFile(filename, content);
+        if (savedPath) {
+          setSyncNotification({
+            type: "success",
+            message: `Nota exportada com sucesso em: ${savedPath}`,
+          });
+          setTimeout(() => setSyncNotification(null), 5000);
+        }
+      } catch (err: any) {
+        console.error("Erro ao exportar nota:", err);
+        setSyncNotification({
+          type: "error",
+          message: err?.message || "Erro ao exportar nota.",
+        });
+        setTimeout(() => setSyncNotification(null), 7000);
+      }
+    } else {
+      downloadFile(filename, content, mimeType);
+    }
   };
 
   const handleFileImport = async (event: ChangeEvent<HTMLInputElement>) => {
