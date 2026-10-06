@@ -89,6 +89,17 @@ type syncRemoteFolder struct {
 	UpdatedAt time.Time  `json:"updatedAt"`
 }
 
+type syncRemoteTag struct {
+	ID             string     `json:"id"`
+	Name           string     `json:"name"`
+	NormalizedName string     `json:"normalizedName"`
+	Icon           string     `json:"icon"`
+	Managed        bool       `json:"managed"`
+	DeletedAt      *time.Time `json:"deletedAt"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
+}
+
 type syncMutationResult struct {
 	Note   syncRemoteNote `json:"note"`
 	Cursor string         `json:"cursor"`
@@ -196,6 +207,9 @@ func (s *noteStore) pendingConflictNotes() []string {
 		if err := rows.Scan(&title); err == nil {
 			notes = append(notes, title)
 		}
+	}
+	if err := rows.Err(); err != nil {
+		log.Printf("pendingConflictNotes: error iterating rows: %v", err)
 	}
 	return notes
 }
@@ -362,13 +376,168 @@ func (s *noteStore) syncFoldersDirect(turso *TursoClient, profileID string) erro
 	return nil
 }
 
+func (s *noteStore) syncTagsViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAuthToken string) error {
+	// Push local pending tags
+	rows, err := s.db.Query(`SELECT id, name, normalized_name, COALESCE(icon, 'tag'), managed, deleted_at, created_at, updated_at FROM tags WHERE sync_state = 'pending'`)
+	if err == nil {
+		var pushedIDs []string
+		defer rows.Close()
+		for rows.Next() {
+			var id, name, normalized, icon string
+			var managedInt int
+			var deletedAt sql.NullInt64
+			var createdAt, updatedAt int64
+			if err := rows.Scan(&id, &name, &normalized, &icon, &managedInt, &deletedAt, &createdAt, &updatedAt); err == nil {
+				var dTime *time.Time
+				if deletedAt.Valid {
+					tVal := time.UnixMilli(deletedAt.Int64).UTC()
+					dTime = &tVal
+				}
+				cTime := time.UnixMilli(createdAt).UTC()
+				uTime := time.UnixMilli(updatedAt).UTC()
+				payload := syncRemoteTag{
+					ID:             id,
+					Name:           name,
+					NormalizedName: normalized,
+					Icon:           icon,
+					Managed:        managedInt == 1,
+					DeletedAt:      dTime,
+					CreatedAt:      cTime,
+					UpdatedAt:      uTime,
+				}
+				statusCode, _, _ := requestSyncRaw(http.MethodPut, fmt.Sprintf("%s/v1/tags/%s", apiURL, id), profileID, tursoDatabaseURL, tursoAuthToken, payload)
+				if statusCode >= 200 && statusCode < 300 {
+					pushedIDs = append(pushedIDs, id)
+				}
+			}
+		}
+		if err := rows.Err(); err != nil {
+			log.Printf("syncTagsViaAPI: error iterating rows: %v", err)
+		}
+		_ = rows.Close()
+		for _, id := range pushedIDs {
+			_, _ = s.db.Exec("UPDATE tags SET sync_state = 'clean' WHERE id = ?", id)
+		}
+	}
+
+	// Pull remote tags
+	rTags, err := requestSyncJSON[[]syncRemoteTag](http.MethodGet, fmt.Sprintf("%s/v1/tags", apiURL), profileID, tursoDatabaseURL, tursoAuthToken, nil)
+	if err == nil {
+		for _, rt := range rTags {
+			var dAt any = nil
+			if rt.DeletedAt != nil {
+				dAt = rt.DeletedAt.UnixMilli()
+			}
+			remoteUpdatedAt := rt.UpdatedAt.UnixMilli()
+			managed := 1
+			if !rt.Managed {
+				managed = 0
+			}
+			icon := rt.Icon
+			if icon == "" {
+				icon = "tag"
+			}
+			_, _ = s.db.Exec(`INSERT INTO tags(id, name, normalized_name, icon, managed, deleted_at, created_at, updated_at, sync_state)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'clean')
+				ON CONFLICT(id) DO UPDATE SET
+					name = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN name ELSE excluded.name END,
+					normalized_name = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN normalized_name ELSE excluded.normalized_name END,
+					icon = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN icon ELSE excluded.icon END,
+					managed = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN managed ELSE excluded.managed END,
+					deleted_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
+					updated_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
+					sync_state = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN 'pending' ELSE 'clean' END`,
+				rt.ID, rt.Name, rt.NormalizedName, icon, managed, dAt, rt.CreatedAt.UnixMilli(), remoteUpdatedAt)
+		}
+	}
+	return nil
+}
+
+func (s *noteStore) syncTagsDirect(turso *TursoClient, profileID string) error {
+	// Push local pending tags
+	rows, err := s.db.Query(`SELECT id, name, normalized_name, COALESCE(icon, 'tag'), managed, deleted_at, created_at, updated_at FROM tags WHERE sync_state = 'pending'`)
+	if err == nil {
+		var pushedIDs []string
+		defer rows.Close()
+		for rows.Next() {
+			var id, name, normalized, icon string
+			var managedInt int
+			var deletedAt sql.NullInt64
+			var createdAt, updatedAt int64
+			if err := rows.Scan(&id, &name, &normalized, &icon, &managedInt, &deletedAt, &createdAt, &updatedAt); err == nil {
+				var dAt any = nil
+				if deletedAt.Valid {
+					dAt = deletedAt.Int64
+				}
+				pushErr := turso.Execute(`INSERT INTO sync_tags(user_id, id, name, normalized_name, icon, managed, deleted_at, created_at, updated_at)
+					VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+					ON CONFLICT(user_id, id) DO UPDATE SET
+						name = CASE WHEN excluded.updated_at >= updated_at THEN excluded.name ELSE name END,
+						normalized_name = CASE WHEN excluded.updated_at >= updated_at THEN excluded.normalized_name ELSE normalized_name END,
+						icon = CASE WHEN excluded.updated_at >= updated_at THEN excluded.icon ELSE icon END,
+						managed = CASE WHEN excluded.updated_at >= updated_at THEN excluded.managed ELSE managed END,
+						deleted_at = CASE WHEN excluded.updated_at >= updated_at THEN deleted_at ELSE deleted_at END,
+						updated_at = MAX(excluded.updated_at, updated_at)`,
+					profileID, id, name, normalized, icon, managedInt, dAt, createdAt, updatedAt)
+				if pushErr == nil {
+					pushedIDs = append(pushedIDs, id)
+				}
+			}
+		}
+		if err := rows.Err(); err != nil {
+			log.Printf("syncTagsDirect: error iterating rows: %v", err)
+		}
+		_ = rows.Close()
+		for _, id := range pushedIDs {
+			_, _ = s.db.Exec("UPDATE tags SET sync_state = 'clean' WHERE id = ?", id)
+		}
+	}
+
+	// Pull remote tags
+	_, rRows, err := turso.Query(`SELECT id, name, normalized_name, icon, managed, deleted_at, created_at, updated_at FROM sync_tags WHERE user_id = ?`, profileID)
+	if err == nil {
+		for _, rRow := range rRows {
+			if len(rRow) < 8 {
+				continue
+			}
+			tID := rRow[0].Value
+			tName := rRow[1].Value
+			tNorm := rRow[2].Value
+			tIcon := rRow[3].Value
+			if tIcon == "" {
+				tIcon = "tag"
+			}
+			tManaged, _ := tursoInt(rRow[4])
+			var dAt any = nil
+			if rRow[5].Type != "null" && rRow[5].Value != "" {
+				dAt, _ = tursoInt(rRow[5])
+			}
+			cAt, _ := tursoInt(rRow[6])
+			uAt, _ := tursoInt(rRow[7])
+			_, _ = s.db.Exec(`INSERT INTO tags(id, name, normalized_name, icon, managed, deleted_at, created_at, updated_at, sync_state)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'clean')
+				ON CONFLICT(id) DO UPDATE SET
+					name = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN name ELSE excluded.name END,
+					normalized_name = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN normalized_name ELSE excluded.normalized_name END,
+					icon = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN icon ELSE excluded.icon END,
+					managed = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN managed ELSE excluded.managed END,
+					deleted_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
+					updated_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
+					sync_state = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN 'pending' ELSE 'clean' END`,
+				tID, tName, tNorm, tIcon, tManaged, dAt, cAt, uAt)
+		}
+	}
+	return nil
+}
+
 func (s *noteStore) syncViaAPI(apiURL, profileID, cursor, tursoDatabaseURL, tursoAuthToken string) (SyncResult, error) {
 	result := SyncResult{
 		SyncedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	// Sincronizar pastas primeiro
+	// Sincronizar pastas e etiquetas primeiro
 	_ = s.syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAuthToken)
+	_ = s.syncTagsViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAuthToken)
 
 	pending, err := s.pendingSyncNotes()
 	if err != nil {
@@ -423,8 +592,9 @@ func (s *noteStore) syncDirectTurso(profileID, cursor, tursoDatabaseURL, tursoAu
 		SyncedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	// Sincronizar pastas primeiro
+	// Sincronizar pastas e etiquetas primeiro
 	_ = s.syncFoldersDirect(turso, profileID)
+	_ = s.syncTagsDirect(turso, profileID)
 
 	pending, err := s.pendingSyncNotes()
 	if err != nil {

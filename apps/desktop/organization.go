@@ -81,6 +81,7 @@ func (s *noteStore) listNavigation() (Navigation, error) {
 
 	tagRows, err := s.db.Query(`SELECT t.id, t.name, COALESCE(t.icon, 'tag'), COUNT(nt.note_id)
 		FROM tags t LEFT JOIN note_tags nt ON nt.tag_id = t.id
+		WHERE t.deleted_at IS NULL
 		GROUP BY t.id, t.name, t.icon ORDER BY t.normalized_name`)
 	if err != nil {
 		return Navigation{}, fmt.Errorf("list tags: %w", err)
@@ -201,17 +202,36 @@ func (s *noteStore) saveTag(tag Tag) (Tag, error) {
 		tag.Icon = "tag"
 	}
 
-	result, err := s.db.Exec(`INSERT INTO tags(id, name, normalized_name, icon, managed, created_at)
-		VALUES (?, ?, ?, ?, 1, ?)
-		ON CONFLICT(id) DO UPDATE SET name = excluded.name, normalized_name = excluded.normalized_name, icon = excluded.icon, managed = 1`,
-		tag.ID, name, normalized, tag.Icon, time.Now().UTC().UnixMilli())
+	tx, err := s.db.Begin()
+	if err != nil {
+		return Tag{}, fmt.Errorf("begin save tag tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	now := time.Now().UTC().UnixMilli()
+	_, err = tx.Exec(`INSERT INTO tags(id, name, normalized_name, icon, managed, deleted_at, created_at, updated_at, sync_state)
+		VALUES (?, ?, ?, ?, 1, NULL, ?, ?, 'pending')
+		ON CONFLICT(id) DO UPDATE SET
+			name = excluded.name,
+			normalized_name = excluded.normalized_name,
+			icon = excluded.icon,
+			managed = 1,
+			deleted_at = NULL,
+			updated_at = excluded.updated_at,
+			sync_state = 'pending'`,
+		tag.ID, name, normalized, tag.Icon, now, now)
 	if err != nil {
 		return Tag{}, fmt.Errorf("save tag: %w", err)
 	}
-	if _, err := result.RowsAffected(); err != nil {
-		return Tag{}, err
-	}
+
 	tag.Name = name
+	if _, err := commitLocalOp(tx, "tag", tag.ID, "create", tag, 1); err != nil {
+		return Tag{}, fmt.Errorf("commit outbox tag op: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return Tag{}, fmt.Errorf("commit tag tx: %w", err)
+	}
 	return s.getTag(tag.ID)
 }
 
@@ -234,7 +254,15 @@ func (s *noteStore) deleteTag(id string) error {
 	if smartFolderCount > 0 {
 		return errors.New("a etiqueta está sendo usada por uma pasta inteligente")
 	}
-	result, err := s.db.Exec("DELETE FROM tags WHERE id = ?", id)
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin delete tag tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	now := time.Now().UTC().UnixMilli()
+	result, err := tx.Exec("UPDATE tags SET deleted_at = ?, updated_at = ?, sync_state = 'pending' WHERE id = ?", now, now, id)
 	if err != nil {
 		return fmt.Errorf("delete tag: %w", err)
 	}
@@ -245,7 +273,16 @@ func (s *noteStore) deleteTag(id string) error {
 	if affected == 0 {
 		return sql.ErrNoRows
 	}
-	return nil
+
+	if _, err := tx.Exec("DELETE FROM note_tags WHERE tag_id = ?", id); err != nil {
+		return fmt.Errorf("clear note tags: %w", err)
+	}
+
+	if _, err := commitLocalOp(tx, "tag", id, "delete", map[string]any{"id": id}, 1); err != nil {
+		return fmt.Errorf("commit outbox tag op: %w", err)
+	}
+
+	return tx.Commit()
 }
 
 func (s *noteStore) deleteFolder(id string) error {
@@ -372,7 +409,11 @@ func (s *noteStore) setNoteTags(noteID string, values []string) (Note, error) {
 		err := tx.QueryRow("SELECT id FROM tags WHERE normalized_name = ?", normalized).Scan(&tagID)
 		if errors.Is(err, sql.ErrNoRows) {
 			tagID = uuid.NewString()
-			_, err = tx.Exec("INSERT INTO tags(id, name, normalized_name, created_at) VALUES (?, ?, ?, ?)", tagID, name, normalized, time.Now().UTC().UnixMilli())
+			now := time.Now().UTC().UnixMilli()
+			_, err = tx.Exec(`INSERT INTO tags(id, name, normalized_name, icon, managed, deleted_at, created_at, updated_at, sync_state)
+				VALUES (?, ?, ?, 'tag', 0, NULL, ?, ?, 'pending')`, tagID, name, normalized, now, now)
+		} else if err == nil {
+			_, _ = tx.Exec(`UPDATE tags SET deleted_at = NULL, sync_state = 'pending', updated_at = ? WHERE id = ? AND deleted_at IS NOT NULL`, time.Now().UTC().UnixMilli(), tagID)
 		}
 		if err != nil {
 			return Note{}, fmt.Errorf("save tag: %w", err)
@@ -383,6 +424,7 @@ func (s *noteStore) setNoteTags(noteID string, values []string) (Note, error) {
 	}
 	if _, err := tx.Exec(`DELETE FROM tags
 		WHERE managed = 0
+		AND deleted_at IS NULL
 		AND NOT EXISTS (SELECT 1 FROM note_tags WHERE note_tags.tag_id = tags.id)
 		AND NOT EXISTS (SELECT 1 FROM smart_folders WHERE smart_folders.tag_id = tags.id)`); err != nil {
 		return Note{}, fmt.Errorf("remove unused tags: %w", err)

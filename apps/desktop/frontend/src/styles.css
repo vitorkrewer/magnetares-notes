@@ -610,10 +610,12 @@ textarea:focus-visible {
 .folder-expander-spacer {
   align-items: center;
   display: inline-flex;
-  flex: 0 0 20px;
+  flex: 0 0 16px;
   height: 24px;
   justify-content: center;
-  width: 20px;
+  margin-left: 2px;
+  margin-right: 2px;
+  width: 16px;
 }
 
 .folder-expander {
@@ -631,8 +633,12 @@ textarea:focus-visible {
 }
 
 .folder-expander svg {
-  height: 13px;
-  width: 13px;
+  height: 12px;
+  width: 12px;
+}
+
+.folder-item.has-expander {
+  padding-left: 2px;
 }
 
 .folder-drop-zone {

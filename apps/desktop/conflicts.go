@@ -79,7 +79,8 @@ func (s *noteStore) ResolveNoteConflict(noteID, resolution string) error {
 	}
 
 	now := time.Now().UTC().UnixMilli()
-	if resolution == "local" {
+	switch resolution {
+	case "local":
 		mutationID := uuid.NewString()
 		result, err := tx.Exec(`UPDATE notes SET server_revision = ?, sync_state = 'pending',
 			pending_mutation_id = ?, updated_at = ? WHERE id = ? AND sync_state = 'conflict'`,
@@ -97,7 +98,7 @@ func (s *noteStore) ResolveNoteConflict(noteID, resolution string) error {
 		if _, err := tx.Exec("UPDATE sync_outbox SET status = 'pending' WHERE entity_id = ? AND status = 'conflict'", noteID); err != nil {
 			return err
 		}
-	} else if resolution == "merge" {
+	case "merge":
 		local, err := scanNote(tx.QueryRow(`SELECT `+noteSelectColumns+` FROM notes n WHERE n.id = ?`, noteID))
 		if err != nil {
 			return err
@@ -152,7 +153,7 @@ func (s *noteStore) ResolveNoteConflict(noteID, resolution string) error {
 		if _, err := tx.Exec("UPDATE sync_outbox SET status = 'pending' WHERE entity_id = ? AND status = 'conflict'", noteID); err != nil {
 			return err
 		}
-	} else {
+	default:
 		folder := remote.Folder
 		if folder == "" {
 			folder = "Notas"

@@ -294,6 +294,18 @@ func (t *TursoClient) InitSchema() error {
 			updated_at INTEGER NOT NULL,
 			PRIMARY KEY (user_id, id)
 		)`,
+		`CREATE TABLE IF NOT EXISTS sync_tags (
+			user_id TEXT NOT NULL,
+			id TEXT NOT NULL,
+			name TEXT NOT NULL DEFAULT '',
+			normalized_name TEXT NOT NULL DEFAULT '',
+			icon TEXT NOT NULL DEFAULT 'tag',
+			managed INTEGER NOT NULL DEFAULT 1,
+			deleted_at INTEGER,
+			created_at INTEGER NOT NULL,
+			updated_at INTEGER NOT NULL,
+			PRIMARY KEY (user_id, id)
+		)`,
 		`CREATE TABLE IF NOT EXISTS sync_note_changes (
 			cursor INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id TEXT NOT NULL,
@@ -328,6 +340,8 @@ func (t *TursoClient) InitSchema() error {
 		`ALTER TABLE sync_notes ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'`,
 		`ALTER TABLE sync_folders ADD COLUMN color TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE sync_folders ADD COLUMN icon TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE sync_tags ADD COLUMN icon TEXT NOT NULL DEFAULT 'tag'`,
+		`ALTER TABLE sync_tags ADD COLUMN managed INTEGER NOT NULL DEFAULT 1`,
 		`ALTER TABLE sync_note_changes ADD COLUMN snapshot_json TEXT NOT NULL DEFAULT ''`,
 	}
 	for _, statement := range alterStatements {
@@ -338,6 +352,7 @@ func (t *TursoClient) InitSchema() error {
 		`UPDATE sync_notes SET folder_id = 'folder-default', folder = 'Notas' WHERE folder_id IS NULL OR folder_id = ''`,
 		`UPDATE sync_folders SET color = '#6366f1' WHERE color IS NULL OR color = ''`,
 		`UPDATE sync_folders SET icon = 'folder' WHERE icon IS NULL OR icon = ''`,
+		`UPDATE sync_tags SET icon = 'tag' WHERE icon IS NULL OR icon = ''`,
 	}
 	for _, statement := range complianceStatements {
 		_ = t.Execute(statement)

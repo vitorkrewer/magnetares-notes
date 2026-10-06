@@ -86,6 +86,17 @@ type RemoteFolder struct {
 	UpdatedAt time.Time  `json:"updatedAt"`
 }
 
+type RemoteTag struct {
+	ID             string     `json:"id"`
+	Name           string     `json:"name"`
+	NormalizedName string     `json:"normalizedName"`
+	Icon           string     `json:"icon"`
+	Managed        bool       `json:"managed"`
+	DeletedAt      *time.Time `json:"deletedAt"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
+}
+
 type syncService struct {
 	turso *TursoClient
 }
@@ -147,6 +158,9 @@ func main() {
 	mux.HandleFunc("GET /v1/folders", service.handleGetFolders)
 	mux.HandleFunc("PUT /v1/folders/{id}", service.handlePutFolder)
 	mux.HandleFunc("DELETE /v1/folders/{id}", service.handleDeleteFolder)
+	mux.HandleFunc("GET /v1/tags", service.handleGetTags)
+	mux.HandleFunc("PUT /v1/tags/{id}", service.handlePutTag)
+	mux.HandleFunc("DELETE /v1/tags/{id}", service.handleDeleteTag)
 
 	addr := os.Getenv("PORT")
 	if addr == "" {
@@ -300,6 +314,68 @@ func (s *syncService) handleDeleteFolder(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"message": "folder deleted"})
+}
+
+func (s *syncService) handleGetTags(w http.ResponseWriter, r *http.Request) {
+	service, err := s.forRequest(r)
+	if err != nil {
+		writeJSONError(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+	profile, ok := syncProfile(w, r)
+	if !ok {
+		return
+	}
+	tags, err := service.getTags(profile)
+	if err != nil {
+		writeJSONError(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, tags)
+}
+
+func (s *syncService) handlePutTag(w http.ResponseWriter, r *http.Request) {
+	service, err := s.forRequest(r)
+	if err != nil {
+		writeJSONError(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+	profile, ok := syncProfile(w, r)
+	if !ok {
+		return
+	}
+	var tag RemoteTag
+	if err := json.NewDecoder(r.Body).Decode(&tag); err != nil || tag.ID == "" {
+		writeJSONError(w, http.StatusBadRequest, "etiqueta inválida")
+		return
+	}
+	if err := service.putTag(profile, tag); err != nil {
+		writeJSONError(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, tag)
+}
+
+func (s *syncService) handleDeleteTag(w http.ResponseWriter, r *http.Request) {
+	service, err := s.forRequest(r)
+	if err != nil {
+		writeJSONError(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+	profile, ok := syncProfile(w, r)
+	if !ok {
+		return
+	}
+	tagID := r.PathValue("id")
+	if tagID == "" {
+		writeJSONError(w, http.StatusBadRequest, "id inválido")
+		return
+	}
+	if err := service.deleteTag(profile, tagID); err != nil {
+		writeJSONError(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"message": "tag deleted"})
 }
 
 func (s *syncService) forRequest(r *http.Request) (*syncService, error) {
@@ -667,6 +743,100 @@ func (s *syncService) deleteFolder(profile string, folderID string) error {
 	}
 	now := time.Now().UTC().UnixMilli()
 	return s.turso.Execute(`UPDATE sync_folders SET deleted_at = ?, updated_at = ? WHERE user_id = ? AND id = ?`, now, now, profile, folderID)
+}
+
+func (s *syncService) getTags(profile string) ([]RemoteTag, error) {
+	if s.turso == nil {
+		return nil, errors.New("sincronização remota não configurada no servidor")
+	}
+	_, rows, err := s.turso.Query(`SELECT id, name, normalized_name, icon, managed, deleted_at, created_at, updated_at
+		FROM sync_tags WHERE user_id = ?`, profile)
+	if err != nil {
+		return nil, err
+	}
+	tags := make([]RemoteTag, 0, len(rows))
+	for _, row := range rows {
+		if len(row) < 8 {
+			continue
+		}
+		var deletedAt *time.Time
+		if row[5].Type != "null" && row[5].Value != "" {
+			dTime, err := tursoTime(row[5])
+			if err == nil {
+				deletedAt = &dTime
+			}
+		}
+		createdAt, err := tursoTime(row[6])
+		if err != nil {
+			return nil, err
+		}
+		updatedAt, err := tursoTime(row[7])
+		if err != nil {
+			return nil, err
+		}
+		managedInt, _ := tursoInt(row[4])
+		icon := row[3].Value
+		if icon == "" {
+			icon = "tag"
+		}
+		tags = append(tags, RemoteTag{
+			ID:             row[0].Value,
+			Name:           row[1].Value,
+			NormalizedName: row[2].Value,
+			Icon:           icon,
+			Managed:        managedInt == 1,
+			DeletedAt:      deletedAt,
+			CreatedAt:      createdAt,
+			UpdatedAt:      updatedAt,
+		})
+	}
+	return tags, nil
+}
+
+func (s *syncService) putTag(profile string, tag RemoteTag) error {
+	if s.turso == nil {
+		return errors.New("sincronização remota não configurada no servidor")
+	}
+	now := time.Now().UTC().UnixMilli()
+	createdAt := now
+	if !tag.CreatedAt.IsZero() {
+		createdAt = tag.CreatedAt.UnixMilli()
+	}
+	updatedAt := now
+	if !tag.UpdatedAt.IsZero() {
+		updatedAt = tag.UpdatedAt.UnixMilli()
+	}
+	var deletedAt any = nil
+	if tag.DeletedAt != nil {
+		deletedAt = tag.DeletedAt.UnixMilli()
+	}
+	if tag.Icon == "" {
+		tag.Icon = "tag"
+	}
+	managed := 1
+	if !tag.Managed {
+		managed = 0
+	}
+	_, err := s.turso.ExecuteAffectedRows(`INSERT INTO sync_tags(user_id, id, name, normalized_name, icon, managed, deleted_at, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(user_id, id) DO UPDATE SET
+			name = excluded.name,
+			normalized_name = excluded.normalized_name,
+			icon = excluded.icon,
+			managed = excluded.managed,
+			deleted_at = excluded.deleted_at,
+			updated_at = excluded.updated_at
+		WHERE sync_tags.updated_at <= excluded.updated_at`,
+		profile, tag.ID, tag.Name, tag.NormalizedName, tag.Icon, managed, deletedAt, createdAt, updatedAt)
+	return err
+}
+
+func (s *syncService) deleteTag(profile string, tagID string) error {
+	if s.turso == nil {
+		return errors.New("sincronização remota não configurada no servidor")
+	}
+	now := time.Now().UTC().UnixMilli()
+	return s.turso.Execute(`UPDATE sync_tags SET deleted_at = ?, updated_at = ? WHERE user_id = ? AND id = ?`, now, now, profile, tagID)
 }
 
 func noteFromChangeRow(row []TursoValue) (RemoteNote, error) {

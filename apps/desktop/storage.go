@@ -335,71 +335,109 @@ func (s *noteStore) ComputeCanonicalStateHash() (string, error) {
 
 	// 1. Folders
 	fRows, err := s.db.Query(`SELECT id, name, parent_id, COALESCE(color, ''), COALESCE(icon, ''), deleted_at FROM folders ORDER BY id ASC`)
-	if err == nil {
-		defer fRows.Close()
-		for fRows.Next() {
-			var id, name, color, icon string
-			var parentID sql.NullString
-			var deletedAt sql.NullInt64
-			if err := fRows.Scan(&id, &name, &parentID, &color, &icon, &deletedAt); err == nil {
-				var pID *string
-				if parentID.Valid && parentID.String != "" {
-					pID = &parentID.String
-				}
-				var dAt *int64
-				if deletedAt.Valid {
-					dAt = &deletedAt.Int64
-				}
-				entities = append(entities, canonicalEntity{
-					Type:      "folder",
-					ID:        id,
-					Name:      name,
-					ParentID:  pID,
-					Color:     color,
-					Icon:      icon,
-					DeletedAt: dAt,
-				})
-			}
+	if err != nil {
+		return "", fmt.Errorf("query folders: %w", err)
+	}
+	defer fRows.Close()
+	for fRows.Next() {
+		var id, name, color, icon string
+		var parentID sql.NullString
+		var deletedAt sql.NullInt64
+		if err := fRows.Scan(&id, &name, &parentID, &color, &icon, &deletedAt); err != nil {
+			return "", fmt.Errorf("scan folder: %w", err)
 		}
+		var pID *string
+		if parentID.Valid && parentID.String != "" {
+			pID = &parentID.String
+		}
+		var dAt *int64
+		if deletedAt.Valid {
+			dAt = &deletedAt.Int64
+		}
+		entities = append(entities, canonicalEntity{
+			Type:      "folder",
+			ID:        id,
+			Name:      name,
+			ParentID:  pID,
+			Color:     color,
+			Icon:      icon,
+			DeletedAt: dAt,
+		})
+	}
+	if err := fRows.Err(); err != nil {
+		return "", fmt.Errorf("iterate folders: %w", err)
 	}
 
 	// 2. Notes
 	nRows, err := s.db.Query(`SELECT n.id, n.title, n.body, n.folder_id, n.revision, n.deleted_at, n.pinned_at,
 		COALESCE((SELECT group_concat(t.name, char(31)) FROM note_tags nt JOIN tags t ON t.id = nt.tag_id WHERE nt.note_id = n.id ORDER BY t.normalized_name), '')
 		FROM notes n ORDER BY n.id ASC`)
-	if err == nil {
-		defer nRows.Close()
-		for nRows.Next() {
-			var id, title, body, folderID, tagsStr string
-			var revision int64
-			var deletedAt, pinnedAt sql.NullInt64
-			if err := nRows.Scan(&id, &title, &body, &folderID, &revision, &deletedAt, &pinnedAt, &tagsStr); err == nil {
-				var dAt, pAt *int64
-				if deletedAt.Valid {
-					dAt = &deletedAt.Int64
-				}
-				if pinnedAt.Valid {
-					pAt = &pinnedAt.Int64
-				}
-				var tags []string
-				if tagsStr != "" {
-					tags = strings.Split(tagsStr, string(rune(31)))
-				} else {
-					tags = make([]string, 0)
-				}
-				entities = append(entities, canonicalEntity{
-					Type:      "note",
-					ID:        id,
-					Title:     title,
-					Body:      body,
-					FolderID:  folderID,
-					Revision:  revision,
-					DeletedAt: dAt,
-					PinnedAt:  pAt,
-					Tags:      tags,
-				})
-			}
+	if err != nil {
+		return "", fmt.Errorf("query notes: %w", err)
+	}
+	defer nRows.Close()
+	for nRows.Next() {
+		var id, title, body, folderID, tagsStr string
+		var revision int64
+		var deletedAt, pinnedAt sql.NullInt64
+		if err := nRows.Scan(&id, &title, &body, &folderID, &revision, &deletedAt, &pinnedAt, &tagsStr); err != nil {
+			return "", fmt.Errorf("scan note: %w", err)
 		}
+		var dAt, pAt *int64
+		if deletedAt.Valid {
+			dAt = &deletedAt.Int64
+		}
+		if pinnedAt.Valid {
+			pAt = &pinnedAt.Int64
+		}
+		var tags []string
+		if tagsStr != "" {
+			tags = strings.Split(tagsStr, string(rune(31)))
+		} else {
+			tags = make([]string, 0)
+		}
+		entities = append(entities, canonicalEntity{
+			Type:      "note",
+			ID:        id,
+			Title:     title,
+			Body:      body,
+			FolderID:  folderID,
+			Revision:  revision,
+			DeletedAt: dAt,
+			PinnedAt:  pAt,
+			Tags:      tags,
+		})
+	}
+	if err := nRows.Err(); err != nil {
+		return "", fmt.Errorf("iterate notes: %w", err)
+	}
+
+	// 3. Tags
+	tRows, err := s.db.Query(`SELECT id, name, COALESCE(icon, 'tag'), deleted_at FROM tags ORDER BY id ASC`)
+	if err != nil {
+		return "", fmt.Errorf("query tags: %w", err)
+	}
+	defer tRows.Close()
+	for tRows.Next() {
+		var id, name, icon string
+		var deletedAt sql.NullInt64
+		if err := tRows.Scan(&id, &name, &icon, &deletedAt); err != nil {
+			return "", fmt.Errorf("scan tag: %w", err)
+		}
+		var dAt *int64
+		if deletedAt.Valid {
+			dAt = &deletedAt.Int64
+		}
+		entities = append(entities, canonicalEntity{
+			Type:      "tag",
+			ID:        id,
+			Name:      name,
+			Icon:      icon,
+			DeletedAt: dAt,
+		})
+	}
+	if err := tRows.Err(); err != nil {
+		return "", fmt.Errorf("iterate tags: %w", err)
 	}
 
 	data, err := json.Marshal(entities)

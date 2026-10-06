@@ -150,6 +150,28 @@ func (s *noteStore) EnsureDataCompliance() (ComplianceReport, error) {
 		}
 	}
 
+	// 8b. Preencher ícone padrão em etiquetas com valores nulos ou vazios
+	res, err = tx.Exec(`UPDATE tags SET
+		icon = CASE WHEN icon IS NULL OR icon = '' THEN 'tag' ELSE icon END
+		WHERE icon IS NULL OR icon = ''`)
+	if err == nil {
+		if affected, _ := res.RowsAffected(); affected > 0 {
+			report.Details = append(report.Details, fmt.Sprintf("Preenchidos ícones padrão em %d etiquetas legadas", affected))
+		}
+	}
+
+	// 8c. Corrigir timestamps e sync_state em etiquetas
+	res, err = tx.Exec(`UPDATE tags SET
+		created_at = CASE WHEN created_at <= 0 THEN ? ELSE created_at END,
+		updated_at = CASE WHEN updated_at <= 0 THEN ? ELSE updated_at END,
+		sync_state = CASE WHEN sync_state IS NULL OR sync_state NOT IN ('clean', 'pending') THEN 'pending' ELSE sync_state END
+		WHERE created_at <= 0 OR updated_at <= 0 OR sync_state IS NULL OR sync_state NOT IN ('clean', 'pending')`, now, now)
+	if err == nil {
+		if affected, _ := res.RowsAffected(); affected > 0 {
+			report.Details = append(report.Details, fmt.Sprintf("Corrigidos metadados de sincronização em %d etiquetas", affected))
+		}
+	}
+
 	// 9. Limpar conflitos falsos (onde a nota remota registrada possuía revisão 0 ou ID vazio)
 	res, err = tx.Exec(`DELETE FROM note_conflicts WHERE server_revision = 0 OR server_note_json LIKE '%"id":""%'`)
 	if err == nil {

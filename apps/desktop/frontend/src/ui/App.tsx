@@ -788,16 +788,18 @@ export function App() {
 
     return (
       <div className="folder-node" key={folder.id}>
-        <div className="folder-node-row" style={{ paddingLeft: 4 + depth * 16 }}>
+        <div className={`folder-node-row depth-${depth} ${hasChildren ? "has-children" : "no-children"}`} style={{ paddingLeft: depth === 0 ? 0 : depth * 14 }}>
           {hasChildren ? (
             <button type="button" className="folder-expander" onClick={() => toggleFolderExpanded(folder.id)} aria-label={isExpanded ? `Recolher ${folder.name}` : `Expandir ${folder.name}`}>
               {isExpanded ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}
             </button>
-          ) : <span className="folder-expander-spacer" />}
+          ) : depth > 0 ? (
+            <span className="folder-expander-spacer" />
+          ) : null}
           <button
             type="button"
             draggable
-            className={`nav-item folder-item folder-drop-zone ${selectedQuery.kind === "folder" && selectedQuery.id === folder.id ? "selected-folder" : ""} ${isDropTarget ? "drop-target" : ""}`}
+            className={`nav-item folder-item folder-drop-zone ${hasChildren || depth > 0 ? "has-expander" : ""} ${selectedQuery.kind === "folder" && selectedQuery.id === folder.id ? "selected-folder" : ""} ${isDropTarget ? "drop-target" : ""}`}
             onClick={() => selectQuery({ kind: "folder", id: folder.id })}
             onDragStart={(event) => {
               event.dataTransfer.effectAllowed = "move";

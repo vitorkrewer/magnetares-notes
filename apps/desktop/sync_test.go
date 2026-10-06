@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -23,6 +24,12 @@ func TestSyncNowPushesPendingNoteAndMarksItClean(t *testing.T) {
 		case r.Method == http.MethodGet && r.URL.Path == "/v1/folders":
 			w.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(w).Encode([]syncRemoteFolder{})
+		case r.Method == http.MethodGet && r.URL.Path == "/v1/tags":
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode([]syncRemoteTag{})
+		case r.Method == http.MethodPut && strings.HasPrefix(r.URL.Path, "/v1/tags/"):
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(syncRemoteTag{})
 		case r.Method == http.MethodPut:
 			var mutation struct {
 				Note struct {
@@ -902,3 +909,138 @@ func TestFolderSyncStateTracking(t *testing.T) {
 		t.Fatalf("deleted folder should be pending for sync, got: %s", syncState)
 	}
 }
+
+func TestTagSyncAndCustomIconIntegrity(t *testing.T) {
+	var pushedTag syncRemoteTag
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/healthz":
+			w.WriteHeader(http.StatusNoContent)
+		case r.Method == http.MethodGet && r.URL.Path == "/v1/folders":
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode([]syncRemoteFolder{})
+		case r.Method == http.MethodGet && r.URL.Path == "/v1/changes":
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(syncChangesPage{Changes: []syncChange{}, NextCursor: "1", HasMore: false})
+		case r.Method == http.MethodPut && strings.HasPrefix(r.URL.Path, "/v1/tags/"):
+			if err := json.NewDecoder(r.Body).Decode(&pushedTag); err != nil {
+				t.Fatalf("decode tag error: %v", err)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(pushedTag)
+		case r.Method == http.MethodGet && r.URL.Path == "/v1/tags":
+			now := time.Now().UTC()
+			remoteTags := []syncRemoteTag{
+				{
+					ID:        "tag-remoto-1",
+					Name:      "Projetos",
+					Icon:      "briefcase",
+					CreatedAt: now,
+					UpdatedAt: now,
+				},
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(remoteTags)
+		default:
+			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer server.Close()
+
+	app, err := NewApp(filepath.Join(t.TempDir(), "tagsync.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	// 1. Create a tag with custom icon
+	tag, err := app.SaveTag(Tag{
+		Name: "Urgente",
+		Icon: "alert-circle",
+	})
+	if err != nil {
+		t.Fatalf("SaveTag error: %v", err)
+	}
+	if tag.Icon != "alert-circle" {
+		t.Fatalf("expected icon alert-circle, got: %s", tag.Icon)
+	}
+
+	// Verify pending state
+	var syncState string
+	if err := app.store.db.QueryRow("SELECT sync_state FROM tags WHERE id = ?", tag.ID).Scan(&syncState); err != nil {
+		t.Fatalf("query tag sync_state error: %v", err)
+	}
+	if syncState != "pending" {
+		t.Fatalf("expected tag sync_state pending, got: %s", syncState)
+	}
+
+	hashBefore, err := app.store.ComputeCanonicalStateHash()
+	if err != nil || hashBefore == "" {
+		t.Fatalf("ComputeCanonicalStateHash error: %v", err)
+	}
+
+	// 2. Perform sync
+	result, err := app.store.syncNow(server.URL, "libsql://sync-test.turso.io", "test-token")
+	if err != nil {
+		t.Fatalf("syncNow error: %v", err)
+	}
+	_ = result
+
+	// Verify local tag was pushed to API with custom icon
+	if pushedTag.ID != tag.ID || pushedTag.Icon != "alert-circle" || pushedTag.Name != "Urgente" {
+		t.Fatalf("pushed tag mismatch: %#v", pushedTag)
+	}
+
+	// Verify local tag transitioned to clean
+	if err := app.store.db.QueryRow("SELECT sync_state FROM tags WHERE id = ?", tag.ID).Scan(&syncState); err != nil {
+		t.Fatalf("query tag sync_state after sync error: %v", err)
+	}
+	if syncState != "clean" {
+		t.Fatalf("expected tag sync_state clean after sync, got: %s", syncState)
+	}
+
+	// Verify remote tag with custom icon was pulled
+	nav, err := app.ListNavigation()
+	if err != nil {
+		t.Fatalf("ListNavigation error: %v", err)
+	}
+	var foundRemote, foundLocal bool
+	for _, navTag := range nav.Tags {
+		if navTag.ID == "tag-remoto-1" {
+			foundRemote = true
+			if navTag.Icon != "briefcase" {
+				t.Fatalf("expected remote tag icon briefcase, got: %s", navTag.Icon)
+			}
+		}
+		if navTag.ID == tag.ID {
+			foundLocal = true
+			if navTag.Icon != "alert-circle" {
+				t.Fatalf("expected local tag icon alert-circle, got: %s", navTag.Icon)
+			}
+		}
+	}
+	if !foundRemote || !foundLocal {
+		t.Fatalf("expected both tags in navigation: foundRemote=%v, foundLocal=%v", foundRemote, foundLocal)
+	}
+
+	// 3. Delete tag and verify pending soft delete
+	if err := app.DeleteTag(tag.ID); err != nil {
+		t.Fatalf("DeleteTag error: %v", err)
+	}
+	var deletedAt sql.NullInt64
+	if err := app.store.db.QueryRow("SELECT sync_state, deleted_at FROM tags WHERE id = ?", tag.ID).Scan(&syncState, &deletedAt); err != nil {
+		t.Fatalf("query tag after delete error: %v", err)
+	}
+	if syncState != "pending" || !deletedAt.Valid {
+		t.Fatalf("expected tag pending and deleted_at set after delete: state=%s, deletedAt=%v", syncState, deletedAt)
+	}
+
+	hashAfter, err := app.store.ComputeCanonicalStateHash()
+	if err != nil {
+		t.Fatalf("ComputeCanonicalStateHash error: %v", err)
+	}
+	if hashBefore == hashAfter {
+		t.Fatal("canonical state hash did not change after tag deletion")
+	}
+}
+
