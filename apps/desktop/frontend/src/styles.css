@@ -745,31 +745,135 @@ textarea:focus-visible {
 
 .footer-status {
   align-items: center;
+  border-radius: 6px;
   display: flex;
   min-width: 0;
   overflow: hidden;
+  padding: 4px 6px;
   text-overflow: ellipsis;
+  transition: background 0.15s ease;
 }
 
-.settings-btn {
-  color: #77766f;
-  flex: 0 0 24px;
-  height: 24px;
-  width: 24px;
+.footer-status:hover {
+  background: rgb(0 0 0 / 5%);
 }
 
-.settings-btn svg {
+[data-theme="dark"] .footer-status:hover {
+  background: rgb(255 255 255 / 6%);
+}
+
+.footer-cloud-wrapper {
+  align-items: center;
+  display: inline-flex;
+  gap: 4px;
+  margin-right: 6px;
+  position: relative;
+}
+
+.footer-cloud-wrapper .sync-dot {
+  margin-right: 0;
+}
+
+.footer-cloud-icon {
+  flex-shrink: 0;
   height: 14px;
+  transition: color 0.2s ease, transform 0.2s ease;
   width: 14px;
 }
 
+.footer-cloud-icon.active-cloud {
+  color: #16a34a;
+}
+
+.footer-cloud-icon.local-cloud {
+  color: #9c9a92;
+}
+
+.footer-cloud-icon.syncing-cloud {
+  animation: cloud-float 1.2s ease-in-out infinite;
+  color: #3b82f6;
+}
+
+@keyframes cloud-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.12);
+  }
+}
+
+.footer-status-text {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.footer-sync-countdown {
+  background: rgb(34 197 94 / 14%);
+  border-radius: 9px;
+  color: #15803d;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  margin-left: 6px;
+  padding: 1px 6px;
+  transition: all 0.2s ease;
+}
+
 .sync-dot {
-  background: #57a164;
+  background: #a8a79f;
   border-radius: 50%;
   display: inline-block;
-  height: 7px;
+  height: 6px;
   margin-right: 6px;
-  width: 7px;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  width: 6px;
+}
+
+.sync-dot.cloud-active {
+  background: #22c55e;
+  box-shadow: 0 0 6px rgb(34 197 94 / 45%);
+}
+
+.sync-dot.pulse-dot {
+  animation: dot-pulse 1s ease-in-out infinite;
+  background: #3b82f6;
+  box-shadow: 0 0 6px rgb(59 130 246 / 50%);
+}
+
+@keyframes dot-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.65);
+  }
+}
+
+[data-theme="dark"] .footer-cloud-icon.active-cloud {
+  color: #4ade80;
+}
+
+[data-theme="dark"] .footer-cloud-icon.local-cloud {
+  color: #71717a;
+}
+
+[data-theme="dark"] .footer-cloud-icon.syncing-cloud {
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .sync-dot.pulse-dot {
+  background: #60a5fa;
+  box-shadow: 0 0 6px rgb(96 165 250 / 50%);
+}
+
+[data-theme="dark"] .footer-sync-countdown {
+  background: rgba(74, 222, 128, 0.16);
+  color: #86efac;
 }
 
 .note-list {

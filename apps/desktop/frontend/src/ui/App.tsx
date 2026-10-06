@@ -54,6 +54,8 @@ export function App() {
   const [tagInputOpen, setTagInputOpen] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [nextSyncCountdown, setNextSyncCountdown] = useState<string>("");
+  const nextSyncTimeRef = useRef<number | null>(null);
   const [syncNotification, setSyncNotification] = useState<{ type: "success" | "warning" | "error" | "info"; message: string } | null>(null);
   const [conflicts, setConflicts] = useState<SyncConflict[]>([]);
   const [conflictsOpen, setConflictsOpen] = useState(false);
@@ -388,7 +390,7 @@ export function App() {
       throw new Error("Sincronização em nuvem está disponível apenas no aplicativo desktop.");
     }
     if (!syncConfiguration.configured) {
-      throw new Error("Conecte o Turso em Preferências antes de sincronizar.");
+      throw new Error("Conecte a Nuvem em Preferências antes de sincronizar.");
     }
     await flushAllPendingNotes();
     const result = await bridge.SyncNow(syncServiceURL);
@@ -414,6 +416,10 @@ export function App() {
     } finally {
       syncingRef.current = false;
       setSyncing(false);
+      const minutes = syncConfiguration.autoSyncIntervalMinutes;
+      if (syncConfiguration.configured && minutes > 0) {
+        nextSyncTimeRef.current = Date.now() + minutes * 60 * 1000;
+      }
     }
   };
 
@@ -421,24 +427,49 @@ export function App() {
 
   useEffect(() => {
     const minutes = syncConfiguration.autoSyncIntervalMinutes;
-    if (!syncConfiguration.configured || minutes <= 0) return;
+    if (!syncConfiguration.configured || minutes <= 0) {
+      nextSyncTimeRef.current = null;
+      setNextSyncCountdown("");
+      return;
+    }
 
-    const timer = window.setInterval(() => {
-      if (syncingRef.current || !syncRunnerRef.current) return;
-      void syncRunnerRef.current()
-        .then((result) => {
-          if (result.conflictNotes?.length) {
-            setSyncNotification({ type: "warning", message: result.message || "Há conflitos preservados para revisar." });
-            setTimeout(() => setSyncNotification(null), 7000);
-          }
-        })
-        .catch((error: any) => {
-          setSyncNotification({ type: "error", message: error?.message || "Falha na sincronização automática." });
-          setTimeout(() => setSyncNotification(null), 7000);
-        });
-    }, minutes * 60 * 1000);
+    if (!nextSyncTimeRef.current || nextSyncTimeRef.current <= Date.now()) {
+      nextSyncTimeRef.current = Date.now() + minutes * 60 * 1000;
+    }
 
-    return () => window.clearInterval(timer);
+    const updateCountdown = () => {
+      if (!nextSyncTimeRef.current) return;
+      const diffMs = nextSyncTimeRef.current - Date.now();
+      if (diffMs <= 0) {
+        if (!syncingRef.current && syncRunnerRef.current) {
+          nextSyncTimeRef.current = Date.now() + minutes * 60 * 1000;
+          void syncRunnerRef.current()
+            .then((result) => {
+              if (result.conflictNotes?.length) {
+                setSyncNotification({ type: "warning", message: result.message || "Há conflitos preservados para revisar." });
+                setTimeout(() => setSyncNotification(null), 7000);
+              }
+            })
+            .catch((error: any) => {
+              setSyncNotification({ type: "error", message: error?.message || "Falha na sincronização automática." });
+              setTimeout(() => setSyncNotification(null), 7000);
+            });
+        }
+        return;
+      }
+
+      const totalSec = Math.ceil(diffMs / 1000);
+      if (totalSec >= 60) {
+        const m = Math.ceil(totalSec / 60);
+        setNextSyncCountdown(`${m}m`);
+      } else {
+        setNextSyncCountdown(`${totalSec}s`);
+      }
+    };
+
+    updateCountdown();
+    const interval = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(interval);
   }, [syncConfiguration.configured, syncConfiguration.autoSyncIntervalMinutes]);
 
   const handleResolveConflict = async (noteID: string, resolution: "local" | "remote" | "merge") => {
@@ -986,13 +1017,34 @@ export function App() {
         </div>
         <footer>
           <div
-            className="footer-status"
+            className={`footer-status ${syncing ? "syncing" : ""} ${syncConfiguration.configured ? "connected" : "local"}`}
             onClick={() => setSettingsOpen(true)}
             style={{ cursor: "pointer" }}
-            title={syncConfiguration.configured ? "Turso Conectado — clique para ver configurações" : "Armazenado localmente — clique para conectar nuvem"}
+            title={
+              syncing
+                ? "Sincronizando com a nuvem..."
+                : syncConfiguration.configured
+                ? syncConfiguration.autoSyncIntervalMinutes > 0 && nextSyncCountdown
+                  ? `Nuvem Ativa — Próxima sincronização automática em ${nextSyncCountdown}`
+                  : "Nuvem Ativa — clique para ver configurações"
+                : "Armazenamento local — clique para conectar nuvem"
+            }
           >
-            <span className={`sync-dot ${syncConfiguration.configured ? "cloud-active" : ""}`} />
-            <span>{syncConfiguration.configured ? "Nuvem Turso ativa" : "Armazenamento local"}</span>
+            <div className="footer-cloud-wrapper">
+              <Cloud
+                className={`footer-cloud-icon ${syncing ? "syncing-cloud" : syncConfiguration.configured ? "active-cloud" : "local-cloud"}`}
+                aria-hidden="true"
+              />
+              <span className={`sync-dot ${syncing ? "pulse-dot" : syncConfiguration.configured ? "cloud-active" : ""}`} />
+            </div>
+            <span className="footer-status-text">
+              {syncing ? "Sincronizando..." : syncConfiguration.configured ? "Nuvem Ativa" : "Armazenamento local"}
+            </span>
+            {syncConfiguration.configured && syncConfiguration.autoSyncIntervalMinutes > 0 && !syncing && nextSyncCountdown && (
+              <span className="footer-sync-countdown" title={`Próxima sincronização automática em ${nextSyncCountdown}`}>
+                {nextSyncCountdown}
+              </span>
+            )}
           </div>
           <button
             type="button"

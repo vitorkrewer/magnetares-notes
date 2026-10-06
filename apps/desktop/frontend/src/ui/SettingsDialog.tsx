@@ -92,18 +92,18 @@ export function SettingsDialog({
     const bridge = window.go?.main?.App;
     if (!currentTursoURL.trim()) {
       setTestStatus("error");
-      setTestMessage("Informe a URL do banco Turso para testar a conexão.");
+      setTestMessage("Informe a URL do banco de dados na nuvem para testar a conexão.");
       return;
     }
     if (!currentTursoToken.trim() && !syncConfigured) {
       setTestStatus("error");
-      setTestMessage("Informe o token de acesso do Turso para testar.");
+      setTestMessage("Informe o token de acesso da nuvem para testar.");
       return;
     }
 
     setTesting(true);
     setTestStatus("testing");
-    setTestMessage("Testando conexão com o Turso...");
+    setTestMessage("Testando conexão com a nuvem...");
 
     try {
       if (bridge?.TestTursoConnection) {
@@ -116,7 +116,7 @@ export function SettingsDialog({
       }
     } catch (err: any) {
       setTestStatus("error");
-      setTestMessage(err?.message || err?.toString() || "Falha ao conectar com o Turso.");
+      setTestMessage(err?.message || err?.toString() || "Falha ao conectar com a nuvem.");
     } finally {
       setTesting(false);
     }
@@ -126,7 +126,7 @@ export function SettingsDialog({
     e.preventDefault();
     if (!currentTursoURL.trim()) {
       setTestStatus("error");
-      setTestMessage("Informe a URL do seu banco Turso.");
+      setTestMessage("Informe a URL do seu banco na nuvem.");
       return;
     }
 
@@ -138,7 +138,7 @@ export function SettingsDialog({
       setTestMessage("Configuração salva com sucesso! Token guardado com segurança no cofre do sistema.");
     } catch (err: any) {
       setTestStatus("error");
-      setTestMessage(err?.message || "Não foi possível salvar a configuração do Turso.");
+      setTestMessage(err?.message || "Não foi possível salvar a configuração da nuvem.");
     } finally {
       setSavingConfig(false);
     }
@@ -164,7 +164,7 @@ export function SettingsDialog({
     }
     setSyncing(true);
     setSyncStatus("syncing");
-    setSyncMessage("Sincronizando notas com o Turso...");
+    setSyncMessage("Sincronizando notas com a nuvem...");
     try {
       const res = await onSyncNow();
       setSyncStatus("success");
@@ -212,7 +212,7 @@ export function SettingsDialog({
             className={`settings-tab ${activeTab === "cloud" ? "active" : ""}`}
             onClick={() => setActiveTab("cloud")}
           >
-            <Cloud aria-hidden="true" /> Nuvem & Turso
+            <Cloud aria-hidden="true" /> Sincronização em Nuvem
           </button>
         </div>
 
@@ -300,8 +300,8 @@ export function SettingsDialog({
             <div className="settings-section">
               <div className="cloud-header-status-row">
                 <div>
-                  <h3>Sincronização na nuvem (Turso / libSQL)</h3>
-                  <p className="settings-desc">O Magnetares é <strong>100% local-first</strong>. O salvamento de notas funciona sempre offline. Configure o Turso caso queira sincronizar suas notas entre múltiplos dispositivos.</p>
+                  <h3>Sincronização na Nuvem</h3>
+                  <p className="settings-desc">O Magnetares é <strong>100% local-first</strong>. O salvamento de notas funciona sempre offline. Configure a nuvem caso queira sincronizar suas notas entre múltiplos dispositivos.</p>
                 </div>
                 <span className={`connection-badge ${syncConfigured ? "connected" : "disconnected"}`}>
                   <span className="sync-dot" /> {syncConfigured ? "Conectado" : "Não configurado"}
@@ -309,24 +309,24 @@ export function SettingsDialog({
               </div>
               
               <form onSubmit={handleSaveCloudSettings} className="cloud-form">
-                <label htmlFor="turso-url-input">URL do seu banco Turso:</label>
+                <label htmlFor="turso-url-input">URL do banco de dados na nuvem:</label>
                 <div className="cloud-input-group">
                   <input
                     id="turso-url-input"
                     value={currentTursoURL}
                     onChange={(e) => setCurrentTursoURL(e.target.value)}
-                    placeholder="libsql://seu-banco.turso.io ou https://seu-banco.turso.io"
+                    placeholder="libsql://seu-banco.nuvem.io ou https://seu-banco.nuvem.io"
                   />
                 </div>
 
-                <label htmlFor="turso-token-input">Token de autenticação Turso:</label>
+                <label htmlFor="turso-token-input">Token de autenticação da nuvem:</label>
                 <div className="cloud-input-group">
                   <input
                     id="turso-token-input"
                     type={showToken ? "text" : "password"}
                     value={currentTursoToken}
                     onChange={(e) => setCurrentTursoToken(e.target.value)}
-                    placeholder={syncConfigured ? "Token salvo no cofre do sistema (deixe vazio para manter)" : "Cole seu token Turso aqui"}
+                    placeholder={syncConfigured ? "Token salvo no cofre do sistema (deixe vazio para manter)" : "Cole seu token de autenticação aqui"}
                   />
                   <button
                     type="button"
@@ -355,7 +355,7 @@ export function SettingsDialog({
                   </button>
 
                   <button type="submit" className="save-cloud-settings-btn" disabled={savingConfig}>
-                    {syncConfigured ? "Atualizar conexão Turso" : "Conectar Turso"}
+                    {syncConfigured ? "Atualizar conexão da Nuvem" : "Conectar Nuvem"}
                   </button>
                 </div>
 
@@ -372,7 +372,7 @@ export function SettingsDialog({
               <div className="auto-sync-settings">
                 <div className="auto-sync-settings-copy">
                   <strong>Sincronização automática</strong>
-                  <small>Quando o Turso estiver conectado, verifica alterações em segundo plano.</small>
+                  <small>Quando a nuvem estiver conectada, verifica alterações em segundo plano.</small>
                 </div>
                 <label htmlFor="auto-sync-interval">Frequência</label>
                 <select
