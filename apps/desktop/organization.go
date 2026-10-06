@@ -225,6 +225,12 @@ func (s *noteStore) saveTag(tag Tag) (Tag, error) {
 	}
 
 	tag.Name = name
+	// Mark all notes using this tag as pending so their tag list is pushed to cloud sync
+	if _, err := tx.Exec(`UPDATE notes SET sync_state = 'pending', updated_at = ?
+		WHERE id IN (SELECT note_id FROM note_tags WHERE tag_id = ?)`, now, tag.ID); err != nil {
+		return Tag{}, fmt.Errorf("mark notes pending for tag update: %w", err)
+	}
+
 	if _, err := commitLocalOp(tx, "tag", tag.ID, "create", tag, 1); err != nil {
 		return Tag{}, fmt.Errorf("commit outbox tag op: %w", err)
 	}
@@ -272,6 +278,12 @@ func (s *noteStore) deleteTag(id string) error {
 	}
 	if affected == 0 {
 		return sql.ErrNoRows
+	}
+
+	// Mark all notes that had this tag as pending so their tag list is synced to cloud
+	if _, err := tx.Exec(`UPDATE notes SET sync_state = 'pending', updated_at = ?
+		WHERE id IN (SELECT note_id FROM note_tags WHERE tag_id = ?)`, now, id); err != nil {
+		return fmt.Errorf("mark notes pending for tag delete: %w", err)
 	}
 
 	if _, err := tx.Exec("DELETE FROM note_tags WHERE tag_id = ?", id); err != nil {

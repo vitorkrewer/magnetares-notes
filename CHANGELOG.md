@@ -2,6 +2,33 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## [v1.3.0] - 2026-10-06
+
+### Added
+
+- **Página de Recursos:** página separada com roteamento no site, baseada na documentação do produto.
+- **Exportação com diálogo nativo:** ao exportar notas (Markdown, HTML, TXT), o sistema abre a caixa de diálogo para escolher o local de salvamento, em vez de gravar direto em Downloads.
+- **Indicador de Nuvem animado:** ícone de nuvem na barra lateral exibe o estado da nuvem ativa, anima durante a sincronização e informa o tempo até a próxima sincronização automática. A interface passa a usar apenas "Nuvem", sem citar o provedor (base para múltiplas nuvens).
+- **Botão "voltar ao topo":** atalho exibido ao rolar listas e conteúdo para baixo.
+- **Sincronização de etiquetas e ícones:** catálogo de etiquetas (nome e ícone) sincronizado entre computadores, com pull LWW.
+
+### Improved
+
+- **Árvore de pastas:** recuo excessivo removido; pastas raiz alinhadas como as etiquetas e subpastas com indentação progressiva correta.
+- **Salvamento antes do sync:** a sincronização agora aguarda também as gravações em andamento (`saveQueues`), não apenas timers e pendências.
+- **Renomear/excluir etiqueta:** notas vinculadas são marcadas como pendentes para que a nova lista de etiquetas seja enviada à nuvem; a lista de notas é recarregada na interface.
+- **Last-Write-Wins em etiquetas e pastas:** o pull remoto não sobrescreve mais registros locais com `updated_at` igual ou mais recente, mesmo já marcados como `clean` após o push.
+
+### Fixed
+
+- Sincronização automática (ex.: a cada 5 minutos) baixava a versão antiga da nuvem após renomear etiqueta, renomear nota e alterar conteúdo, exigindo sincronização manual prévia.
+- Reversão do nome de etiqueta pelo estado desatualizado do editor ao editar a nota logo após renomear a etiqueta.
+- Sobrescrita de notas locais limpas por snapshots remotos mais antigos em `applyRemoteNote`.
+
+### Tests
+
+- `TestTagRenameAndNoteEditPropagateDuringSync` cobrindo renomear etiqueta, renomear nota, editar conteúdo e sincronizar.
+
 ## [v1.2.0] - 2026-09-28
 
 ### Added

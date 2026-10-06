@@ -1044,3 +1044,237 @@ func TestTagSyncAndCustomIconIntegrity(t *testing.T) {
 	}
 }
 
+func TestTagRenameAndNoteEditPropagateDuringSync(t *testing.T) {
+	var pushedTags []syncRemoteTag
+	var pushedNotes []struct {
+		ID       string
+		Title    string
+		Body     string
+		Tags     []string
+		Revision int64
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodGet && r.URL.Path == "/healthz":
+			w.WriteHeader(http.StatusNoContent)
+		case r.Method == http.MethodGet && r.URL.Path == "/v1/folders":
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode([]syncRemoteFolder{})
+		case r.Method == http.MethodGet && r.URL.Path == "/v1/changes":
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(syncChangesPage{Changes: []syncChange{}, NextCursor: "1", HasMore: false})
+		case r.Method == http.MethodPut && strings.HasPrefix(r.URL.Path, "/v1/tags/"):
+			var tag syncRemoteTag
+			if err := json.NewDecoder(r.Body).Decode(&tag); err != nil {
+				t.Fatalf("decode tag error: %v", err)
+			}
+			pushedTags = append(pushedTags, tag)
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(tag)
+		case r.Method == http.MethodGet && r.URL.Path == "/v1/tags":
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(pushedTags)
+		case r.Method == http.MethodPut && strings.HasPrefix(r.URL.Path, "/v1/notes/"):
+			var mutation struct {
+				BaseRevision int64 `json:"baseRevision"`
+				Note         struct {
+					Title    string   `json:"title"`
+					Body     string   `json:"body"`
+					BodyText string   `json:"bodyText"`
+					Folder   string   `json:"folder"`
+					FolderID string   `json:"folderId"`
+					Tags     []string `json:"tags"`
+				} `json:"note"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&mutation); err != nil {
+				t.Fatalf("decode note mutation: %v", err)
+			}
+			noteID := strings.TrimPrefix(r.URL.Path, "/v1/notes/")
+			pushedNotes = append(pushedNotes, struct {
+				ID       string
+				Title    string
+				Body     string
+				Tags     []string
+				Revision int64
+			}{
+				ID:       noteID,
+				Title:    mutation.Note.Title,
+				Body:     mutation.Note.Body,
+				Tags:     mutation.Note.Tags,
+				Revision: mutation.BaseRevision + 1,
+			})
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(syncMutationResult{
+				Note: syncRemoteNote{
+					ID:        noteID,
+					Title:     mutation.Note.Title,
+					Body:      mutation.Note.Body,
+					BodyText:  mutation.Note.BodyText,
+					Folder:    mutation.Note.Folder,
+					FolderID:  mutation.Note.FolderID,
+					Tags:      mutation.Note.Tags,
+					Revision:  mutation.BaseRevision + 1,
+					CreatedAt: time.Now().UTC(),
+					UpdatedAt: time.Now().UTC(),
+				},
+				Cursor: "1",
+			})
+		default:
+			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+	}))
+	defer server.Close()
+
+	app, err := NewApp(filepath.Join(t.TempDir(), "rename_sync.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Close()
+
+	// 1. Create a tag "Urgente"
+	tag, err := app.SaveTag(Tag{
+		ID:   "tag-urgente-1",
+		Name: "Urgente",
+		Icon: "alert-circle",
+	})
+	if err != nil {
+		t.Fatalf("SaveTag: %v", err)
+	}
+
+	// 2. Create note 1 with tag "Urgente"
+	note1, err := app.SaveNote(Note{
+		ID:       "note-1",
+		Title:    "Nota 1",
+		Body:     "Conteudo original",
+		BodyText: "Conteudo original",
+		Folder:   "Notas",
+		FolderID: "folder-default",
+	})
+	if err != nil {
+		t.Fatalf("SaveNote: %v", err)
+	}
+	if _, err := app.SetNoteTags(note1.ID, []string{"Urgente"}); err != nil {
+		t.Fatalf("SetNoteTags: %v", err)
+	}
+
+	// 3. Initial sync: uploads tag and note
+	initialResult, err := app.store.syncNow(server.URL, "libsql://sync-test.turso.io", "test-token")
+	if err != nil {
+		t.Fatalf("initial syncNow: %v", err)
+	}
+	if initialResult.Uploaded < 1 {
+		t.Fatalf("expected initial sync to upload note, got: %#v", initialResult)
+	}
+
+	// Verify both tag and note are clean locally
+	var tagState, noteState string
+	if err := app.store.db.QueryRow("SELECT sync_state FROM tags WHERE id = ?", tag.ID).Scan(&tagState); err != nil {
+		t.Fatal(err)
+	}
+	if tagState != "clean" {
+		t.Fatalf("expected tag clean after sync, got %s", tagState)
+	}
+	if err := app.store.db.QueryRow("SELECT sync_state FROM notes WHERE id = ?", note1.ID).Scan(&noteState); err != nil {
+		t.Fatal(err)
+	}
+	if noteState != "clean" {
+		t.Fatalf("expected note clean after sync, got %s", noteState)
+	}
+
+	// 4. User scenario:
+	// a) Renames the tag to "Prioridade"
+	updatedTag, err := app.SaveTag(Tag{
+		ID:   tag.ID,
+		Name: "Prioridade",
+		Icon: "star",
+	})
+	if err != nil {
+		t.Fatalf("rename tag: %v", err)
+	}
+	if updatedTag.Name != "Prioridade" {
+		t.Fatalf("expected tag name Prioridade, got %s", updatedTag.Name)
+	}
+
+	// Verify that saving/renaming the tag marks the associated note as pending!
+	if err := app.store.db.QueryRow("SELECT sync_state FROM notes WHERE id = ?", note1.ID).Scan(&noteState); err != nil {
+		t.Fatal(err)
+	}
+	if noteState != "pending" {
+		t.Fatalf("expected note marked pending after tag rename, got %s", noteState)
+	}
+
+	// b) User renames the note and alters content
+	_, err = app.SaveNote(Note{
+		ID:       note1.ID,
+		Title:    "Nota 1 Renomeada",
+		Body:     "Conteudo 1 alterado pelo usuario",
+		BodyText: "Conteudo 1 alterado pelo usuario",
+		Folder:   "Notas",
+		FolderID: "folder-default",
+	})
+	if err != nil {
+		t.Fatalf("save edited note: %v", err)
+	}
+
+	// Clear pushed tracker for next sync assertion
+	pushedTags = nil
+	pushedNotes = nil
+
+	// 5. Sync runs (simulating auto-sync after interval)
+	syncResult, err := app.store.syncNow(server.URL, "libsql://sync-test.turso.io", "test-token")
+	if err != nil {
+		t.Fatalf("syncNow after edit: %v", err)
+	}
+	if syncResult.Uploaded < 1 {
+		t.Fatalf("expected sync to upload edited note and tag, got: %#v", syncResult)
+	}
+
+	// Verify that the renamed tag was pushed with "Prioridade"
+	var foundPrioridadeTag bool
+	for _, pt := range pushedTags {
+		if pt.ID == tag.ID && pt.Name == "Prioridade" && pt.Icon == "star" {
+			foundPrioridadeTag = true
+		}
+	}
+	if !foundPrioridadeTag {
+		t.Fatalf("expected pushed tag to have name Prioridade, pushed: %#v", pushedTags)
+	}
+
+	// Verify that the note was pushed with new title, new body, and new tag
+	var foundEditedNote bool
+	for _, pn := range pushedNotes {
+		if pn.ID == note1.ID {
+			foundEditedNote = true
+			if pn.Title != "Nota 1 Renomeada" {
+				t.Fatalf("expected pushed note title 'Nota 1 Renomeada', got: %s", pn.Title)
+			}
+			if pn.Body != "Conteudo 1 alterado pelo usuario" {
+				t.Fatalf("expected pushed note body 'Conteudo 1 alterado pelo usuario', got: %s", pn.Body)
+			}
+			if len(pn.Tags) == 0 || pn.Tags[0] != "Prioridade" {
+				t.Fatalf("expected pushed note tags ['Prioridade'], got: %#v", pn.Tags)
+			}
+		}
+	}
+	if !foundEditedNote {
+		t.Fatalf("expected edited note to be pushed during sync, pushed: %#v", pushedNotes)
+	}
+
+	// 6. Verify local database has the updated values and was not overwritten by old version
+	finalNote, err := app.store.getNote(note1.ID)
+	if err != nil {
+		t.Fatalf("getNote: %v", err)
+	}
+	if finalNote.Title != "Nota 1 Renomeada" {
+		t.Fatalf("local note title was corrupted: %s", finalNote.Title)
+	}
+	if finalNote.Body != "Conteudo 1 alterado pelo usuario" {
+		t.Fatalf("local note body was corrupted: %s", finalNote.Body)
+	}
+	if len(finalNote.Tags) == 0 || finalNote.Tags[0] != "Prioridade" {
+		t.Fatalf("local note tags were corrupted: %#v", finalNote.Tags)
+	}
+}
+
+

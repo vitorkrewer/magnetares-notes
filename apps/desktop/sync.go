@@ -276,16 +276,16 @@ func (s *noteStore) syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, turso
 				dAt = rf.DeletedAt.UnixMilli()
 			}
 			remoteUpdatedAt := rf.UpdatedAt.UnixMilli()
-			// Only apply remote if it's newer than local (LWW) and local is not pending
+			// Only apply remote if it's newer than local (LWW)
 			_, _ = s.db.Exec(`INSERT INTO folders(id, name, parent_id, color, icon, deleted_at, created_at, updated_at, sync_state)
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'clean')
 				ON CONFLICT(id) DO UPDATE SET
-					name = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN name ELSE excluded.name END,
-					parent_id = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN parent_id ELSE excluded.parent_id END,
-					color = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN color ELSE excluded.color END,
-					icon = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN icon ELSE excluded.icon END,
-					deleted_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
-					updated_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
+					name = CASE WHEN updated_at >= excluded.updated_at THEN name ELSE excluded.name END,
+					parent_id = CASE WHEN updated_at >= excluded.updated_at THEN parent_id ELSE excluded.parent_id END,
+					color = CASE WHEN updated_at >= excluded.updated_at THEN color ELSE excluded.color END,
+					icon = CASE WHEN updated_at >= excluded.updated_at THEN icon ELSE excluded.icon END,
+					deleted_at = CASE WHEN updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
+					updated_at = CASE WHEN updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
 					sync_state = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN 'pending' ELSE 'clean' END`,
 				rf.ID, rf.Name, pID, rf.Color, rf.Icon, dAt, rf.CreatedAt.UnixMilli(), remoteUpdatedAt)
 		}
@@ -359,16 +359,16 @@ func (s *noteStore) syncFoldersDirect(turso *TursoClient, profileID string) erro
 			}
 			cAt, _ := tursoInt(rRow[6])
 			uAt, _ := tursoInt(rRow[7])
-			// LWW: only apply remote if it's newer and local is not pending with a newer local change
+			// LWW: only apply remote if it's newer than local
 			_, _ = s.db.Exec(`INSERT INTO folders(id, name, parent_id, color, icon, deleted_at, created_at, updated_at, sync_state)
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'clean')
 				ON CONFLICT(id) DO UPDATE SET
-					name = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN name ELSE excluded.name END,
-					parent_id = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN parent_id ELSE excluded.parent_id END,
-					color = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN color ELSE excluded.color END,
-					icon = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN icon ELSE excluded.icon END,
-					deleted_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
-					updated_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
+					name = CASE WHEN updated_at >= excluded.updated_at THEN name ELSE excluded.name END,
+					parent_id = CASE WHEN updated_at >= excluded.updated_at THEN parent_id ELSE excluded.parent_id END,
+					color = CASE WHEN updated_at >= excluded.updated_at THEN color ELSE excluded.color END,
+					icon = CASE WHEN updated_at >= excluded.updated_at THEN icon ELSE excluded.icon END,
+					deleted_at = CASE WHEN updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
+					updated_at = CASE WHEN updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
 					sync_state = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN 'pending' ELSE 'clean' END`,
 				fID, fName, pID, fColor, fIcon, dAt, cAt, uAt)
 		}
@@ -440,12 +440,12 @@ func (s *noteStore) syncTagsViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAut
 			_, _ = s.db.Exec(`INSERT INTO tags(id, name, normalized_name, icon, managed, deleted_at, created_at, updated_at, sync_state)
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'clean')
 				ON CONFLICT(id) DO UPDATE SET
-					name = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN name ELSE excluded.name END,
-					normalized_name = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN normalized_name ELSE excluded.normalized_name END,
-					icon = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN icon ELSE excluded.icon END,
-					managed = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN managed ELSE excluded.managed END,
-					deleted_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
-					updated_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
+					name = CASE WHEN updated_at >= excluded.updated_at THEN name ELSE excluded.name END,
+					normalized_name = CASE WHEN updated_at >= excluded.updated_at THEN normalized_name ELSE excluded.normalized_name END,
+					icon = CASE WHEN updated_at >= excluded.updated_at THEN icon ELSE excluded.icon END,
+					managed = CASE WHEN updated_at >= excluded.updated_at THEN managed ELSE excluded.managed END,
+					deleted_at = CASE WHEN updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
+					updated_at = CASE WHEN updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
 					sync_state = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN 'pending' ELSE 'clean' END`,
 				rt.ID, rt.Name, rt.NormalizedName, icon, managed, dAt, rt.CreatedAt.UnixMilli(), remoteUpdatedAt)
 		}
@@ -517,12 +517,12 @@ func (s *noteStore) syncTagsDirect(turso *TursoClient, profileID string) error {
 			_, _ = s.db.Exec(`INSERT INTO tags(id, name, normalized_name, icon, managed, deleted_at, created_at, updated_at, sync_state)
 				VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'clean')
 				ON CONFLICT(id) DO UPDATE SET
-					name = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN name ELSE excluded.name END,
-					normalized_name = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN normalized_name ELSE excluded.normalized_name END,
-					icon = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN icon ELSE excluded.icon END,
-					managed = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN managed ELSE excluded.managed END,
-					deleted_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
-					updated_at = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
+					name = CASE WHEN updated_at >= excluded.updated_at THEN name ELSE excluded.name END,
+					normalized_name = CASE WHEN updated_at >= excluded.updated_at THEN normalized_name ELSE excluded.normalized_name END,
+					icon = CASE WHEN updated_at >= excluded.updated_at THEN icon ELSE excluded.icon END,
+					managed = CASE WHEN updated_at >= excluded.updated_at THEN managed ELSE excluded.managed END,
+					deleted_at = CASE WHEN updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
+					updated_at = CASE WHEN updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
 					sync_state = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN 'pending' ELSE 'clean' END`,
 				tID, tName, tNorm, tIcon, tManaged, dAt, cAt, uAt)
 		}
@@ -1226,6 +1226,10 @@ func (s *noteStore) applyRemoteNote(remote syncRemoteNote) (bool, error) {
 			return false, nil
 		}
 		if remote.Revision < local.localServerRev {
+			return false, nil
+		}
+		// If local note is clean and its localUpdatedAt is >= remoteUpdatedAtMilli, do not overwrite with older remote
+		if local.state == "clean" && local.localUpdatedAt >= remoteUpdatedAtMilli {
 			return false, nil
 		}
 	}

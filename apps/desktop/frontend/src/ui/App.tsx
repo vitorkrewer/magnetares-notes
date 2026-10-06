@@ -168,9 +168,13 @@ export function App() {
   const flushAllPendingNotes = async () => {
     const pendingIDs = new Set([
       ...pendingNotes.current.keys(),
-      ...saveTimers.current.keys()
+      ...saveTimers.current.keys(),
+      ...saveQueues.current.keys()
     ]);
     await Promise.all([...pendingIDs].map((id) => flushNote(id)));
+    while (saveQueues.current.size > 0) {
+      await Promise.all([...saveQueues.current.values()]);
+    }
   };
 
   const scheduleSave = (note: Note) => {
@@ -623,7 +627,10 @@ export function App() {
     const bridge = window.go?.main?.App;
     if (bridge?.SaveTag) {
       await bridge.SaveTag(tag);
-      void reloadNavigation();
+      await Promise.all([
+        reloadNavigation(),
+        bridge.ListNotes ? bridge.ListNotes().then(setNotes) : Promise.resolve()
+      ]);
     } else {
       setNavigation((current) => ({
         ...current,
@@ -813,7 +820,10 @@ export function App() {
       const bridge = window.go?.main?.App;
       if (bridge?.DeleteTag) {
         await bridge.DeleteTag(tag.id);
-        void reloadNavigation();
+        await Promise.all([
+          reloadNavigation(),
+          bridge.ListNotes ? bridge.ListNotes().then(setNotes) : Promise.resolve()
+        ]);
         if (selectedQuery.kind === "tag" && selectedQuery.id === tag.id) {
           selectQuery({ kind: "all" });
         }
