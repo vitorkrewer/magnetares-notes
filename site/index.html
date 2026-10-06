@@ -3,206 +3,423 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Magnetares Notes: suas ideias, com gravidade própria." />
+    <meta name="description" content="Magnetares Notes: Onde pensamentos ganham gravidade própria. Um caderno inteligente, 100% local-first, rápido e privado para desktop." />
     <link rel="icon" type="image/png" href="assets/magnetar-icon.png" />
-    <title>Magnetares Notes</title>
+    <title>Magnetares Notes — Onde pensamentos ganham gravidade própria</title>
+    
+    <!-- Google Fonts modernas: Plus Jakarta Sans e Space Grotesk -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+    
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <!-- HEADER FIXO COM GLASSMORPHISM -->
     <header class="site-header">
       <a class="brand" href="#top" aria-label="Magnetares Notes">
-        <img src="assets/magnetar-icon.png" alt="" />
+        <img src="assets/magnetar-icon.png" alt="Logo Magnetares" />
         <span>Magnetares</span>
       </a>
-      <nav aria-label="Navegação principal">
-        <a href="#recursos">Recursos</a>
-        <a href="#melhorias">Novidades</a>
+
+      <nav class="header-nav" aria-label="Navegação principal">
+        <a href="recursos.html">Recursos</a>
+        <a href="#arquitetura">Arquitetura</a>
         <a href="screenshots.html">Screenshots</a>
         <a href="#downloads">Downloads</a>
       </nav>
-      <a class="header-download" href="#downloads">Baixar agora <span aria-hidden="true">↘</span></a>
+
+      <div class="header-actions">
+        <a class="header-github" href="https://github.com/vitorkrewer/magnetares-notes" target="_blank" rel="noreferrer" aria-label="Repositório no GitHub">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+        <a class="header-download-btn" href="#downloads">
+          <span>Baixar</span>
+          <span id="header-version-badge">v1.1.0</span>
+        </a>
+      </div>
     </header>
 
     <main id="top">
+      <!-- HERO SECTION -->
       <section class="hero">
         <div class="starfield" aria-hidden="true"></div>
-        <div class="hero-copy">
-          <p class="eyebrow">Notas para pensamentos com gravidade própria</p>
-          <h1>Onde ideias<br />ganham <em>órbita.</em></h1>
-          <p class="hero-description">Um caderno inteligente, local e calmo para capturar, organizar e expandir o que importa.</p>
+
+        <div class="hero-content">
+          <div class="hero-pill">
+            <span class="pill-dot"></span>
+            <span id="hero-version-text">Magnetares Notes v1.1.0 · 100% Local-First</span>
+          </div>
+
+          <h1>
+            Onde pensamentos ganham<br />
+            <span class="gradient-text">gravidade própria.</span>
+          </h1>
+
+          <p class="hero-description">
+            Um caderno inteligente, veloz e descomplicado para desktop. Seus dados moram no seu disco com banco SQLite local, com sincronização em nuvem opcional quando você desejar.
+          </p>
+
           <div class="hero-actions">
-            <a class="primary-action" href="#downloads">Explorar Magnetares <span aria-hidden="true">↓</span></a>
-            <a class="text-action" href="#recursos">Ver recursos <span aria-hidden="true">→</span></a>
+            <a class="cta-primary" id="hero-download-btn" href="#downloads">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+              </svg>
+              <span id="hero-download-text">Baixar para Windows</span>
+            </a>
+            <a class="cta-secondary" href="screenshots.html">
+              <span>Ver galeria de telas</span>
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+
+          <div class="hero-meta-strip">
+            <span class="hero-meta-item">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              100% Local-First
+            </span>
+            <span class="hero-meta-item">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              Zero Telemetria
+            </span>
+            <span class="hero-meta-item">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              Código Aberto (MIT)
+            </span>
+            <span class="hero-meta-item">
+              <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+              Windows · macOS · Linux
+            </span>
           </div>
         </div>
-        <div class="hero-art" aria-label="Ícone do Magnetares Notes">
-          <div class="orbit orbit-one"></div>
-          <div class="orbit orbit-two"></div>
-          <div class="orbit orbit-three"></div>
-          <img src="assets/magnetar-icon.png" alt="Ícone do Magnetares Notes" />
-        </div>
-        <div class="hero-footnote">Local primeiro. Nuvem quando você quiser.</div>
-      </section>
 
-      <section class="intro" id="recursos">
-        <p class="section-kicker">Uma nota não precisa ser pequena.</p>
-        <div class="intro-grid">
-          <h2>Do lampejo inicial<br />ao sistema que o sustenta.</h2>
-          <p>Magnetares reúne a liberdade de escrever com ferramentas que acompanham a complexidade das suas ideias, sem transformar a tela em ruído.</p>
-        </div>
-      </section>
-
-      <section class="feature-grid">
-        <article class="feature feature-editor">
-          <span class="feature-number">01</span>
-          <div class="feature-icon" aria-hidden="true">✦</div>
-          <h3>Escreva em qualquer escala.</h3>
-          <p>Títulos, listas, checklists, tabelas, citações e cálculos vivem naturalmente no mesmo documento.</p>
-          <div class="note-preview" aria-hidden="true">
-            <span class="preview-title">Plano de lançamento</span>
-            <span class="preview-line long"></span>
-            <span class="preview-check">✓ Revisar narrativa</span>
-            <span class="preview-check muted">○ Publicar versão final</span>
+        <!-- APP WINDOW MOCKUP -->
+        <div class="app-mockup-wrapper">
+          <div class="app-mockup-glow"></div>
+          <div class="app-window">
+            <div class="window-header">
+              <div class="window-dots" aria-hidden="true">
+                <span class="window-dot close"></span>
+                <span class="window-dot minimize"></span>
+                <span class="window-dot maximize"></span>
+              </div>
+              <div class="window-title">
+                <img src="assets/magnetar-icon.png" alt="" />
+                <span>Magnetares Notes — Caderno Principal</span>
+              </div>
+              <div></div>
+            </div>
+            <div class="window-body">
+              <img src="assets/screenshots/editor.png" alt="Interface real do Magnetares Notes exibindo editor rico e navegação em árvore" />
+              
+              <div class="mockup-tag tag-left">
+                <span style="color:var(--lime-400)">⚡</span>
+                <span>SQLite Local & Rápido</span>
+              </div>
+              <div class="mockup-tag tag-right">
+                <span style="color:var(--blue-400)">☁</span>
+                <span>Sincronização Turso Opcional</span>
+              </div>
+            </div>
           </div>
-        </article>
+        </div>
+      </section>
 
-        <article class="feature feature-organize">
-          <span class="feature-number">02</span>
-          <div class="feature-icon" aria-hidden="true">⌘</div>
-          <h3>Encontre o centro.</h3>
-          <p>Pastas, etiquetas, notas fixadas e Pastas Inteligentes mantêm o contexto a uma órbita de distância.</p>
-          <div class="tag-cloud" aria-hidden="true">
-            <span>#trabalho</span><span>#ideias</span><span>#leituras</span><span>#próximos-passos</span>
+      <!-- SEÇÃO RECURSOS: BENTO GRID -->
+      <section class="section-features" id="recursos">
+        <div class="section-head">
+          <p class="kicker">Poder sem distrações</p>
+          <h2>Construído para o fluxo real do seu pensamento.</h2>
+          <p>Esqueça ferramentas pesadas que exigem login antes de digitar. O Magnetares abre no milissegundo em que você precisa anotar algo crucial.</p>
+        </div>
+
+        <div class="bento-grid">
+          <!-- Card 1: Editor Rico -->
+          <article class="bento-card card-span-7">
+            <div class="bento-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            </div>
+            <h3>Editor de texto rico e estruturado</h3>
+            <p>Escreva notas com títulos, checklists interativos, citações, tabelas e até cálculos matemáticos em tempo real com Tiptap e Math.js.</p>
+            <div class="interactive-preview">
+              <div class="editor-snippet">
+                <div class="snippet-title">
+                  <span>Sprint de Lançamento Magnetares</span>
+                  <span class="snippet-badge">Tiptap Engine</span>
+                </div>
+                <div class="snippet-item">
+                  <span class="snippet-check">✓</span>
+                  <span>Banco local em modo WAL para alto desempenho</span>
+                </div>
+                <div class="snippet-item">
+                  <span class="snippet-check">✓</span>
+                  <span>Formatação completa de tabelas e listas dinâmicas</span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 2: Local-First & Privacidade -->
+          <article class="bento-card card-span-5">
+            <div class="bento-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+            </div>
+            <h3>Seus dados começam com você</h3>
+            <p>Seu banco de dados SQLite local funciona 100% offline. Zero telemetria, zero rastreamento. As notas pertencem a você.</p>
+            <div class="interactive-preview">
+              <div class="sync-status-box">
+                <span class="sync-pill">
+                  <span class="sync-dot"></span>
+                  Armazenamento Local Ativo
+                </span>
+                <span style="font-size: 11px; color: #8c93b9; font-family: monospace;">sqlite3 / notes.db</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 3: Organização por Órbitas -->
+          <article class="bento-card card-span-5">
+            <div class="bento-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+            </div>
+            <h3>Pastas infinitas e Pastas Inteligentes</h3>
+            <p>Aninhe assuntos com profundidade ilimitada, fixe tópicos prioritários e crie filtros inteligentes por etiquetas dinâmicas.</p>
+            <div class="interactive-preview">
+              <div class="tag-cluster">
+                <span class="tag-chip active">#trabalho</span>
+                <span class="tag-chip">#arquitetura</span>
+                <span class="tag-chip">#pesquisa</span>
+                <span class="tag-chip">#leituras</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 4: Sincronização Sob Demanda -->
+          <article class="bento-card card-span-7">
+            <div class="bento-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/></svg>
+            </div>
+            <h3>Sincronização em nuvem segura com Turso</h3>
+            <p>Quando quiser levar suas notas para outro computador, ative a sincronização via Turso LibSQL com controle de alterações e detecção de conflitos.</p>
+            <div class="interactive-preview">
+              <div class="sync-status-box">
+                <span style="font-size: 13px; color: #ffffff; font-weight: 600;">Sincronismo Opcional</span>
+                <span style="font-size: 12px; color: var(--blue-400); font-weight: 700;">Turso LibSQL Edge</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div style="text-align: center; margin-top: 48px;">
+          <a class="cta-secondary" href="recursos.html">
+            <span>Explorar catálogo completo de recursos e especificações</span>
+            <span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- SEÇÃO ARQUITETURA TÉCNICA -->
+      <section class="section-tech" id="arquitetura">
+        <div class="section-head">
+          <p class="kicker">Engenharia de precisão</p>
+          <h2>Construído sobre fundamentos modernos.</h2>
+          <p>Uma pilha técnica sólida combinando performance nativa compilada com flexibilidade de interface moderna.</p>
+        </div>
+
+        <div class="tech-grid">
+          <article class="tech-item">
+            <div class="tech-number">01</div>
+            <h4>Wails + Go</h4>
+            <p>Binário desktop compilado nativo, baixo consumo de memória RAM e operações ultrarrápidas no sistema de arquivos.</p>
+          </article>
+
+          <article class="tech-item">
+            <div class="tech-number">02</div>
+            <h4>React + TypeScript</h4>
+            <p>Interface responsiva e componentizada com tipagem estrita de ponta a ponta para maior estabilidade.</p>
+          </article>
+
+          <article class="tech-item">
+            <div class="tech-number">03</div>
+            <h4>SQLite + WAL Mode</h4>
+            <p>Persistência local confiável, suporte a transações concorrentes e integridade dos seus dados garantida.</p>
+          </article>
+
+          <article class="tech-item">
+            <div class="tech-number">04</div>
+            <h4>Tiptap + Math.js</h4>
+            <p>Editor headless altamente extensível com suporte nativo a equações matemáticas e formatação rica.</p>
+          </article>
+
+          <article class="tech-item">
+            <div class="tech-number">05</div>
+            <h4>Turso Database</h4>
+            <p>Camada de sincronização remota opcional distribuída na borda com compatibilidade total SQLite.</p>
+          </article>
+
+          <article class="tech-item">
+            <div class="tech-number">06</div>
+            <h4>Multiplataforma CI/CD</h4>
+            <p>Pipelines no GitHub Actions que geram compilações assinadas para Windows, macOS e Linux automaticamente.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- SEÇÃO SCREENSHOTS TEASER -->
+      <section class="section-preview">
+        <div class="section-head">
+          <p class="kicker">Interface em detalhes</p>
+          <h2>Uma olhada rápida no ambiente.</h2>
+          <p>Minimalismo projetado para eliminar ruídos e colocar foco absoluto no seu processo criativo.</p>
+        </div>
+
+        <div class="preview-grid">
+          <div class="preview-thumb">
+            <img src="assets/screenshots/editor.png" alt="Editor principal" />
+            <div class="preview-thumb-info">
+              <h4>Editor Principal</h4>
+              <p>Escrita fluida com foco e ferramentas limpas.</p>
+            </div>
           </div>
-        </article>
 
-        <article class="feature feature-local">
-          <span class="feature-number">03</span>
-          <div class="feature-icon" aria-hidden="true">◌</div>
-          <h3>Seus dados começam com você.</h3>
-          <p>O banco local abre instantaneamente e funciona offline. Backup com Turso fica disponível quando você decidir sincronizar.</p>
-          <div class="local-status" aria-hidden="true"><i></i> Salvo neste dispositivo</div>
-        </article>
+          <div class="preview-thumb">
+            <img src="assets/screenshots/organization.png" alt="Organização por pastas e tags" />
+            <div class="preview-thumb-info">
+              <h4>Organização de Órbitas</h4>
+              <p>Navegação por pastas, marcadores e tags.</p>
+            </div>
+          </div>
+
+          <div class="preview-thumb">
+            <img src="assets/screenshots/sync.png" alt="Sincronização" />
+            <div class="preview-thumb-info">
+              <h4>Backup & Sincronização</h4>
+              <p>Gerenciamento da base de dados e nuvem.</p>
+            </div>
+          </div>
+        </div>
+
+        <a class="preview-cta-btn" href="screenshots.html">
+          <span>Explorar todas as telas e detalhes na Galeria</span>
+          <span aria-hidden="true">→</span>
+        </a>
       </section>
 
-      <section class="improvements" id="melhorias">
-        <div class="improvements-heading">
-          <p class="section-kicker">Feito para durar</p>
-          <h2>Um caderno que cresce<br />com a sua constelação.</h2>
-          <p>Magnetares começa simples, mas já carrega uma base completa para escrita, organização e continuidade entre dispositivos.</p>
-        </div>
-        <div class="improvements-grid">
-          <article>
-            <span>Local-first</span>
-            <h3>Seu banco, seu ritmo.</h3>
-            <p>SQLite local, autosave, lixeira e funcionamento completo sem internet desde a primeira abertura.</p>
-          </article>
-          <article>
-            <span>Editor rico</span>
-            <h3>Estruture o pensamento.</h3>
-            <p>Checklists, tabelas, cálculos, citações e formatação sem sair da mesma nota.</p>
-          </article>
-          <article>
-            <span>Organização</span>
-            <h3>Arraste para a órbita certa.</h3>
-            <p>Pastas e subpastas expansíveis, etiquetas, notas fixadas e Pastas Inteligentes.</p>
-          </article>
-          <article>
-            <span>Continuidade</span>
-            <h3>De um computador ao outro.</h3>
-            <p>Sincronização Turso opcional, cursor de alterações e detecção de conflitos em evolução beta.</p>
-          </article>
-          <article>
-            <span>Seu jeito</span>
-            <h3>Claro, escuro, seu.</h3>
-            <p>Temas, janela desktop nativa, preferências e escolha do local do banco de dados.</p>
-          </article>
-          <article>
-            <span>Sem prender ideias</span>
-            <h3>Leve o que escreveu.</h3>
-            <p>Importe Markdown e texto, exporte para Markdown, HTML ou TXT e imprima quando precisar.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="technology-section" id="tecnologias">
-        <div class="technology-intro">
-          <p class="section-kicker">Arquitetura em órbita</p>
-          <h2>Uma pilha técnica<br />com gravidade local.</h2>
-          <p>Magnetares combina uma experiência desktop fluida com dados que permanecem seus, sincronizando apenas quando você escolher.</p>
-        </div>
-        <div class="technology-orbit" aria-hidden="true">
-          <span class="tech-core">M</span>
-          <span class="tech-star star-a"></span>
-          <span class="tech-star star-b"></span>
-          <span class="tech-star star-c"></span>
-        </div>
-        <div class="technology-list">
-          <article>
-            <span class="tech-index">01</span>
-            <div><h3>React + TypeScript</h3><p>Interface responsiva, editor estruturado e preferências do aplicativo.</p></div>
-          </article>
-          <article>
-            <span class="tech-index">02</span>
-            <div><h3>Wails + Go</h3><p>Bridge desktop nativa, janela multiplataforma e operações locais tipadas.</p></div>
-          </article>
-          <article>
-            <span class="tech-index">03</span>
-            <div><h3>SQLite + WAL</h3><p>Banco local rápido, durável e disponível mesmo sem conexão.</p></div>
-          </article>
-          <article>
-            <span class="tech-index">04</span>
-            <div><h3>Tiptap + Math.js</h3><p>Notas ricas com tabelas, checklists, cálculos e conteúdo estruturado.</p></div>
-          </article>
-          <article>
-            <span class="tech-index">05</span>
-            <div><h3>Go API + Turso</h3><p>Sincronização opcional, cursor de mudanças e base remota do usuário.</p></div>
-          </article>
-          <article>
-            <span class="tech-index">06</span>
-            <div><h3>GitHub Actions</h3><p>Builds para Windows, Linux e macOS, release e publicação no GitHub Pages.</p></div>
-          </article>
-        </div>
-      </section>
-
+      <!-- SEÇÃO DOWNLOADS -->
       <section class="download-section" id="downloads">
-        <div class="download-heading">
-          <p class="section-kicker">Magnetares Notes</p>
-          <h2>Pronto para<br />entrar em órbita?</h2>
+        <div class="section-head">
+          <p class="kicker">Comece agora</p>
+          <h2>Pronto para entrar em órbita?</h2>
+          <p>Baixe o Magnetares Notes gratuitamente e sinta a diferença de um aplicativo local-first de verdade.</p>
         </div>
-        <div class="download-panel">
-          <div class="platform-switch" role="tablist" aria-label="Escolha sua plataforma">
+
+        <div class="download-box">
+          <div class="platform-switch" role="tablist" aria-label="Escolha seu sistema operacional">
             <button class="platform selected" type="button" data-platform="windows" role="tab" aria-selected="true">Windows</button>
             <button class="platform" type="button" data-platform="macos" role="tab" aria-selected="false">macOS</button>
             <button class="platform" type="button" data-platform="linux" role="tab" aria-selected="false">Linux</button>
           </div>
+
           <div class="download-details">
-            <p id="platform-note">Windows 10 ou superior · Instalador nativo</p>
-            <a id="download-link" class="download-link" href="#" data-download-link>
-              <span id="download-label">Baixar para Windows</span>
-              <span aria-hidden="true">↓</span>
+            <p class="download-note" id="platform-note">Windows 10 ou superior · Instalador nativo (.exe)</p>
+            <a class="download-action-btn" id="download-link" href="#">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/>
+              </svg>
+              <span id="download-label">Baixar para Windows (x64)</span>
             </a>
-            <small id="download-meta">Versão 1.1.0 · x64</small>
+            <p class="download-meta-text" id="download-meta">Versão mais recente · 64-bit</p>
           </div>
         </div>
       </section>
     </main>
 
+    <!-- RODAPÉ INSTITUCIONAL PROFISSIONAL -->
     <footer class="site-footer">
-      <a class="brand" href="#top" aria-label="Voltar ao topo">
-        <img src="assets/magnetar-icon.png" alt="" />
-        <span>Magnetares</span>
-      </a>
-      <div class="footer-center">
-        <p>Feito para pensamentos que merecem ficar.</p>
-        <div class="social-links" aria-label="Links do projeto">
-          <a href="https://www.linkedin.com/in/vitorkrewer/" target="_blank" rel="noreferrer">LinkedIn <span aria-hidden="true">↗</span></a>
-          <a href="https://github.com/vitorkrewer" target="_blank" rel="noreferrer">GitHub pessoal <span aria-hidden="true">↗</span></a>
-          <a href="https://github.com/vitorkrewer/magnetares-notes" target="_blank" rel="noreferrer">Repositório <span aria-hidden="true">↗</span></a>
+      <div class="footer-top">
+        <div class="footer-brand-col">
+          <a class="brand" href="#top" aria-label="Voltar ao topo">
+            <img src="assets/magnetar-icon.png" alt="" />
+            <span>Magnetares</span>
+          </a>
+          <p class="footer-tagline">
+            Onde pensamentos ganham gravidade própria. Um caderno local-first, rápido e privado para quem leva anotações a sério.
+          </p>
+          <div class="footer-badge-list">
+            <span class="footer-badge">
+              <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+              100% Local-First
+            </span>
+            <span class="footer-badge">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14h2v2h-2zm0-10h2v8h-2z"/></svg>
+              Zero Rastreamento
+            </span>
+            <span class="footer-badge">
+              <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+              Licença MIT
+            </span>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h5>Navegação</h5>
+          <ul>
+            <li><a href="recursos.html">Recursos do Editor</a></li>
+            <li><a href="#arquitetura">Arquitetura Técnica</a></li>
+            <li><a href="screenshots.html">Galeria de Telas</a></li>
+            <li><a href="#downloads">Instaladores & Builds</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Tecnologias</h5>
+          <ul>
+            <li><a href="https://wails.io" target="_blank" rel="noreferrer">Wails Framework <svg class="external-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg></a></li>
+            <li><a href="https://golang.org" target="_blank" rel="noreferrer">Go Language <svg class="external-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg></a></li>
+            <li><a href="https://turso.tech" target="_blank" rel="noreferrer">Turso LibSQL <svg class="external-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg></a></li>
+            <li><a href="https://tiptap.dev" target="_blank" rel="noreferrer">Tiptap Editor <svg class="external-icon" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg></a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Conectar & Código</h5>
+          <p style="font-size: 13px; line-height: 1.5; margin: 0 0 12px; color: #7d84a7;">Acompanhe o desenvolvimento ou contribua com o projeto no GitHub.</p>
+          <div class="social-icon-links">
+            <a class="social-icon-btn" href="https://github.com/vitorkrewer/magnetares-notes" target="_blank" rel="noreferrer" aria-label="Repositório no GitHub" title="Repositório GitHub">
+              <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            </a>
+            <a class="social-icon-btn" href="https://www.linkedin.com/in/vitorkrewer/" target="_blank" rel="noreferrer" aria-label="LinkedIn de Vitor Krewer" title="LinkedIn Vitor Krewer">
+              <svg viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76c-.95 0-1.72-.77-1.72-1.72s.77-1.72 1.72-1.72 1.72.77 1.72 1.72-.77 1.72-1.72 1.72m1.39 9.74v-8.37H5.07v8.37h2.78z"/></svg>
+            </a>
+            <a class="social-icon-btn" href="https://github.com/vitorkrewer" target="_blank" rel="noreferrer" aria-label="GitHub de Vitor Krewer" title="Perfil GitHub">
+              <svg viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg>
+            </a>
+            <a class="social-icon-btn" href="https://github.com/vitorkrewer/magnetares-notes/releases" target="_blank" rel="noreferrer" aria-label="Todas as Releases" title="Todas as Releases">
+              <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+            </a>
+          </div>
         </div>
       </div>
-      <span class="footer-copyright">© <span id="year"></span> Magnetares Notes</span>
+
+      <div class="footer-bottom">
+        <div class="footer-creator">
+          Desenvolvido com dedicação por <a href="https://github.com/vitorkrewer" target="_blank" rel="noreferrer">Vitor Krewer</a>
+        </div>
+        <div>
+          © <span id="year"></span> Magnetares Notes · Todos os direitos reservados.
+        </div>
+      </div>
     </footer>
+
+    <!-- BOTÃO FLUTUANTE VOLTAR AO TOPO -->
+    <button class="scroll-top-btn" id="scroll-top-btn" type="button" aria-label="Voltar ao topo" title="Voltar ao topo">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/>
+      </svg>
+    </button>
 
     <script src="script.js"></script>
   </body>
