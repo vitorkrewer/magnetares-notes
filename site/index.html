@@ -235,13 +235,13 @@
                 d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z" />
             </svg>
           </div>
-          <h3>Sincronização em nuvem segura com Turso</h3>
-          <p>Quando quiser levar suas notas para outro computador, ative a sincronização via Turso LibSQL com controle
-            de alterações e detecção de conflitos.</p>
+          <h3>Sincronização em Nuvem (Turso hoje, mais opções em breve)</h3>
+          <p>Quando quiser levar suas notas para outro computador, ative a sincronização em nuvem com controle
+            de alterações e detecção inteligente de conflitos. Atualmente suportamos Turso (libSQL), com novos provedores a caminho.</p>
           <div class="interactive-preview">
             <div class="sync-status-box">
               <span style="font-size: 13px; color: #ffffff; font-weight: 600;">Sincronismo Opcional</span>
-              <span style="font-size: 12px; color: var(--blue-400); font-weight: 700;">Turso LibSQL Edge</span>
+              <span style="font-size: 12px; color: var(--blue-400); font-weight: 700;">Turso LibSQL Edge (Mais opções em breve)</span>
             </div>
           </div>
         </article>
@@ -361,6 +361,18 @@
         </div>
 
         <div class="download-details">
+          <div class="download-formats" id="linux-formats" style="display: none;" role="tablist" aria-label="Formatos Linux">
+            <button class="format-pill active" type="button" data-format="appimage">
+              <span class="pill-spark">✦</span> AppImage <span class="pill-tag">Recomendado</span>
+            </button>
+            <button class="format-pill" type="button" data-format="deb">
+              .deb <span class="pill-tag">Debian / Ubuntu</span>
+            </button>
+            <button class="format-pill" type="button" data-format="targz">
+              .tar.gz <span class="pill-tag">Portátil</span>
+            </button>
+          </div>
+
           <p class="download-note" id="platform-note">Windows 10 ou superior · Instalador nativo (.exe)</p>
           <a class="download-action-btn" id="download-link" href="#">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -370,6 +382,7 @@
             <span id="download-label">Baixar para Windows (x64)</span>
           </a>
           <p class="download-meta-text" id="download-meta">Versão mais recente · 64-bit</p>
+          <div class="download-alt-links" id="download-alt-links"></div>
         </div>
       </div>
     </section>

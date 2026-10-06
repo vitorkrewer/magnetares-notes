@@ -8,6 +8,9 @@ on:
       - ".github/workflows/pages.yml"
   release:
     types: [published]
+  workflow_run:
+    workflows: ["Release Magnetares Notes"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:

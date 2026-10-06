@@ -8,7 +8,9 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 - **Página de Recursos:** página separada com roteamento no site, baseada na documentação do produto.
 - **Exportação com diálogo nativo:** ao exportar notas (Markdown, HTML, TXT), o sistema abre a caixa de diálogo para escolher o local de salvamento, em vez de gravar direto em Downloads.
-- **Indicador de Nuvem animado:** ícone de nuvem na barra lateral exibe o estado da nuvem ativa, anima durante a sincronização e informa o tempo até a próxima sincronização automática. A interface passa a usar apenas "Nuvem", sem citar o provedor (base para múltiplas nuvens).
+- **Pacotes Linux (.AppImage e .deb):** workflow de release atualizado para empacotar e publicar `Magnetares-Notes-Linux-x64.AppImage` (universal) e `Magnetares-Notes-Linux-x64.deb` (Debian/Ubuntu/Mint/Pop!_OS), além do `.tar.gz` portátil.
+- **Seletor de formatos de download no site:** landing page e páginas institucionais com seletor interativo de pacotes Linux e deploy automatizado no GitHub Pages ao concluir releases.
+- **Indicador de Nuvem animado:** ícone de nuvem na barra lateral exibe o estado da nuvem ativa, anima durante a sincronização e informa o tempo até a próxima sincronização automática. A interface passa a usar apenas "Nuvem", sem citar o provedor. Hoje a sincronização é suportada via Turso; em breve, mais opções de nuvem.
 - **Botão "voltar ao topo":** atalho exibido ao rolar listas e conteúdo para baixo.
 - **Sincronização de etiquetas e ícones:** catálogo de etiquetas (nome e ícone) sincronizado entre computadores, com pull LWW.
 

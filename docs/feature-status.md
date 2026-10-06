@@ -53,6 +53,7 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 
 ### Fase 3: segurança e distribuição
 
+- **Entregue na v1.3.0:** empacotamento Linux automatizado com `.deb` (Debian/Ubuntu/Mint) e `.AppImage` universal no GitHub Actions, além do `.tar.gz` portátil.
 - Cifra opcional do banco local.
 - Assinatura de Windows e notarização de macOS.
 - Política de backup e recuperação testada.

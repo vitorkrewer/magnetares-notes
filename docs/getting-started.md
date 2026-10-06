@@ -10,8 +10,8 @@ Para quem baixa um release, não há instalação de Go, Node.js ou Wails. Basta
 
 | Plataforma | Artefato esperado | Observação |
 | --- | --- | --- |
-| Windows | `Magnetares-Notes-Windows.exe` | Windows 10 ou superior e WebView2. |
-| Linux | `Magnetares-Notes-Linux-x64.tar.gz` | Extraia e execute o binário incluído. |
+| Windows | `Magnetares-Notes-Windows-x64.exe` | Windows 10 ou superior e WebView2. |
+| Linux | `Magnetares-Notes-Linux-x64.AppImage`, `Magnetares-Notes-Linux-x64.deb`, `Magnetares-Notes-Linux-x64.tar.gz` | AppImage universal, pacote Debian `.deb` ou `.tar.gz` portátil. |
 | macOS | `Magnetares-Notes-macOS-universal.zip` | Extraia o `.app`; requisitos de assinatura/notarização dependem do release. |
 
 Os links publicados na landing page do projeto são configurados no arquivo `site/script.js` depois que os artefatos estiverem disponíveis no GitHub Release.
@@ -49,13 +49,15 @@ Ao abrir uma instalação migrada de versões antigas, o aplicativo tenta copiar
 
 Mostra o caminho do SQLite atual e permite definir outro arquivo `.db`. No desktop nativo, o bridge Wails fecha o store atual, abre o novo banco, aplica migrações e recarrega notas/navegação.
 
-### Nuvem e Turso
+### Nuvem (Turso hoje, mais opções em breve)
 
 Esta área é opcional. Para usar a mesma coleção de notas em outro computador, informe:
 
 - URL do seu banco Turso/libSQL;
 - token de acesso do seu Turso;
-- clique em **Conectar Turso** e depois em **Sincronizar agora com a Nuvem**.
+- clique em **Conectar Nuvem** e depois em **Sincronizar agora com a Nuvem**.
+
+> **Provedores de nuvem:** atualmente o suporte nativo é via **Turso (libSQL)**. Em breve novas opções de nuvem serão adicionadas.
 
 O token é armazenado no cofre de credenciais do sistema operacional, não no bundle do aplicativo. Em um computador novo, informe a mesma URL e token e execute a primeira sincronização para baixar as notas no SQLite local.
 

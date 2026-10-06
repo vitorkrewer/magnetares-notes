@@ -104,7 +104,105 @@ jobs:
         shell: bash
         run: |
           mkdir -p release-assets
+
+          # 1. Archive tar.gz
           tar -C apps/desktop/build/bin -czf release-assets/Magnetares-Notes-Linux-x64.tar.gz .
+
+          # Localizar o binário gerado pelo Wails
+          BIN_PATH=$(find apps/desktop/build/bin -maxdepth 1 -type f -perm /111 ! -name "*.exe" ! -name "*.zip" ! -name "*.tar.gz" -print -quit)
+          if [ -z "$BIN_PATH" ]; then
+            BIN_PATH=$(find apps/desktop/build/bin -maxdepth 1 -type f ! -name "*.exe" ! -name "*.zip" ! -name "*.tar.gz" -print -quit)
+          fi
+          echo "Binário Linux encontrado em: $BIN_PATH"
+
+          # Determinar versão para os pacotes
+          VERSION="${GITHUB_REF_NAME}"
+          if [[ -z "$VERSION" || "$VERSION" != v* ]]; then
+            VERSION=$(grep -oE '^##\s*\[?v?[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -n 1 | sed -E 's/##\s*\[?v?//')
+          fi
+          CLEAN_VER="${VERSION#v}"
+          [ -z "$CLEAN_VER" ] && CLEAN_VER="1.3.0"
+          echo "Versão do pacote Linux: $CLEAN_VER"
+
+          # 2. Gerar pacote Debian (.deb)
+          DEB_ROOT="build-deb/magnetares-notes"
+          rm -rf build-deb
+          mkdir -p "$DEB_ROOT/DEBIAN"
+          mkdir -p "$DEB_ROOT/usr/bin"
+          mkdir -p "$DEB_ROOT/usr/share/applications"
+          mkdir -p "$DEB_ROOT/usr/share/icons/hicolor/512x512/apps"
+          mkdir -p "$DEB_ROOT/usr/share/pixmaps"
+
+          cp "$BIN_PATH" "$DEB_ROOT/usr/bin/magnetares-notes"
+          chmod 755 "$DEB_ROOT/usr/bin/magnetares-notes"
+          cp apps/desktop/build/appicon.png "$DEB_ROOT/usr/share/icons/hicolor/512x512/apps/magnetares-notes.png"
+          cp apps/desktop/build/appicon.png "$DEB_ROOT/usr/share/pixmaps/magnetares-notes.png"
+
+          cat <<EOF > "$DEB_ROOT/DEBIAN/control"
+Package: magnetares-notes
+Version: ${CLEAN_VER}
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: Magnetares <vitormkrewer@gmail.com>
+Depends: libgtk-3-0, libwebkit2gtk-4.1-0
+Description: Magnetares Notes
+ Modern and secure markdown notes app with local-first storage and cloud sync.
+EOF
+
+          cat <<EOF > "$DEB_ROOT/usr/share/applications/magnetares-notes.desktop"
+[Desktop Entry]
+Name=Magnetares Notes
+Comment=Onde pensamentos ganham gravidade própria.
+Exec=magnetares-notes %u
+Icon=magnetares-notes
+Terminal=false
+Type=Application
+Categories=Office;Utility;TextEditor;
+StartupWMClass=Magnetares Notes
+EOF
+          chmod 644 "$DEB_ROOT/usr/share/applications/magnetares-notes.desktop"
+
+          dpkg-deb --build --root-owner-group "$DEB_ROOT" release-assets/Magnetares-Notes-Linux-x64.deb
+
+          # 3. Gerar AppImage (.AppImage)
+          APPDIR="build-appimage/MagnetaresNotes.AppDir"
+          rm -rf build-appimage
+          mkdir -p "$APPDIR/usr/bin"
+          mkdir -p "$APPDIR/usr/share/icons/hicolor/512x512/apps"
+
+          cp "$BIN_PATH" "$APPDIR/usr/bin/magnetares-notes"
+          chmod 755 "$APPDIR/usr/bin/magnetares-notes"
+          cp apps/desktop/build/appicon.png "$APPDIR/usr/share/icons/hicolor/512x512/apps/magnetares-notes.png"
+          cp apps/desktop/build/appicon.png "$APPDIR/magnetares-notes.png"
+          cp apps/desktop/build/appicon.png "$APPDIR/.DirIcon"
+
+          cat <<EOF > "$APPDIR/magnetares-notes.desktop"
+[Desktop Entry]
+Name=Magnetares Notes
+Comment=Onde pensamentos ganham gravidade própria.
+Exec=magnetares-notes %u
+Icon=magnetares-notes
+Terminal=false
+Type=Application
+Categories=Office;Utility;TextEditor;
+StartupWMClass=Magnetares Notes
+EOF
+
+          cat <<'EOF' > "$APPDIR/AppRun"
+#!/bin/sh
+SELF=$(readlink -f "$0")
+HERE=${SELF%/*}
+export PATH="${HERE}/usr/bin:${PATH}"
+export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
+exec "${HERE}/usr/bin/magnetares-notes" "$@"
+EOF
+          chmod +x "$APPDIR/AppRun"
+
+          curl -sL https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -o appimagetool.AppImage
+          chmod +x appimagetool.AppImage
+          ./appimagetool.AppImage --appimage-extract
+          ARCH=x86_64 ./squashfs-root/AppRun "$APPDIR" release-assets/Magnetares-Notes-Linux-x64.AppImage
 
       - name: Prepare macOS artifact
         if: runner.os == 'macOS'

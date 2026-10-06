@@ -20,11 +20,35 @@ const DOWNLOADS = {
     url: LATEST_RELEASE_PAGE
   },
   linux: {
-    label: "Baixar para Linux (x64)",
+    label: "Baixar para Linux (AppImage)",
     heroLabel: "Baixar para Linux",
-    note: "Distribuições Linux modernas (glibc 2.31+) · Pacote portátil (.tar.gz)",
-    meta: "Versão mais recente · 64-bit",
-    url: LATEST_RELEASE_PAGE
+    note: "Distribuições Linux modernas (glibc 2.31+) · Pacote universal AppImage",
+    meta: "Versão mais recente · 64-bit (.AppImage)",
+    url: LATEST_RELEASE_PAGE,
+    selectedFormat: "appimage",
+    formats: {
+      appimage: {
+        label: "Baixar AppImage (x64)",
+        heroLabel: "Baixar AppImage",
+        note: "Universal para Ubuntu, Fedora, Arch, Debian · Executável sem instalação (.AppImage)",
+        meta: "Versão mais recente · 64-bit (.AppImage)",
+        url: LATEST_RELEASE_PAGE
+      },
+      deb: {
+        label: "Baixar Pacote Debian (.deb)",
+        heroLabel: "Baixar .deb",
+        note: "Para Ubuntu, Debian, Linux Mint, Pop!_OS e derivados (.deb)",
+        meta: "Versão mais recente · 64-bit (.deb)",
+        url: LATEST_RELEASE_PAGE
+      },
+      targz: {
+        label: "Baixar Arquivo Tarball (.tar.gz)",
+        heroLabel: "Baixar .tar.gz",
+        note: "Binário puro compactado para execução manual (.tar.gz)",
+        meta: "Versão mais recente · 64-bit (.tar.gz)",
+        url: LATEST_RELEASE_PAGE
+      }
+    }
   }
 };
 
@@ -50,6 +74,9 @@ const downloadMeta = document.querySelector("#download-meta");
 const heroDownloadBtn = document.querySelector("#hero-download-btn");
 const heroDownloadText = document.querySelector("#hero-download-text");
 const headerVersionBadge = document.querySelector("#header-version-badge");
+const linuxFormatsContainer = document.querySelector("#linux-formats");
+const downloadAltLinks = document.querySelector("#download-alt-links");
+const formatPills = document.querySelectorAll(".format-pill");
 
 function updateDownloadUI(platform) {
   const data = DOWNLOADS[platform];
@@ -61,13 +88,49 @@ function updateDownloadUI(platform) {
     item.setAttribute("aria-selected", String(isSelected));
   });
 
-  if (downloadLink) downloadLink.href = data.url;
-  if (downloadLabel) downloadLabel.textContent = data.label;
-  if (platformNote) platformNote.textContent = data.note;
-  if (downloadMeta) downloadMeta.textContent = data.meta;
+  if (platform === "linux") {
+    if (linuxFormatsContainer) linuxFormatsContainer.style.display = "flex";
 
-  if (heroDownloadBtn) heroDownloadBtn.href = data.url;
-  if (heroDownloadText) heroDownloadText.textContent = data.heroLabel;
+    const fmtKey = data.selectedFormat || "appimage";
+    const fmt = data.formats[fmtKey] || data.formats.appimage;
+
+    formatPills.forEach((pill) => {
+      pill.classList.toggle("active", pill.dataset.format === fmtKey);
+    });
+
+    if (downloadLink) downloadLink.href = fmt.url;
+    if (downloadLabel) downloadLabel.textContent = fmt.label;
+    if (platformNote) platformNote.textContent = fmt.note;
+    if (downloadMeta) downloadMeta.textContent = fmt.meta;
+
+    if (heroDownloadBtn) heroDownloadBtn.href = fmt.url;
+    if (heroDownloadText) heroDownloadText.textContent = fmt.heroLabel;
+
+    if (downloadAltLinks) {
+      const alts = [];
+      if (fmtKey !== "appimage") {
+        alts.push(`<a href="${data.formats.appimage.url}">AppImage</a>`);
+      }
+      if (fmtKey !== "deb") {
+        alts.push(`<a href="${data.formats.deb.url}">Pacote .deb</a>`);
+      }
+      if (fmtKey !== "targz") {
+        alts.push(`<a href="${data.formats.targz.url}">Arquivo .tar.gz</a>`);
+      }
+      downloadAltLinks.innerHTML = `<span>Também disponível em: ${alts.join(" · ")}</span>`;
+    }
+  } else {
+    if (linuxFormatsContainer) linuxFormatsContainer.style.display = "none";
+    if (downloadAltLinks) downloadAltLinks.innerHTML = "";
+
+    if (downloadLink) downloadLink.href = data.url;
+    if (downloadLabel) downloadLabel.textContent = data.label;
+    if (platformNote) platformNote.textContent = data.note;
+    if (downloadMeta) downloadMeta.textContent = data.meta;
+
+    if (heroDownloadBtn) heroDownloadBtn.href = data.url;
+    if (heroDownloadText) heroDownloadText.textContent = data.heroLabel;
+  }
 }
 
 if (buttons.length > 0) {
@@ -75,6 +138,15 @@ if (buttons.length > 0) {
     button.addEventListener("click", () => {
       const platform = button.dataset.platform;
       updateDownloadUI(platform);
+    });
+  });
+}
+
+if (formatPills.length > 0) {
+  formatPills.forEach((pill) => {
+    pill.addEventListener("click", () => {
+      DOWNLOADS.linux.selectedFormat = pill.dataset.format;
+      updateDownloadUI("linux");
     });
   });
 }
@@ -89,7 +161,7 @@ async function fetchLatestRelease() {
     const res = await fetch(RELEASE_API);
     if (!res.ok) return;
     const data = await res.json();
-    const version = data.tag_name || "v1.1.0";
+    const version = data.tag_name || "v1.3.0";
     const assets = data.assets || [];
 
     if (headerVersionBadge) {
@@ -111,9 +183,15 @@ async function fetchLatestRelease() {
       } else if (name.includes("macos") || name.includes("darwin") || name.endsWith(".zip")) {
         DOWNLOADS.macos.url = downloadUrl;
         DOWNLOADS.macos.meta = `Versão ${version} · Universal (.zip)`;
-      } else if (name.includes("linux") || name.endsWith(".tar.gz")) {
-        DOWNLOADS.linux.url = downloadUrl;
-        DOWNLOADS.linux.meta = `Versão ${version} · x64 (.tar.gz)`;
+      } else if (name.endsWith(".appimage")) {
+        DOWNLOADS.linux.formats.appimage.url = downloadUrl;
+        DOWNLOADS.linux.formats.appimage.meta = `Versão ${version} · x64 (.AppImage)`;
+      } else if (name.endsWith(".deb")) {
+        DOWNLOADS.linux.formats.deb.url = downloadUrl;
+        DOWNLOADS.linux.formats.deb.meta = `Versão ${version} · x64 (.deb)`;
+      } else if (name.endsWith(".tar.gz")) {
+        DOWNLOADS.linux.formats.targz.url = downloadUrl;
+        DOWNLOADS.linux.formats.targz.meta = `Versão ${version} · x64 (.tar.gz)`;
       }
     });
 

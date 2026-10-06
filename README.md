@@ -29,7 +29,7 @@
 
 ## Visão geral
 
-Magnetares Notes é um aplicativo desktop **local-first** para Windows, Linux e macOS. Ele abre, pesquisa e salva suas notas em SQLite mesmo offline. Quando você quiser continuidade entre computadores, pode conectar seu Turso e sincronizar as alterações pendentes.
+Magnetares Notes é um aplicativo desktop **local-first** para Windows, Linux e macOS. Ele abre, pesquisa e salva suas notas em SQLite mesmo offline. Quando você quiser continuidade entre computadores, pode conectar sua nuvem e sincronizar as alterações pendentes.
 
 ```mermaid
 flowchart LR
@@ -59,19 +59,22 @@ Baixe a versão adequada na página de [Releases](https://github.com/vitorkrewer
 | Plataforma | Artefato esperado |
 | --- | --- |
 | Windows | `Magnetares-Notes-Windows-x64.exe` |
-| Linux | `Magnetares-Notes-Linux-x64.tar.gz` |
+| Linux | `Magnetares-Notes-Linux-x64.AppImage`, `Magnetares-Notes-Linux-x64.deb`, `Magnetares-Notes-Linux-x64.tar.gz` |
 | macOS | `Magnetares-Notes-macOS-universal.zip` |
 
 Na primeira abertura, o Magnetares cria seu banco local automaticamente. Não há necessidade de conta, internet ou configuração para começar a escrever.
 
 Para sincronizar outro computador:
 
-1. Abra **Preferências > Nuvem & Turso**.
-2. Informe a URL e o token do seu banco Turso.
-3. Clique em **Conectar Turso**.
+1. Abra **Preferências > Sincronização em Nuvem**.
+2. Informe a URL do banco de dados e o token de autenticação da nuvem.
+3. Clique em **Conectar Nuvem**.
 4. Em outro computador, informe os mesmos dados e sincronize para popular o SQLite local.
+5. Opcionalmente, escolha a frequência da sincronização automática (5, 15, 30 ou 60 minutos). O ícone de nuvem na barra lateral indica quando a sincronização está ativa e quando será a próxima.
 
 O token é guardado no cofre de credenciais do sistema operacional e não é embutido no aplicativo.
+
+> **Provedores de nuvem:** hoje a sincronização é suportada via **Turso (libSQL)**. Novas opções de nuvem estarão disponíveis em breve.
 
 Leia o [Guia inicial](docs/getting-started.md) e o [Guia do usuário](docs/user-guide.md) para instruções completas.
 
