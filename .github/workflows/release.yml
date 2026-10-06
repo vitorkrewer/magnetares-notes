@@ -1,8 +1,6 @@
 name: Release Magnetares Notes
 
 on:
-  push:
-    tags: ["v*"]
   workflow_dispatch:
     inputs:
       version:
@@ -138,29 +136,29 @@ jobs:
           cp apps/desktop/build/appicon.png "$DEB_ROOT/usr/share/icons/hicolor/512x512/apps/magnetares-notes.png"
           cp apps/desktop/build/appicon.png "$DEB_ROOT/usr/share/pixmaps/magnetares-notes.png"
 
-          cat <<EOF > "$DEB_ROOT/DEBIAN/control"
-Package: magnetares-notes
-Version: ${CLEAN_VER}
-Section: utils
-Priority: optional
-Architecture: amd64
-Maintainer: Magnetares <vitormkrewer@gmail.com>
-Depends: libgtk-3-0, libwebkit2gtk-4.1-0
-Description: Magnetares Notes
- Modern and secure markdown notes app with local-first storage and cloud sync.
-EOF
+          printf "%s\n" \
+            "Package: magnetares-notes" \
+            "Version: ${CLEAN_VER}" \
+            "Section: utils" \
+            "Priority: optional" \
+            "Architecture: amd64" \
+            "Maintainer: Magnetares <vitormkrewer@gmail.com>" \
+            "Depends: libgtk-3-0, libwebkit2gtk-4.1-0" \
+            "Description: Magnetares Notes" \
+            " Modern and secure markdown notes app with local-first storage and cloud sync." \
+            > "$DEB_ROOT/DEBIAN/control"
 
-          cat <<EOF > "$DEB_ROOT/usr/share/applications/magnetares-notes.desktop"
-[Desktop Entry]
-Name=Magnetares Notes
-Comment=Onde pensamentos ganham gravidade própria.
-Exec=magnetares-notes %u
-Icon=magnetares-notes
-Terminal=false
-Type=Application
-Categories=Office;Utility;TextEditor;
-StartupWMClass=Magnetares Notes
-EOF
+          printf "%s\n" \
+            "[Desktop Entry]" \
+            "Name=Magnetares Notes" \
+            "Comment=Onde pensamentos ganham gravidade própria." \
+            "Exec=magnetares-notes %u" \
+            "Icon=magnetares-notes" \
+            "Terminal=false" \
+            "Type=Application" \
+            "Categories=Office;Utility;TextEditor;" \
+            "StartupWMClass=Magnetares Notes" \
+            > "$DEB_ROOT/usr/share/applications/magnetares-notes.desktop"
           chmod 644 "$DEB_ROOT/usr/share/applications/magnetares-notes.desktop"
 
           dpkg-deb --build --root-owner-group "$DEB_ROOT" release-assets/Magnetares-Notes-Linux-x64.deb
@@ -177,26 +175,26 @@ EOF
           cp apps/desktop/build/appicon.png "$APPDIR/magnetares-notes.png"
           cp apps/desktop/build/appicon.png "$APPDIR/.DirIcon"
 
-          cat <<EOF > "$APPDIR/magnetares-notes.desktop"
-[Desktop Entry]
-Name=Magnetares Notes
-Comment=Onde pensamentos ganham gravidade própria.
-Exec=magnetares-notes %u
-Icon=magnetares-notes
-Terminal=false
-Type=Application
-Categories=Office;Utility;TextEditor;
-StartupWMClass=Magnetares Notes
-EOF
+          printf "%s\n" \
+            "[Desktop Entry]" \
+            "Name=Magnetares Notes" \
+            "Comment=Onde pensamentos ganham gravidade própria." \
+            "Exec=magnetares-notes %u" \
+            "Icon=magnetares-notes" \
+            "Terminal=false" \
+            "Type=Application" \
+            "Categories=Office;Utility;TextEditor;" \
+            "StartupWMClass=Magnetares Notes" \
+            > "$APPDIR/magnetares-notes.desktop"
 
-          cat <<'EOF' > "$APPDIR/AppRun"
-#!/bin/sh
-SELF=$(readlink -f "$0")
-HERE=${SELF%/*}
-export PATH="${HERE}/usr/bin:${PATH}"
-export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
-exec "${HERE}/usr/bin/magnetares-notes" "$@"
-EOF
+          printf "%s\n" \
+            "#!/bin/sh" \
+            'SELF=$(readlink -f "$0")' \
+            'HERE=${SELF%/*}' \
+            'export PATH="${HERE}/usr/bin:${PATH}"' \
+            'export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"' \
+            'exec "${HERE}/usr/bin/magnetares-notes" "$@"' \
+            > "$APPDIR/AppRun"
           chmod +x "$APPDIR/AppRun"
 
           curl -sL https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -o appimagetool.AppImage
@@ -266,7 +264,7 @@ EOF
                   if not tag.startswith("v"):
                       tag = f"v{tag}"
               else:
-                  tag = "v1.1.0"
+                  tag = "v1.3.0"
 
           print(f"Calculated RELEASE_TAG: {tag}")
 
