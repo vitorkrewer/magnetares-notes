@@ -161,7 +161,7 @@ async function fetchLatestRelease() {
     const res = await fetch(RELEASE_API);
     if (!res.ok) return;
     const data = await res.json();
-    const version = data.tag_name || "v1.4.0";
+    const version = data.tag_name || "v1.5.0";
     const assets = data.assets || [];
 
     if (headerVersionBadge) {
