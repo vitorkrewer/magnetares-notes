@@ -29,6 +29,8 @@ Exemplos de métodos expostos:
 
 - `ListNotes`, `SaveNote`, `DeleteNote`, `RestoreNote`.
 - `ListNavigation`, `SaveFolder`, `MoveNote`, `SetNotePinned`, `SetNoteTags`.
+- `ListStickerBoards`, `SaveStickerBoard`, `DeleteStickerBoard`.
+- `ListStickers`, `SaveSticker`, `DeleteSticker`, `MoveSticker`, `SetStickerPinned`.
 - `QueryNotes`, `SaveSmartFolder`, `DeleteSmartFolder`.
 - `GetDatabasePath`, `SetCustomDatabasePath`.
 - `MinimizeWindow`, `ToggleMaximizeWindow`, `CloseWindow`.
@@ -39,6 +41,8 @@ O frontend fica em `apps/desktop/frontend` e é construído por Vite/React.
 
 - `App.tsx`: estado, autosave, navegação, diálogos e integração bridge/API.
 - `StructuredEditor.tsx`: Tiptap e toolbar de formatação.
+- `StickerBoardView.tsx`: mural full-width de notas adesivas com reordenação drag & drop e edição inline.
+- `StickerBoardDialog.tsx`: diálogo de criação e edição de quadros de stickers com paleta de cores.
 - `CalculationNode.tsx`: nó inline de cálculo matemático.
 - `SettingsDialog.tsx`: tema, dados locais e nuvem.
 - `types.ts`: contrato TypeScript da bridge Wails.

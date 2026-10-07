@@ -60,6 +60,17 @@ Use o ícone de alfinete no topo do editor. Notas fixadas aparecem primeiro nas 
 - O caractere `#` é opcional; `trabalho` e `#trabalho` representam a mesma etiqueta.
 - Clique no `×` de um chip para removê-lo.
 
+### Stickers (Notas Autoadesivas)
+
+A seção **STICKERS** fica posicionada na barra lateral entre Pastas e Etiquetas, permitindo gerenciar lembretes rápidos e pensamentos em formato de post-its visuais:
+
+- **Quadros (Views):** clique no `+` da seção STICKERS para criar quadros dedicados (ex.: "Tarefas Rápidas", "Ideias", "Estudos"). Cada quadro funciona como uma pasta independente de stickers.
+- **Mural Full-Width:** ao selecionar um quadro, a interface abre um mural em tela cheia que organiza as notas adesivas em uma grade fluida e responsiva.
+- **Criar Sticker:** use o botão **+ Novo sticker** para adicionar um card. O salvamento é automático e contínuo.
+- **Personalização de Cores:** cada nota adesiva possui um seletor com 8 tons pastel (amarelo, laranja, rosa, roxo, azul, turquesa, verde e neutro) compatíveis com os temas claro e escuro.
+- **Fixação:** clique no ícone de alfinete para fixar stickers importantes no topo do mural.
+- **Mover e Reordenar (Drag & Drop):** arraste qualquer sticker para reordená-lo no mural, solte no espaço vazio do canvas para enviá-lo ao fim da lista, ou arraste-o diretamente para **outro quadro na barra lateral** para transferi-lo entre quadros.
+
 ### Pastas Inteligentes
 
 Uma Pasta Inteligente armazena uma regra simples e mostra notas dinamicamente. Regras disponíveis:

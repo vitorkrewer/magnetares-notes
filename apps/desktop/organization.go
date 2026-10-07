@@ -23,9 +23,10 @@ type Folder struct {
 }
 
 type Navigation struct {
-	Folders      []Folder      `json:"folders"`
-	Tags         []Tag         `json:"tags"`
-	SmartFolders []SmartFolder `json:"smartFolders"`
+	Folders       []Folder       `json:"folders"`
+	Tags          []Tag          `json:"tags"`
+	SmartFolders  []SmartFolder  `json:"smartFolders"`
+	StickerBoards []StickerBoard `json:"stickerBoards"`
 }
 
 type Tag struct {
@@ -123,6 +124,12 @@ func (s *noteStore) listNavigation() (Navigation, error) {
 	if err := smartRows.Err(); err != nil {
 		return Navigation{}, fmt.Errorf("read smart folders: %w", err)
 	}
+
+	stickerBoards, err := s.listStickerBoards()
+	if err != nil {
+		return Navigation{}, err
+	}
+	navigation.StickerBoards = stickerBoards
 	return navigation, nil
 }
 

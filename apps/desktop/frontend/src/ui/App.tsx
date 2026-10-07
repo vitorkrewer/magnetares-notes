@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FilePenLine, FileText, Folder, Globe, List, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, Trash2, Upload, X } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FilePenLine, FileText, Folder, Globe, List, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Trash2, Upload, X } from "lucide-react";
 import { StructuredEditor } from "./StructuredEditor";
 import { TitleBar } from "./TitleBar";
 import { OrganizationDialog, getFolderIconComponent, getTagIconComponent } from "./OrganizationDialog";
 import { SettingsDialog, type ThemeOption } from "./SettingsDialog";
 import { ConflictDialog } from "./ConflictDialog";
-import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord } from "./types";
+import { StickerBoardDialog, STICKER_PALETTE, DelicateStickerIcon } from "./StickerBoardDialog";
+import { StickerBoardView } from "./StickerBoardView";
+import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord } from "./types";
 import { downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
 
 type SaveState = "saved" | "saving" | "error";
-type LibraryView = "notes" | "deleted";
+type LibraryView = "notes" | "deleted" | "stickers";
 
 const demo: Note[] = [
   { id: "welcome", title: "Bem-vindo ao Magnetares", body: "Um lugar tranquilo para pensar, planejar e guardar o que importa.", bodyText: "Um lugar tranquilo para pensar, planejar e guardar o que importa.", folder: "Notas", updatedAt: new Date().toISOString() },
@@ -33,7 +35,7 @@ const fullDateLabel = (value: string) => new Intl.DateTimeFormat("pt-BR", {
 export function App() {
   const [notes, setNotes] = useState<Note[]>(demo);
   const [deletedNotes, setDeletedNotes] = useState<Note[]>([]);
-  const [navigation, setNavigation] = useState<NavigationRecord>({ folders: [], tags: [], smartFolders: [] });
+  const [navigation, setNavigation] = useState<NavigationRecord>({ folders: [], tags: [], smartFolders: [], stickerBoards: [] });
   const [selectedQuery, setSelectedQuery] = useState<NoteQuery>({ kind: "all" });
   const [view, setView] = useState<LibraryView>("notes");
   const [activeId, setActiveId] = useState("welcome");
@@ -45,6 +47,9 @@ export function App() {
   const [dialogMode, setDialogMode] = useState<{ kind: "folder"; parentId?: string; folderToEdit?: FolderRecord } | { kind: "tag"; tagToEdit?: TagRecord } | { kind: "smart" } | null>(null);
   const [deleteFolderTarget, setDeleteFolderTarget] = useState<FolderRecord | null>(null);
   const [deleteTagTarget, setDeleteTagTarget] = useState<TagRecord | null>(null);
+  const [stickerBoardDialogOpen, setStickerBoardDialogOpen] = useState(false);
+  const [boardToEdit, setBoardToEdit] = useState<StickerBoardRecord | undefined>(undefined);
+  const [deleteBoardTarget, setDeleteBoardTarget] = useState<StickerBoardRecord | null>(null);
   const [theme, setTheme] = useState<ThemeOption>(() => ((localStorage.getItem("magnetares_theme") || localStorage.getItem("aster_theme")) as ThemeOption) || "light");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dbPath, setDbPath] = useState("%LOCALAPPDATA%\\Magnetares Notes\\magnetares.db");
@@ -197,11 +202,18 @@ export function App() {
 
   const selectQuery = (targetQuery: NoteQuery) => {
     setSelectedQuery(targetQuery);
-    const nextView = targetQuery.kind === "deleted" ? "deleted" : "notes";
+    const nextView: LibraryView =
+      targetQuery.kind === "deleted"
+        ? "deleted"
+        : targetQuery.kind === "stickerBoard"
+        ? "stickers"
+        : "notes";
     setView(nextView);
     setQuery("");
     setLoadError("");
-    void loadQueryNotes(targetQuery);
+    if (targetQuery.kind !== "stickerBoard") {
+      void loadQueryNotes(targetQuery);
+    }
     setSaveState("saved");
   };
 
@@ -369,7 +381,7 @@ export function App() {
       void Promise.all([
         bridge.ListNotes?.() ?? Promise.resolve([]),
         bridge.ListDeletedNotes?.() ?? Promise.resolve([]),
-        bridge.ListNavigation?.() ?? Promise.resolve({ folders: [], tags: [], smartFolders: [] })
+        bridge.ListNavigation?.() ?? Promise.resolve({ folders: [], tags: [], smartFolders: [], stickerBoards: [] })
       ]).then(([loadedNotes, loadedDeletedNotes, loadedNav]) => {
         setNotes(loadedNotes);
         setDeletedNotes(loadedDeletedNotes);
@@ -401,7 +413,7 @@ export function App() {
     await Promise.all([
       bridge.ListNotes?.() ?? Promise.resolve([]),
       bridge.ListDeletedNotes?.() ?? Promise.resolve([]),
-      bridge.ListNavigation?.() ?? Promise.resolve({ folders: [], tags: [], smartFolders: [] })
+      bridge.ListNavigation?.() ?? Promise.resolve({ folders: [], tags: [], smartFolders: [], stickerBoards: [] })
     ]).then(([loadedNotes, loadedDeletedNotes, loadedNav]) => {
       setNotes(loadedNotes);
       setDeletedNotes(loadedDeletedNotes);
@@ -483,7 +495,7 @@ export function App() {
     const [loadedNotes, loadedDeletedNotes, loadedNav, currentConflicts] = await Promise.all([
       bridge.ListNotes?.() ?? Promise.resolve([]),
       bridge.ListDeletedNotes?.() ?? Promise.resolve([]),
-      bridge.ListNavigation?.() ?? Promise.resolve({ folders: [], tags: [], smartFolders: [] }),
+      bridge.ListNavigation?.() ?? Promise.resolve({ folders: [], tags: [], smartFolders: [], stickerBoards: [] }),
       bridge.ListNoteConflicts?.() ?? Promise.resolve([])
     ]);
     setNotes(loadedNotes);
@@ -743,7 +755,7 @@ export function App() {
     void Promise.all([
       bridge.ListNotes(),
       bridge.ListDeletedNotes?.() ?? Promise.resolve([]),
-      bridge.ListNavigation?.() ?? Promise.resolve({ folders: [], tags: [], smartFolders: [] })
+      bridge.ListNavigation?.() ?? Promise.resolve({ folders: [], tags: [], smartFolders: [], stickerBoards: [] })
     ])
       .then(([loadedNotes, loadedDeletedNotes, loadedNav]) => {
         setNotes(loadedNotes);
@@ -838,6 +850,62 @@ export function App() {
     } finally {
       setDeleteTagTarget(null);
     }
+  };
+
+  const handleSaveStickerBoard = async (boardRecord: StickerBoardRecord) => {
+    const bridge = window.go?.main?.App;
+    if (bridge?.SaveStickerBoard) {
+      try {
+        const saved = await bridge.SaveStickerBoard(boardRecord);
+        await reloadNavigation();
+        selectQuery({ kind: "stickerBoard", id: saved.id });
+      } catch (err: any) {
+        setLoadError(err?.message || "Não foi possível salvar o quadro de stickers.");
+      }
+    } else {
+      setNavigation((current) => ({
+        ...current,
+        stickerBoards: current.stickerBoards.some((b) => b.id === boardRecord.id)
+          ? current.stickerBoards.map((b) => (b.id === boardRecord.id ? boardRecord : b))
+          : [...current.stickerBoards, boardRecord]
+      }));
+      selectQuery({ kind: "stickerBoard", id: boardRecord.id });
+    }
+  };
+
+  const handleDeleteStickerBoard = async (boardRecord: StickerBoardRecord) => {
+    if (boardRecord.id === "board-default") return;
+    try {
+      const bridge = window.go?.main?.App;
+      if (bridge?.DeleteStickerBoard) {
+        await bridge.DeleteStickerBoard(boardRecord.id);
+        await reloadNavigation();
+        if (selectedQuery.kind === "stickerBoard" && selectedQuery.id === boardRecord.id) {
+          selectQuery({ kind: "all" });
+        }
+      } else {
+        setNavigation((current) => ({
+          ...current,
+          stickerBoards: current.stickerBoards.filter((b) => b.id !== boardRecord.id)
+        }));
+        if (selectedQuery.kind === "stickerBoard" && selectedQuery.id === boardRecord.id) {
+          selectQuery({ kind: "all" });
+        }
+      }
+    } catch (err: any) {
+      setLoadError(err?.message || "Não foi possível excluir o quadro de stickers.");
+    } finally {
+      setDeleteBoardTarget(null);
+    }
+  };
+
+  const handleStickerCountChange = (boardId: string, count: number) => {
+    setNavigation((prev) => ({
+      ...prev,
+      stickerBoards: (prev.stickerBoards || []).map((b) =>
+        b.id === boardId ? { ...b, stickerCount: count } : b
+      ),
+    }));
   };
 
   const toggleFolderExpanded = (folderID: string) => {
@@ -941,7 +1009,15 @@ export function App() {
 
   return (
     <div className="app-container">
-      <TitleBar title={active?.title ? `${active.title} — Magnetares` : "Magnetares Notes"} />
+      <TitleBar
+        title={
+          view === "stickers"
+            ? `${(navigation.stickerBoards || []).find((b) => b.id === selectedQuery.id)?.name ?? "Stickers"} — Magnetares`
+            : active?.title
+            ? `${active.title} — Magnetares`
+            : "Magnetares Notes"
+        }
+      />
       {syncNotification && !conflictsOpen && (
         <div className={`app-toast ${syncNotification.type}`} role="status">
           <span>{syncNotification.message}</span>
@@ -950,7 +1026,7 @@ export function App() {
           </button>
         </div>
       )}
-      <main className={`shell ${sidebarOpen ? "" : "sidebar-closed"}`}>
+      <main className={`shell ${sidebarOpen ? "" : "sidebar-closed"} ${view === "stickers" ? "stickers-view" : ""}`}>
       <aside className="sidebar" aria-label="Pastas">
         <div className="sidebar-heading">
           <Sparkles className="brand-mark" aria-hidden="true" />
@@ -995,6 +1071,99 @@ export function App() {
             </div>
           </>
         )}
+
+        <>
+          <div className="sidebar-section-header">
+            <span className="folder-label">STICKERS</span>
+            <button
+              className="icon-button mini-add"
+              onClick={() => {
+                setBoardToEdit(undefined);
+                setStickerBoardDialogOpen(true);
+              }}
+              title="Novo quadro de stickers"
+              aria-label="Novo quadro de stickers"
+            >
+              <Plus aria-hidden="true" />
+            </button>
+          </div>
+          <div className="folder-tree">
+            {(navigation.stickerBoards || []).map((board) => {
+              const isSelected = selectedQuery.kind === "stickerBoard" && selectedQuery.id === board.id;
+              const colorHex = STICKER_PALETTE.find((c) => c.id === board.color)?.hex ?? "#eab308";
+              return (
+                <button
+                  key={board.id}
+                  type="button"
+                  className={`nav-item sticker-board-item ${isSelected ? "selected" : ""}`}
+                  onClick={() => selectQuery({ kind: "stickerBoard", id: board.id })}
+                  onDragOver={(event) => {
+                    if (event.dataTransfer.types.includes("application/x-magnetares-sticker")) {
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = "move";
+                    }
+                  }}
+                  onDrop={async (event) => {
+                    const stickerId = event.dataTransfer.getData("application/x-magnetares-sticker");
+                    if (stickerId && board.id !== selectedQuery.id) {
+                      event.preventDefault();
+                      const bridge = window.go?.main?.App;
+                      if (bridge?.MoveSticker) {
+                        await bridge.MoveSticker(stickerId, board.id, "");
+                        await reloadNavigation();
+                        selectQuery({ kind: "stickerBoard", id: board.id });
+                      }
+                    }
+                  }}
+                  title={board.name}
+                >
+                  <span>
+                    <DelicateStickerIcon
+                      size={14}
+                      className="tag-icon sticker-board-icon"
+                      style={{ color: colorHex }}
+                    />
+                    <span className="nav-item-title">{board.name}</span>
+                  </span>
+                  <div className="folder-item-actions">
+                    <small className="folder-note-count">{board.stickerCount ?? 0}</small>
+                    <div className="folder-hover-btns">
+                      <span
+                        className="folder-action-btn"
+                        role="button"
+                        tabIndex={0}
+                        title="Editar quadro"
+                        aria-label={`Editar quadro ${board.name}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setBoardToEdit(board);
+                          setStickerBoardDialogOpen(true);
+                        }}
+                      >
+                        <FilePenLine size={13} aria-hidden="true" />
+                      </span>
+                      {board.id !== "board-default" && (
+                        <span
+                          className="folder-action-btn danger"
+                          role="button"
+                          tabIndex={0}
+                          title="Excluir quadro"
+                          aria-label={`Excluir quadro ${board.name}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setDeleteBoardTarget(board);
+                          }}
+                        >
+                          <Trash2 size={13} aria-hidden="true" />
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </>
 
         <>
           <div className="sidebar-section-header">
@@ -1068,7 +1237,29 @@ export function App() {
         </footer>
       </aside>
 
-      <section className="note-list" aria-label="Lista de notas">
+      {view === "stickers" ? (
+        <StickerBoardView
+          board={
+            (navigation.stickerBoards || []).find((b) => b.id === selectedQuery.id) ||
+            (navigation.stickerBoards || [])[0] || {
+              id: "board-default",
+              name: "Geral",
+              color: "yellow",
+              stickerCount: 0,
+            }
+          }
+          sidebarOpen={sidebarOpen}
+          onOpenSidebar={() => setSidebarOpen(true)}
+          onEditBoard={(board) => {
+            setBoardToEdit(board);
+            setStickerBoardDialogOpen(true);
+          }}
+          onDeleteBoard={(board) => setDeleteBoardTarget(board)}
+          onStickerCountChange={handleStickerCountChange}
+        />
+      ) : (
+        <>
+          <section className="note-list" aria-label="Lista de notas">
         <div className="list-toolbar">
           {!sidebarOpen && <button className="icon-button" onClick={() => setSidebarOpen(true)} title="Mostrar barra lateral" aria-label="Mostrar barra lateral"><ChevronRight aria-hidden="true" /></button>}
           <label className="search">
@@ -1219,6 +1410,8 @@ export function App() {
           </div>
         )}
       </article>
+      </>
+      )}
 
       {dialogMode && (
         <OrganizationDialog
@@ -1302,6 +1495,38 @@ export function App() {
             </footer>
           </div>
         </div>
+      )}
+
+      {deleteBoardTarget && (
+        <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setDeleteBoardTarget(null)}>
+          <div className="organization-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-board-dialog-title" style={{ maxWidth: 420 }}>
+            <header>
+              <Trash2 aria-hidden="true" style={{ color: "#ef4444" }} />
+              <h2 id="delete-board-dialog-title">Excluir quadro</h2>
+              <button type="button" onClick={() => setDeleteBoardTarget(null)} aria-label="Fechar" title="Fechar"><X aria-hidden="true" /></button>
+            </header>
+            <p style={{ marginTop: 12, marginBottom: 20, color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
+              Tem certeza que deseja excluir o quadro <strong>{deleteBoardTarget.name}</strong>? Os stickers deste quadro serão arquivados.
+            </p>
+            <footer>
+              <button type="button" className="ghost" onClick={() => setDeleteBoardTarget(null)}>Cancelar</button>
+              <button type="button" style={{ background: "#dc2626", color: "#ffffff", borderColor: "#b91c1c" }} onClick={() => void handleDeleteStickerBoard(deleteBoardTarget)}>
+                Excluir quadro
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {stickerBoardDialogOpen && (
+        <StickerBoardDialog
+          boardToEdit={boardToEdit}
+          onClose={() => {
+            setStickerBoardDialogOpen(false);
+            setBoardToEdit(undefined);
+          }}
+          onSave={handleSaveStickerBoard}
+        />
       )}
     </main>
     </div>

@@ -18,6 +18,7 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 | Pastas e subpastas | Implementado | Criação e edição completa de pastas e subpastas com cores HSL e 8 ícones personalizáveis, suporte a pastas legadas. |
 | Notas fixadas | Implementado | Pin e ordenação no topo. |
 | Etiquetas | Implementado | CRUD, ícones, chips, associação persistida e layout responsivo para tags extensas. |
+| Stickers (Mural de Post-its) | Implementado (v1.4.0) | Quadros organizadores, mural full-width, cards pastel em 8 cores, ordenação fluida por drag-and-drop, busca local e fixação. |
 | Pastas Inteligentes | Implementado | Tag, período e checklist com atualização automática. |
 | Busca por texto local | Implementado | Título e `body_text`; não usa FTS/OCR. |
 | Lixeira e restauração | Implementado | Exclusão lógica com confirmação e redirecionamento seguro para a pasta padrão. |

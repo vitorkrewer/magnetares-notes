@@ -41,14 +41,34 @@ export type SmartFolderRecord = {
   checklistState?: "any" | "open" | "completed";
 };
 
+export type StickerBoardRecord = {
+  id: string;
+  name: string;
+  color: string;
+  stickerCount: number;
+};
+
+export type StickerRecord = {
+  id: string;
+  boardId: string;
+  title: string;
+  body: string;
+  color: string;
+  position: number;
+  pinnedAt?: string | null;
+  createdAt?: string;
+  updatedAt: string;
+};
+
 export type NavigationRecord = {
   folders: FolderRecord[];
   tags: TagRecord[];
   smartFolders: SmartFolderRecord[];
+  stickerBoards: StickerBoardRecord[];
 };
 
 export type NoteQuery = {
-  kind: "all" | "deleted" | "pinned" | "tag" | "folder" | "smart";
+  kind: "all" | "deleted" | "pinned" | "tag" | "folder" | "smart" | "stickerBoard";
   id?: string;
 };
 
@@ -85,6 +105,7 @@ export type ComplianceReport = {
   orphanNotesFixed: number;
   checklistsCorrected: number;
   orphanTagsCleaned: number;
+  orphanStickersFixed?: number;
   details: string[];
   auditedAt: string;
 };
@@ -108,6 +129,14 @@ export type DesktopBridge = {
   QueryNotes?: (query: NoteQuery) => Promise<Note[]>;
   SaveSmartFolder?: (smart: SmartFolderRecord) => Promise<SmartFolderRecord>;
   DeleteSmartFolder?: (id: string) => Promise<void>;
+  SaveStickerBoard?: (board: StickerBoardRecord) => Promise<StickerBoardRecord>;
+  DeleteStickerBoard?: (id: string) => Promise<void>;
+  ListStickers?: (boardId: string) => Promise<StickerRecord[]>;
+  SaveSticker?: (sticker: StickerRecord) => Promise<StickerRecord>;
+  DeleteSticker?: (id: string) => Promise<void>;
+  RestoreSticker?: (id: string) => Promise<StickerRecord>;
+  SetStickerPinned?: (id: string, pinned: boolean) => Promise<StickerRecord>;
+  MoveSticker?: (id: string, boardId: string, beforeId: string) => Promise<StickerRecord>;
   GetDatabasePath?: () => Promise<string>;
   SetCustomDatabasePath?: (newPath: string) => Promise<string>;
   SyncNow?: (apiURL: string) => Promise<SyncResult>;

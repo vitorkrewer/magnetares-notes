@@ -113,6 +113,38 @@ func (a *App) DeleteSmartFolder(id string) error {
 	return a.store.deleteSmartFolder(id)
 }
 
+func (a *App) SaveStickerBoard(board StickerBoard) (StickerBoard, error) {
+	return a.store.saveStickerBoard(board)
+}
+
+func (a *App) DeleteStickerBoard(id string) error {
+	return a.store.deleteStickerBoard(id)
+}
+
+func (a *App) ListStickers(boardID string) ([]Sticker, error) {
+	return a.store.listStickers(boardID)
+}
+
+func (a *App) SaveSticker(sticker Sticker) (Sticker, error) {
+	return a.store.saveSticker(sticker)
+}
+
+func (a *App) DeleteSticker(id string) error {
+	return a.store.deleteSticker(id)
+}
+
+func (a *App) RestoreSticker(id string) (Sticker, error) {
+	return a.store.restoreSticker(id)
+}
+
+func (a *App) SetStickerPinned(id string, pinned bool) (Sticker, error) {
+	return a.store.setStickerPinned(id, pinned)
+}
+
+func (a *App) MoveSticker(id, boardID, beforeID string) (Sticker, error) {
+	return a.store.moveSticker(id, boardID, beforeID)
+}
+
 func (a *App) GetDatabasePath() (string, error) {
 	return defaultDatabasePath()
 }

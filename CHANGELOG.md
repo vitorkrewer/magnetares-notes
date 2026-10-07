@@ -2,6 +2,25 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## [v1.4.0] - 2026-10-06
+
+### Added
+
+- **Nova funcionalidade Stickers:** mural de notas autoadesivas (post-its) organizado por quadros (*views*), posicionado na barra lateral logo acima de Etiquetas e abaixo de Pastas.
+- **Quadros de Stickers (Boards):** CRUD completo para gerenciar múltiplos quadros (criar, editar nome e tema, excluir quadros customizados), com quadro padrão "Geral" protegido contra exclusão e contador dinâmico de stickers.
+- **Mural Full-Width:** layout responsivo que aproveita 100% da área útil da janela (em vez de ficar restrito a uma coluna de lista estreita), distribuindo as notas adesivas em múltiplas colunas automáticas (`minmax(280px, 1fr)`).
+- **CRUD e Edição Inline de Stickers:** notas de texto simples com título (até 120 caracteres) e corpo (até 5.000 caracteres), criação rápida por botão ou atalho e salvamento automático contínuo com debounce de 400ms e flush imediato no blur.
+- **Fixação no topo (Pin):** destaque visual dourado e prioridade de ordenação no banco SQLite para notas adesivas fixadas.
+- **Paleta de 8 cores pastel:** amarelo, laranja, rosa, roxo, azul, turquesa, verde e cinza neutro, com contraste calibrado e suporte automático a temas claro e escuro.
+- **Movimentação fluida (Drag & Drop):** reordenação de cards no mural com posicionamento fracionário no SQLite, capacidade de soltar na área livre do canvas para enviar ao fim do quadro, e arraste de notas diretamente sobre outros quadros na barra lateral para transferência imediata entre quadros.
+- **Ícones delicados na barra lateral:** componente `DelicateStickerIcon` desenhado com proporção elegante de 14px e traço fino de 1.6px, perfeitamente integrado à hierarquia visual de pastas e etiquetas.
+- **Auditoria de Compliance de Stickers:** rotina `ensureStickerCompliance` que garante integridade do quadro padrão, normalização de cores e reparenting automático de stickers órfãos.
+- **Migração de banco `0010_stickers.sql`:** tabelas `sticker_boards` e `stickers` criadas com suporte nativo a soft-delete e colunas preparadas para futura sincronização na nuvem (`updated_at`, `deleted_at`, `sync_state`).
+
+### Tests
+
+- `TestStickerBoardsAndStickersCRUD` cobrindo o ciclo de vida completo de quadros (criação, edição, unicidade de nomes, proteção do quadro padrão) e stickers (criação, reordenação por ponto médio, fixação, soft-delete em cascata e reparenting).
+
 ## [v1.3.0] - 2026-10-06
 
 ### Added

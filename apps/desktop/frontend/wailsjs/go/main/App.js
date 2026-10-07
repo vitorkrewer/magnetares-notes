@@ -22,6 +22,14 @@ export function DeleteSmartFolder(arg1) {
   return window['go']['main']['App']['DeleteSmartFolder'](arg1);
 }
 
+export function DeleteSticker(arg1) {
+  return window['go']['main']['App']['DeleteSticker'](arg1);
+}
+
+export function DeleteStickerBoard(arg1) {
+  return window['go']['main']['App']['DeleteStickerBoard'](arg1);
+}
+
 export function DeleteTag(arg1) {
   return window['go']['main']['App']['DeleteTag'](arg1);
 }
@@ -66,12 +74,20 @@ export function ListNotes() {
   return window['go']['main']['App']['ListNotes']();
 }
 
+export function ListStickers(arg1) {
+  return window['go']['main']['App']['ListStickers'](arg1);
+}
+
 export function MinimizeWindow() {
   return window['go']['main']['App']['MinimizeWindow']();
 }
 
 export function MoveNote(arg1, arg2) {
   return window['go']['main']['App']['MoveNote'](arg1, arg2);
+}
+
+export function MoveSticker(arg1, arg2, arg3) {
+  return window['go']['main']['App']['MoveSticker'](arg1, arg2, arg3);
 }
 
 export function QueryNotes(arg1) {
@@ -84,6 +100,10 @@ export function ResolveNoteConflict(arg1, arg2) {
 
 export function RestoreNote(arg1) {
   return window['go']['main']['App']['RestoreNote'](arg1);
+}
+
+export function RestoreSticker(arg1) {
+  return window['go']['main']['App']['RestoreSticker'](arg1);
 }
 
 export function RunComplianceAudit() {
@@ -106,6 +126,14 @@ export function SaveSmartFolder(arg1) {
   return window['go']['main']['App']['SaveSmartFolder'](arg1);
 }
 
+export function SaveSticker(arg1) {
+  return window['go']['main']['App']['SaveSticker'](arg1);
+}
+
+export function SaveStickerBoard(arg1) {
+  return window['go']['main']['App']['SaveStickerBoard'](arg1);
+}
+
 export function SaveSyncConfiguration(arg1, arg2) {
   return window['go']['main']['App']['SaveSyncConfiguration'](arg1, arg2);
 }
@@ -124,6 +152,10 @@ export function SetNotePinned(arg1, arg2) {
 
 export function SetNoteTags(arg1, arg2) {
   return window['go']['main']['App']['SetNoteTags'](arg1, arg2);
+}
+
+export function SetStickerPinned(arg1, arg2) {
+  return window['go']['main']['App']['SetStickerPinned'](arg1, arg2);
 }
 
 export function SetSyncProfileID(arg1) {

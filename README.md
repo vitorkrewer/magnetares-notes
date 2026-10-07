@@ -44,13 +44,24 @@ flowchart LR
 | Área | Disponível hoje |
 | --- | --- |
 | **Editor** | Títulos, negrito, itálico, destaque, listas, citações, checklists, tabelas, cálculos inline, hyperlinks e blocos de código com syntax highlighting. |
+| **Stickers** | Mural full-width de notas autoadesivas (post-its) organizado por quadros dedicados, 8 cores pastel (temas claro/escuro), fixação no topo, busca instantânea e reordenação por Drag & Drop (no mural e entre quadros na barra lateral). |
 | **Organização** | Pastas/subpastas com cores HSL e 8 ícones personalizáveis, CRUD de etiquetas com 6 ícones, edição de pastas legadas, notas fixadas e Pastas Inteligentes. |
 | **Dados locais & Compliance** | SQLite com WAL, migrações automáticas, lixeira, auditoria de integridade (`EnsureDataCompliance`) e autorreparo em Preferências. |
 | **Portabilidade** | Importação Markdown/TXT, exportação Markdown/HTML/TXT com diálogo nativo para escolher o destino e impressão limpa. |
-| **Experiência** | Tema claro/escuro, barra de título desktop, layout responsivo de três painéis, árvore de pastas alinhada, botão voltar ao topo e tratamento avançado de tags longas. |
+| **Experiência** | Tema claro/escuro, barra de título desktop, layout responsivo de três painéis para notas e full-width para stickers, árvore de pastas alinhada, botão voltar ao topo e tratamento avançado de tags longas. |
 | **Sync Nuvem** | Outbox local, transações remotas, snapshots por cursor, sync automático configurável com indicador de nuvem animado, resolução local/remota/merge e sync de pastas e etiquetas (nomes e ícones) com Last-Write-Wins. |
 
 > Confira a [matriz de funcionalidades](docs/feature-status.md) para status detalhado de recursos implementados, beta e planejados.
+
+### Stickers (Notas Autoadesivas)
+
+A partir da versão **1.4.0**, o Magnetares Notes traz um mural visual completo de notas autoadesivas (*post-its*):
+- **Quadros dedicados (Boards):** crie e organize notas em múltiplos quadros temáticos (como "Ideias", "Lembretes", "Projetos"), com o quadro padrão "Geral" sempre protegido.
+- **Mural em tela cheia (Full-Width):** visualização em grade fluida e responsiva que aproveita toda a largura da janela.
+- **Paleta de 8 cores pastel:** amarelo, laranja, rosa, roxo, azul, turquesa, verde e cinza neutro, calibradas para contraste em temas claro e escuro.
+- **Edição inline instantânea:** digite títulos (até 120 caracteres) e textos (até 5.000 caracteres) diretamente nos cartões com salvamento automático contínuo.
+- **Fixação no topo (Pin):** destaque lembretes cruciais com pin dourado e ordenação prioritária.
+- **Movimentação fluida (Drag & Drop):** reordene notas livremente no mural, mova para o final soltando no espaço livre do canvas ou arraste diretamente sobre outros quadros na barra lateral para transferir instantaneamente.
 
 ## Começar a usar
 

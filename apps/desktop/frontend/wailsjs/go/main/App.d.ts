@@ -12,6 +12,10 @@ export function DeleteNote(arg1:string):Promise<void>;
 
 export function DeleteSmartFolder(arg1:string):Promise<void>;
 
+export function DeleteSticker(arg1:string):Promise<void>;
+
+export function DeleteStickerBoard(arg1:string):Promise<void>;
+
 export function DeleteTag(arg1:string):Promise<void>;
 
 export function ExportNoteFile(arg1:string,arg2:string):Promise<string>;
@@ -34,15 +38,21 @@ export function ListNoteConflicts():Promise<Array<main.SyncConflict>>;
 
 export function ListNotes():Promise<Array<main.Note>>;
 
+export function ListStickers(arg1:string):Promise<Array<main.Sticker>>;
+
 export function MinimizeWindow():Promise<void>;
 
 export function MoveNote(arg1:string,arg2:string):Promise<void>;
+
+export function MoveSticker(arg1:string,arg2:string,arg3:string):Promise<main.Sticker>;
 
 export function QueryNotes(arg1:main.NoteQuery):Promise<Array<main.Note>>;
 
 export function ResolveNoteConflict(arg1:string,arg2:string):Promise<void>;
 
 export function RestoreNote(arg1:string):Promise<void>;
+
+export function RestoreSticker(arg1:string):Promise<main.Sticker>;
 
 export function RunComplianceAudit():Promise<main.ComplianceReport>;
 
@@ -54,6 +64,10 @@ export function SaveNote(arg1:main.Note):Promise<main.Note>;
 
 export function SaveSmartFolder(arg1:main.SmartFolder):Promise<main.SmartFolder>;
 
+export function SaveSticker(arg1:main.Sticker):Promise<main.Sticker>;
+
+export function SaveStickerBoard(arg1:main.StickerBoard):Promise<main.StickerBoard>;
+
 export function SaveSyncConfiguration(arg1:string,arg2:string):Promise<main.SyncConfiguration>;
 
 export function SaveTag(arg1:main.Tag):Promise<main.Tag>;
@@ -63,6 +77,8 @@ export function SetCustomDatabasePath(arg1:string):Promise<string>;
 export function SetNotePinned(arg1:string,arg2:boolean):Promise<main.Note>;
 
 export function SetNoteTags(arg1:string,arg2:Array<string>):Promise<main.Note>;
+
+export function SetStickerPinned(arg1:string,arg2:boolean):Promise<main.Sticker>;
 
 export function SetSyncProfileID(arg1:string):Promise<void>;
 

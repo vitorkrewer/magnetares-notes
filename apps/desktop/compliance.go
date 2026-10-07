@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"time"
@@ -13,6 +14,7 @@ type ComplianceReport struct {
 	OrphanNotesFixed    int      `json:"orphanNotesFixed"`
 	ChecklistsCorrected int      `json:"checklistsCorrected"`
 	OrphanTagsCleaned   int      `json:"orphanTagsCleaned"`
+	OrphanStickersFixed int      `json:"orphanStickersFixed"`
 	Details             []string `json:"details"`
 	AuditedAt           string   `json:"auditedAt"`
 }
@@ -199,6 +201,9 @@ func (s *noteStore) EnsureDataCompliance() (ComplianceReport, error) {
 		}
 	}
 
+	// 12. Stickers: quadro padrão, cores inválidas, stickers órfãos e metadados de sync
+	s.ensureStickerCompliance(tx, now, &report)
+
 	if err := tx.Commit(); err != nil {
 		return report, fmt.Errorf("commit compliance: %w", err)
 	}
@@ -208,4 +213,45 @@ func (s *noteStore) EnsureDataCompliance() (ComplianceReport, error) {
 	}
 
 	return report, nil
+}
+
+func (s *noteStore) ensureStickerCompliance(tx *sql.Tx, now int64, report *ComplianceReport) {
+	// 12a. Garantir existência do quadro padrão 'board-default'
+	_, _ = tx.Exec(`INSERT INTO sticker_boards(id, name, color, position, created_at, updated_at, sync_state)
+		VALUES ('board-default', 'Geral', 'yellow', 0, ?, ?, 'pending')
+		ON CONFLICT(id) DO UPDATE SET
+			color = CASE WHEN sticker_boards.color IS NULL OR sticker_boards.color = '' THEN 'yellow' ELSE sticker_boards.color END`, now, now)
+
+	// 12b. Normalizar cores inválidas em quadros
+	colorList := stickerColorSQLList()
+	_, _ = tx.Exec(fmt.Sprintf(`UPDATE sticker_boards SET color = 'yellow', updated_at = ?
+		WHERE color IS NULL OR color NOT IN (%s)`, colorList), now)
+
+	// 12c. Corrigir stickers órfãos (quadro inexistente ou excluído)
+	res, err := tx.Exec(`UPDATE stickers SET board_id = 'board-default', sync_state = 'pending', updated_at = ?
+		WHERE board_id NOT IN (SELECT id FROM sticker_boards WHERE deleted_at IS NULL)`, now)
+	if err == nil {
+		if affected, _ := res.RowsAffected(); affected > 0 {
+			report.OrphanStickersFixed += int(affected)
+			report.Details = append(report.Details, fmt.Sprintf("Reatribuídos %d stickers órfãos para o quadro padrão (Geral)", affected))
+		}
+	}
+
+	// 12d. Normalizar cores inválidas em stickers
+	_, _ = tx.Exec(fmt.Sprintf(`UPDATE stickers SET color = 'yellow', updated_at = ?
+		WHERE color IS NULL OR color NOT IN (%s)`, colorList), now)
+
+	// 12e. Corrigir timestamps e sync_state inválidos em quadros
+	_, _ = tx.Exec(`UPDATE sticker_boards SET
+		created_at = CASE WHEN created_at <= 0 THEN ? ELSE created_at END,
+		updated_at = CASE WHEN updated_at <= 0 THEN ? ELSE updated_at END,
+		sync_state = CASE WHEN sync_state IS NULL OR sync_state NOT IN ('clean', 'pending') THEN 'pending' ELSE sync_state END
+		WHERE created_at <= 0 OR updated_at <= 0 OR sync_state IS NULL OR sync_state NOT IN ('clean', 'pending')`, now, now)
+
+	// 12f. Corrigir timestamps e sync_state inválidos em stickers
+	_, _ = tx.Exec(`UPDATE stickers SET
+		created_at = CASE WHEN created_at <= 0 THEN ? ELSE created_at END,
+		updated_at = CASE WHEN updated_at <= 0 THEN ? ELSE updated_at END,
+		sync_state = CASE WHEN sync_state IS NULL OR sync_state NOT IN ('clean', 'pending') THEN 'pending' ELSE sync_state END
+		WHERE created_at <= 0 OR updated_at <= 0 OR sync_state IS NULL OR sync_state NOT IN ('clean', 'pending')`, now, now)
 }

@@ -401,6 +401,14 @@ textarea:focus-visible {
   grid-template-columns: 0 310px minmax(390px, 1fr);
 }
 
+.shell.stickers-view {
+  grid-template-columns: 220px 1fr;
+}
+
+.shell.stickers-view.sidebar-closed {
+  grid-template-columns: 0 1fr;
+}
+
 .sidebar {
   background: var(--sidebar);
   border-right: 1px solid #cfcec9;
@@ -560,7 +568,9 @@ textarea:focus-visible {
 }
 
 .smart-item svg,
-.tag-item svg {
+.tag-item svg,
+.sticker-board-item svg,
+.sticker-board-icon {
   color: #b87800;
   height: 14px;
   width: 14px;
@@ -2953,6 +2963,14 @@ textarea:focus-visible {
     grid-template-columns: 0 275px minmax(320px, 1fr);
   }
 
+  .shell.stickers-view {
+    grid-template-columns: 190px 1fr;
+  }
+
+  .shell.stickers-view.sidebar-closed {
+    grid-template-columns: 0 1fr;
+  }
+
   .editor-page,
   .shell.sidebar-closed .editor-page {
     padding-left: 24px;
@@ -2964,6 +2982,11 @@ textarea:focus-visible {
   .shell,
   .shell.sidebar-closed {
     grid-template-columns: 0 260px minmax(380px, 1fr);
+  }
+
+  .shell.stickers-view,
+  .shell.stickers-view.sidebar-closed {
+    grid-template-columns: 0 1fr;
   }
 
   .sidebar {
@@ -3078,3 +3101,524 @@ textarea:focus-visible {
 [data-theme="dark"] .color-picker-btn.selected {
   box-shadow: 0 0 0 2px #1e1e1e, 0 0 0 4px #818cf8;
 }
+
+/* ==========================================================================
+   Stickers Feature
+   ========================================================================== */
+
+.sticker-board-item svg,
+.sticker-board-item .sticker-board-icon {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.6;
+  flex-shrink: 0;
+}
+
+.sticker-board-container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  background: var(--list);
+  overflow: hidden;
+}
+
+.sticker-board-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 32px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  min-height: 60px;
+  flex-shrink: 0;
+}
+
+.sticker-board-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sticker-board-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
+
+.sticker-board-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sticker-board-name {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sticker-board-count {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.sticker-board-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.sticker-search {
+  margin: 0;
+  width: 220px;
+}
+
+.btn-create-sticker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--accent);
+  color: #252522;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-create-sticker:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.btn-create-sticker.primary-action {
+  padding: 10px 20px;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.sticker-board-manage-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-left: 1px solid var(--line);
+  padding-left: 8px;
+}
+
+.sticker-board-canvas {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 36px;
+  position: relative;
+}
+
+.sticker-board-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.sticker-board-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 340px;
+  text-align: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.empty-sticker-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.sticker-board-empty strong {
+  font-size: 16px;
+  color: var(--text);
+}
+
+.sticker-board-empty p {
+  margin: 0;
+  font-size: 13px;
+  max-width: 340px;
+  line-height: 1.45;
+}
+
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 22px;
+  align-items: start;
+}
+
+.sticker-card {
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  border: 1px solid transparent;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 190px;
+}
+
+.sticker-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.sticker-card.is-pinned {
+  border-top-width: 3px;
+  border-top-style: solid;
+}
+
+.sticker-card.is-dragging {
+  opacity: 0.45;
+  transform: scale(0.97);
+  cursor: grabbing;
+}
+
+.sticker-card.drop-target {
+  outline: 2px dashed var(--accent);
+  outline-offset: 4px;
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+}
+
+/* Color palettes: Light mode */
+.sticker-card.color-yellow {
+  background: #fef9c3;
+  border-color: #fde047;
+  color: #713f12;
+}
+.sticker-card.color-yellow.is-pinned {
+  border-top-color: #ca8a04;
+}
+
+.sticker-card.color-orange {
+  background: #ffedd5;
+  border-color: #fdba74;
+  color: #7c2d12;
+}
+.sticker-card.color-orange.is-pinned {
+  border-top-color: #ea580c;
+}
+
+.sticker-card.color-pink {
+  background: #fce7f3;
+  border-color: #f9a8d4;
+  color: #831843;
+}
+.sticker-card.color-pink.is-pinned {
+  border-top-color: #db2777;
+}
+
+.sticker-card.color-purple {
+  background: #f3e8ff;
+  border-color: #d8b4fe;
+  color: #581c87;
+}
+.sticker-card.color-purple.is-pinned {
+  border-top-color: #9333ea;
+}
+
+.sticker-card.color-blue {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0c4a6e;
+}
+.sticker-card.color-blue.is-pinned {
+  border-top-color: #0284c7;
+}
+
+.sticker-card.color-teal {
+  background: #ccfbf1;
+  border-color: #5eead4;
+  color: #134e4a;
+}
+.sticker-card.color-teal.is-pinned {
+  border-top-color: #0d9488;
+}
+
+.sticker-card.color-green {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #14532d;
+}
+.sticker-card.color-green.is-pinned {
+  border-top-color: #16a34a;
+}
+
+.sticker-card.color-gray {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+.sticker-card.color-gray.is-pinned {
+  border-top-color: #64748b;
+}
+
+/* Color palettes: Dark mode */
+[data-theme="dark"] .sticker-card.color-yellow {
+  background: #2b250d;
+  border-color: #5c4811;
+  color: #fef08a;
+}
+[data-theme="dark"] .sticker-card.color-yellow.is-pinned {
+  border-top-color: #eab308;
+}
+
+[data-theme="dark"] .sticker-card.color-orange {
+  background: #311b0e;
+  border-color: #632d13;
+  color: #fed7aa;
+}
+[data-theme="dark"] .sticker-card.color-orange.is-pinned {
+  border-top-color: #f97316;
+}
+
+[data-theme="dark"] .sticker-card.color-pink {
+  background: #301323;
+  border-color: #651f46;
+  color: #fbcfe8;
+}
+[data-theme="dark"] .sticker-card.color-pink.is-pinned {
+  border-top-color: #ec4899;
+}
+
+[data-theme="dark"] .sticker-card.color-purple {
+  background: #221434;
+  border-color: #4b2374;
+  color: #e9d5ff;
+}
+[data-theme="dark"] .sticker-card.color-purple.is-pinned {
+  border-top-color: #a855f7;
+}
+
+[data-theme="dark"] .sticker-card.color-blue {
+  background: #0f2334;
+  border-color: #174a72;
+  color: #bae6fd;
+}
+[data-theme="dark"] .sticker-card.color-blue.is-pinned {
+  border-top-color: #38bdf8;
+}
+
+[data-theme="dark"] .sticker-card.color-teal {
+  background: #0d2825;
+  border-color: #15554f;
+  color: #99f6e4;
+}
+[data-theme="dark"] .sticker-card.color-teal.is-pinned {
+  border-top-color: #2dd4bf;
+}
+
+[data-theme="dark"] .sticker-card.color-green {
+  background: #102719;
+  border-color: #1c5532;
+  color: #bbf7d0;
+}
+[data-theme="dark"] .sticker-card.color-green.is-pinned {
+  border-top-color: #4ade80;
+}
+
+[data-theme="dark"] .sticker-card.color-gray {
+  background: #1b2029;
+  border-color: #333d4e;
+  color: #e2e8f0;
+}
+[data-theme="dark"] .sticker-card.color-gray.is-pinned {
+  border-top-color: #94a3b8;
+}
+
+/* Card Header */
+.sticker-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sticker-drag-handle {
+  cursor: grab;
+  opacity: 0.35;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.15s;
+}
+
+.sticker-drag-handle:hover {
+  opacity: 0.8;
+}
+
+.sticker-drag-handle:active {
+  cursor: grabbing;
+}
+
+.sticker-card-tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sticker-tool-btn {
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.sticker-tool-btn:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .sticker-tool-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sticker-tool-btn.pinned-active {
+  opacity: 1;
+  color: #d97706;
+  transform: rotate(-15deg);
+}
+
+[data-theme="dark"] .sticker-tool-btn.pinned-active {
+  color: #facc15;
+}
+
+.sticker-tool-btn.delete-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+}
+
+/* Color Popover */
+.sticker-color-popover-wrapper {
+  position: relative;
+}
+
+.sticker-color-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 50;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px;
+  width: 124px;
+}
+
+.sticker-color-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.sticker-color-dot:hover {
+  transform: scale(1.2);
+}
+
+.sticker-color-dot.active-color {
+  border-color: var(--text);
+}
+
+/* Card Inputs */
+.sticker-title-input {
+  background: transparent;
+  border: 0;
+  outline: none;
+  font-size: 15px;
+  font-weight: 700;
+  color: inherit;
+  width: 100%;
+  padding: 0;
+  font-family: inherit;
+}
+
+.sticker-title-input::placeholder {
+  opacity: 0.45;
+  color: inherit;
+}
+
+.sticker-body-input {
+  background: transparent;
+  border: 0;
+  outline: none;
+  font-size: 13px;
+  line-height: 1.5;
+  color: inherit;
+  width: 100%;
+  resize: vertical;
+  min-height: 80px;
+  padding: 0;
+  font-family: inherit;
+}
+
+.sticker-body-input::placeholder {
+  opacity: 0.45;
+  color: inherit;
+}
+
+/* Card Footer */
+.sticker-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.sticker-date {
+  font-size: 10px;
+  opacity: 0.55;
+  font-weight: 500;
+}

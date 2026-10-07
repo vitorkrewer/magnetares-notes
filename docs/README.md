@@ -24,9 +24,11 @@ Este diretório descreve o Magnetares Notes como produto, aplicativo desktop e c
 
 - Notas locais persistentes em SQLite com autosave, lixeira e restauração.
 - Editor rico: títulos, negrito, itálico, destaque, listas, citações, checklists, tabelas e cálculos.
+- **Stickers (v1.4.0):** mural full-width de notas autoadesivas por quadros, 8 cores pastel, fixação no topo e drag & drop.
 - Pastas, subpastas, fixadas, etiquetas e Pastas Inteligentes.
-- Importação de Markdown/texto, exportação Markdown/HTML/texto e impressão.
+- Importação de Markdown/texto, exportação Markdown/HTML/texto com diálogo nativo e impressão.
 - Tema claro/escuro, barra de título sem moldura e configuração do local do banco.
+- Sincronização em nuvem opcional com detecção de conflitos, resolução local/remoto/merge e sync de pastas e etiquetas.
 
 ### Implementado com limitações
 

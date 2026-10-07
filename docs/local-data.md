@@ -60,6 +60,8 @@ Nunca altere uma migração já lançada. Crie uma nova migração com prefixo c
 | `0007_sync_folder_updated_at_index.sql` | Índice para sincronização de pastas. |
 | `0007_tag_icon.sql` | Ícone persistido no catálogo de etiquetas. |
 | `0008_managed_tags.sql` | Marca etiquetas criadas pelo usuário para preservar etiquetas vazias. |
+| `0009_sync_tags.sql` | Colunas de sincronização e soft-delete em etiquetas para nuvem. |
+| `0010_stickers.sql` | Tabelas `sticker_boards` e `stickers`, quadro padrão "Geral" e índices. |
 
 ## Modelo de dados local
 
@@ -78,6 +80,34 @@ Nunca altere uma migração já lançada. Crie uma nova migração com prefixo c
 | `checklist_total` / `checklist_open` | Projeção de nós `taskItem` do documento JSON. |
 | `deleted_at` | Exclusão lógica/lixeira. |
 | `created_at` / `updated_at` | Epoch em milissegundos. |
+
+### `sticker_boards` (Quadros de Stickers)
+
+| Coluna | Descrição |
+| --- | --- |
+| `id` | Identificador do quadro (ex.: `board-default` para Geral). |
+| `name` | Nome único do quadro (até 64 caracteres). |
+| `color` | Cor temática do quadro (paleta pastel). |
+| `position` | Posição inteira para ordenação na barra lateral. |
+| `is_default` | Booleano que impede a exclusão do quadro padrão. |
+| `created_at` / `updated_at` | Epoch em milissegundos. |
+| `deleted_at` | Exclusão lógica para sincronização. |
+| `sync_state` | Estado de sincronização (`clean` / `pending`). |
+
+### `stickers` (Notas Autoadesivas)
+
+| Coluna | Descrição |
+| --- | --- |
+| `id` | Identificador único do sticker. |
+| `board_id` | Quadro ao qual o sticker pertence. |
+| `title` | Título (até 120 caracteres). |
+| `body` | Corpo em texto simples (até 5.000 caracteres). |
+| `color` | Cor de fundo pastel do card (8 opções). |
+| `position` | Posição fracionária (`REAL`) para ordenação contínua. |
+| `pinned_at` | Data de fixação no topo, ou `NULL`. |
+| `created_at` / `updated_at` | Epoch em milissegundos. |
+| `deleted_at` | Exclusão lógica para sincronização. |
+| `sync_state` | Estado de sincronização (`clean` / `pending`). |
 
 ### Organização
 

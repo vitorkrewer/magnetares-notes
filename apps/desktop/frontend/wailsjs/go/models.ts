@@ -7,6 +7,7 @@ export namespace main {
 	    orphanNotesFixed: number;
 	    checklistsCorrected: number;
 	    orphanTagsCleaned: number;
+	    orphanStickersFixed: number;
 	    details: string[];
 	    auditedAt: string;
 	
@@ -22,6 +23,7 @@ export namespace main {
 	        this.orphanNotesFixed = source["orphanNotesFixed"];
 	        this.checklistsCorrected = source["checklistsCorrected"];
 	        this.orphanTagsCleaned = source["orphanTagsCleaned"];
+	        this.orphanStickersFixed = source["orphanStickersFixed"];
 	        this.details = source["details"];
 	        this.auditedAt = source["auditedAt"];
 	    }
@@ -46,6 +48,24 @@ export namespace main {
 	        this.color = source["color"];
 	        this.icon = source["icon"];
 	        this.noteCount = source["noteCount"];
+	    }
+	}
+	export class StickerBoard {
+	    id: string;
+	    name: string;
+	    color: string;
+	    stickerCount: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new StickerBoard(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.color = source["color"];
+	        this.stickerCount = source["stickerCount"];
 	    }
 	}
 	export class SmartFolder {
@@ -94,6 +114,7 @@ export namespace main {
 	    folders: Folder[];
 	    tags: Tag[];
 	    smartFolders: SmartFolder[];
+	    stickerBoards: StickerBoard[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Navigation(source);
@@ -104,6 +125,7 @@ export namespace main {
 	        this.folders = this.convertValues(source["folders"], Folder);
 	        this.tags = this.convertValues(source["tags"], Tag);
 	        this.smartFolders = this.convertValues(source["smartFolders"], SmartFolder);
+	        this.stickerBoards = this.convertValues(source["stickerBoards"], StickerBoard);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -197,6 +219,56 @@ export namespace main {
 	        this.kind = source["kind"];
 	        this.id = source["id"];
 	    }
+	}
+	
+	export class Sticker {
+	    id: string;
+	    boardId: string;
+	    title: string;
+	    body: string;
+	    color: string;
+	    position: number;
+	    // Go type: time
+	    pinnedAt?: any;
+	    // Go type: time
+	    createdAt: any;
+	    // Go type: time
+	    updatedAt: any;
+	
+	    static createFrom(source: any = {}) {
+	        return new Sticker(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.boardId = source["boardId"];
+	        this.title = source["title"];
+	        this.body = source["body"];
+	        this.color = source["color"];
+	        this.position = source["position"];
+	        this.pinnedAt = this.convertValues(source["pinnedAt"], null);
+	        this.createdAt = this.convertValues(source["createdAt"], null);
+	        this.updatedAt = this.convertValues(source["updatedAt"], null);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	
 	export class SyncConfiguration {
