@@ -27,7 +27,7 @@ type noteStore struct {
 	db *sql.DB
 }
 
-const noteSelectColumns = `n.id, n.title, n.body, n.body_text, n.folder, n.folder_id,
+const noteSelectColumns = `n.id, n.title, n.body, n.body_text, n.note_type, n.language, n.folder, n.folder_id,
 	n.revision, n.pinned_at, n.checklist_total, n.checklist_open, n.deleted_at, n.created_at, n.updated_at,
 	COALESCE((SELECT group_concat(name, char(31)) FROM (
 		SELECT t.name FROM note_tags nt JOIN tags t ON t.id = nt.tag_id
@@ -472,12 +472,21 @@ func (s *noteStore) saveNote(note Note) (Note, error) {
 	_ = tx.QueryRow("SELECT revision FROM notes WHERE id = ?", note.ID).Scan(&currentRev)
 	nextRev := currentRev + 1
 
-	_, err = tx.Exec(`INSERT INTO notes(id, title, body, body_text, folder, folder_id, revision, checklist_total, checklist_open, sync_state, pending_mutation_id, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)
+	if note.Type == "" {
+		note.Type = "rtf"
+	}
+	if note.Language == "" {
+		note.Language = "plaintext"
+	}
+
+	_, err = tx.Exec(`INSERT INTO notes(id, title, body, body_text, note_type, language, folder, folder_id, revision, checklist_total, checklist_open, sync_state, pending_mutation_id, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
 			title = excluded.title,
 			body = excluded.body,
 			body_text = excluded.body_text,
+			note_type = excluded.note_type,
+			language = excluded.language,
 			folder = excluded.folder,
 			folder_id = excluded.folder_id,
 			checklist_total = excluded.checklist_total,
@@ -485,7 +494,7 @@ func (s *noteStore) saveNote(note Note) (Note, error) {
 			sync_state = 'pending',
 			pending_mutation_id = excluded.pending_mutation_id,
 			revision = notes.revision + 1,
-			updated_at = excluded.updated_at`, note.ID, note.Title, note.Body, note.BodyText, note.Folder, note.FolderID, nextRev, note.ChecklistTotal, note.ChecklistOpen, mutationID, now, now)
+			updated_at = excluded.updated_at`, note.ID, note.Title, note.Body, note.BodyText, note.Type, note.Language, note.Folder, note.FolderID, nextRev, note.ChecklistTotal, note.ChecklistOpen, mutationID, now, now)
 	if err != nil {
 		return Note{}, fmt.Errorf("save note: %w", err)
 	}
@@ -562,7 +571,7 @@ func scanNote(scanner noteScanner) (Note, error) {
 	var createdAt int64
 	var updatedAt int64
 	var tags string
-	if err := scanner.Scan(&note.ID, &note.Title, &note.Body, &note.BodyText, &note.Folder, &note.FolderID, &note.Revision, &pinnedAt, &note.ChecklistTotal, &note.ChecklistOpen, &deletedAt, &createdAt, &updatedAt, &tags); err != nil {
+	if err := scanner.Scan(&note.ID, &note.Title, &note.Body, &note.BodyText, &note.Type, &note.Language, &note.Folder, &note.FolderID, &note.Revision, &pinnedAt, &note.ChecklistTotal, &note.ChecklistOpen, &deletedAt, &createdAt, &updatedAt, &tags); err != nil {
 		return Note{}, fmt.Errorf("scan note: %w", err)
 	}
 	if tags == "" {

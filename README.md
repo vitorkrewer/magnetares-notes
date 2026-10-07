@@ -43,7 +43,8 @@ flowchart LR
 
 | Área | Disponível hoje |
 | --- | --- |
-| **Editor** | Títulos, negrito, itálico, destaque, listas, citações, checklists, tabelas, cálculos inline, hyperlinks e blocos de código com syntax highlighting. |
+| **Editor** | Títulos, negrito, itálico, destaque, listas, citações, checklists, tabelas, cálculos inline, hyperlinks e blocos de código integrados. |
+| **Code Snippets** | Notas de código independentes com motor Monaco Editor (o mesmo do VS Code). Syntax highlighting avançado, dropdown com diversas linguagens, Color Badges elegantes na interface, e botão de cópia com 1 clique. |
 | **Stickers** | Mural full-width de notas autoadesivas (post-its) organizado por quadros dedicados, 8 cores pastel (temas claro/escuro), fixação no topo, busca instantânea e reordenação por Drag & Drop (no mural e entre quadros na barra lateral). |
 | **Organização** | Pastas/subpastas com cores HSL e 8 ícones personalizáveis, CRUD de etiquetas com 6 ícones, edição de pastas legadas, notas fixadas e Pastas Inteligentes. |
 | **Dados locais & Compliance** | SQLite com WAL, migrações automáticas, lixeira, auditoria de integridade (`EnsureDataCompliance`) e autorreparo em Preferências. |

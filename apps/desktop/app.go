@@ -18,6 +18,8 @@ type Note struct {
 	Title          string     `json:"title"`
 	Body           string     `json:"body"`
 	BodyText       string     `json:"bodyText"`
+	Type           string     `json:"type"`
+	Language       string     `json:"language"`
 	Folder         string     `json:"folder"`
 	FolderID       string     `json:"folderId"`
 	Revision       int64      `json:"revision"`
@@ -249,8 +251,15 @@ func (a *App) ExportNoteFile(defaultFilename, content string) (string, error) {
 			{DisplayName: "Todos os Arquivos (*.*)", Pattern: "*.*"},
 		}
 	default:
-		filters = []runtime.FileFilter{
-			{DisplayName: "Todos os Arquivos (*.*)", Pattern: "*.*"},
+		if ext != "" {
+			filters = []runtime.FileFilter{
+				{DisplayName: fmt.Sprintf("Arquivo de Código (*%s)", ext), Pattern: "*" + ext},
+				{DisplayName: "Todos os Arquivos (*.*)", Pattern: "*.*"},
+			}
+		} else {
+			filters = []runtime.FileFilter{
+				{DisplayName: "Todos os Arquivos (*.*)", Pattern: "*.*"},
+			}
 		}
 	}
 

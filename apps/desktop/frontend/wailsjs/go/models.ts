@@ -151,6 +151,8 @@ export namespace main {
 	    title: string;
 	    body: string;
 	    bodyText: string;
+	    type: string;
+	    language: string;
 	    folder: string;
 	    folderId: string;
 	    revision: number;
@@ -176,6 +178,8 @@ export namespace main {
 	        this.title = source["title"];
 	        this.body = source["body"];
 	        this.bodyText = source["bodyText"];
+	        this.type = source["type"];
+	        this.language = source["language"];
 	        this.folder = source["folder"];
 	        this.folderId = source["folderId"];
 	        this.revision = source["revision"];

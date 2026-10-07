@@ -13,9 +13,17 @@ O botão de recolher a barra lateral amplia a área do editor. A rolagem da nota
 ## Criar e editar
 
 - Clique em **Nova nota** ou use `Ctrl+N` (`Cmd+N` no macOS).
+- Ao lado do botão "Nova nota", clique no botão **Novo código** `< >` para criar um Code Snippet, otimizado para desenvolvedores.
 - Edite título e conteúdo; o salvamento é automático com debounce e fila serial por nota.
 - O estado no topo do editor alterna entre **Salvando…**, **Salvo** e **Falha ao salvar**.
 - `Ctrl+F` ou `Cmd+F` move o foco para a busca.
+
+### Code Snippets
+O Magnetares agora permite criar arquivos exclusivos de código (independentes das anotações ricas).
+- Motor de renderização: utiliza a mesma engine do **VS Code** (Monaco Editor).
+- Suporte a syntax highlighting com identificação automática da linguagem pela seleção no *dropdown* superior.
+- Cópia com 1-clique por meio do botão nativo "Copiar".
+- As notas de código exibem a linguagem com **Color Badges** ou os logotipos originais na barra lateral (ao invés do botão genérico).
 
 ## Formatação
 

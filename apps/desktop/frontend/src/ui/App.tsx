@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FilePenLine, FileText, Folder, Globe, List, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Trash2, Upload, X } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FileCode2, FilePenLine, FileText, Folder, Globe, List, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Trash2, Upload, X } from "lucide-react";
 import { StructuredEditor } from "./StructuredEditor";
+import { CodeEditor } from "./CodeEditor";
 import { TitleBar } from "./TitleBar";
 import { OrganizationDialog, getFolderIconComponent, getTagIconComponent } from "./OrganizationDialog";
 import { SettingsDialog, type ThemeOption } from "./SettingsDialog";
@@ -17,6 +18,55 @@ const demo: Note[] = [
   { id: "welcome", title: "Bem-vindo ao Magnetares", body: "Um lugar tranquilo para pensar, planejar e guardar o que importa.", bodyText: "Um lugar tranquilo para pensar, planejar e guardar o que importa.", folder: "Notas", updatedAt: new Date().toISOString() },
   { id: "ideas", title: "Ideias", body: "• Diário de projeto\n• Atalhos de teclado\n• Sincronização segura", bodyText: "• Diário de projeto\n• Atalhos de teclado\n• Sincronização segura", folder: "Notas", updatedAt: new Date(Date.now() - 7_200_000).toISOString() }
 ];
+
+export function LanguageBadge({ language }: { language?: string }) {
+  const devicons: Record<string, string> = {
+    javascript: "devicon-javascript-plain colored",
+    typescript: "devicon-typescript-plain colored",
+    python: "devicon-python-plain colored",
+    html: "devicon-html5-plain colored",
+    css: "devicon-css3-plain colored",
+    go: "devicon-go-original-wordmark colored",
+    json: "devicon-json-plain colored",
+    sql: "devicon-mysql-plain colored",
+    markdown: "devicon-markdown-original",
+    php: "devicon-php-plain colored",
+    shell: "devicon-bash-plain colored",
+    cpp: "devicon-cplusplus-plain colored",
+    java: "devicon-java-plain colored",
+    rust: "devicon-rust-plain",
+    yaml: "devicon-yaml-plain colored"
+  };
+
+  const iconClass = devicons[language || ""];
+
+  if (iconClass) {
+    return (
+      <i className={iconClass} style={{ fontSize: '15px', marginRight: '6px', verticalAlign: 'text-bottom' }} title={language} aria-hidden="true"></i>
+    );
+  }
+
+  return (
+    <span style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '15px',
+      height: '15px',
+      borderRadius: '4px',
+      backgroundColor: "#888888",
+      color: "#ffffff",
+      fontSize: '8px',
+      fontWeight: 'bold',
+      marginRight: '6px',
+      verticalAlign: 'text-bottom',
+      lineHeight: 1,
+      fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace"
+    }} title={language} aria-hidden="true">
+      {language ? language.substring(0, 2).toUpperCase() : "Tx"}
+    </span>
+  );
+}
 
 const dateLabel = (value: string) => {
   const date = new Date(value);
@@ -286,14 +336,33 @@ export function App() {
     window.print();
   };
 
-  const handleExport = async (format: "md" | "html" | "txt") => {
+  const handleExport = async (format: "md" | "html" | "txt" | "code") => {
     if (!active) return;
     const cleanTitle = active.title.replace(/[\\/:*?"<>|]/g, "_").trim() || "Nota";
     let filename = "";
     let content = "";
     let mimeType = "";
 
-    if (format === "md") {
+    if (active.type === "code" || format === "code") {
+      let ext = ".txt";
+      switch (active.language) {
+        case "javascript": ext = ".js"; break;
+        case "typescript": ext = ".ts"; break;
+        case "python": ext = ".py"; break;
+        case "go": ext = ".go"; break;
+        case "html": ext = ".html"; break;
+        case "css": ext = ".css"; break;
+        case "json": ext = ".json"; break;
+        case "shell":
+        case "bash": ext = ".sh"; break;
+        case "sql": ext = ".sql"; break;
+        case "markdown": ext = ".md"; break;
+        case "cpp": ext = ".cpp"; break;
+      }
+      filename = `${cleanTitle}${ext}`;
+      content = active.body;
+      mimeType = "text/plain";
+    } else if (format === "md") {
       filename = `${cleanTitle}.md`;
       content = exportToMarkdown(active.title, active.body, active.bodyText);
       mimeType = "text/markdown";
@@ -664,7 +733,7 @@ export function App() {
     }
   };
 
-  const createNote = () => {
+  const createNote = (type: "rtf" | "code" = "rtf") => {
     const now = new Date().toISOString();
     const targetFolderID = selectedQuery.kind === "folder" && selectedQuery.id ? selectedQuery.id : "folder-default";
     const targetFolder = folderOptions.find((f) => f.id === targetFolderID)?.name ?? "Notas";
@@ -674,6 +743,8 @@ export function App() {
       title: "",
       body: "",
       bodyText: "",
+      type: type,
+      language: type === "code" ? "javascript" : "plaintext",
       folder: targetFolder,
       folderId: targetFolderID,
       revision: 0,
@@ -1269,7 +1340,8 @@ export function App() {
           </label>
           <input ref={fileInputRef} type="file" accept=".md,.markdown,.txt" multiple style={{ display: "none" }} onChange={(event) => void handleFileImport(event)} />
           <button className="icon-button" onClick={() => fileInputRef.current?.click()} title="Importar nota (.md, .txt)" aria-label="Importar nota"><Upload aria-hidden="true" /></button>
-          <button className="icon-button compose-button" onClick={createNote} title="Nova nota (Ctrl+N)" aria-label="Nova nota"><FilePenLine aria-hidden="true" /></button>
+          <button className="icon-button compose-button" onClick={() => createNote("code")} title="Novo código" aria-label="Novo código"><FileCode2 aria-hidden="true" /></button>
+          <button className="icon-button compose-button" onClick={() => createNote("rtf")} title="Nova nota (Ctrl+N)" aria-label="Nova nota"><FilePenLine aria-hidden="true" /></button>
         </div>
         <div className="list-heading">
           <h1>{view === "deleted" ? "Apagadas recentemente" : "Notas"}</h1>
@@ -1299,6 +1371,7 @@ export function App() {
             >
               <strong>
                 {Boolean(note.pinnedAt) && <Pin className="pin-icon" aria-hidden="true" />}
+                {note.type === "code" && <LanguageBadge language={note.language} />}
                 {note.title || "Nova nota"}
               </strong>
               <span className="note-preview"><time>{dateLabel(note.updatedAt)}</time> {(note.bodyText ?? note.body).replace(/\s+/g, " ") || "Nenhum texto adicional"}</span>
@@ -1336,15 +1409,21 @@ export function App() {
                       <button className={`icon-button ${exportMenuOpen ? "active-pin" : ""}`} onClick={() => setExportMenuOpen((open) => !open)} title="Exportar nota" aria-label="Exportar nota"><Download aria-hidden="true" /></button>
                       {exportMenuOpen && (
                         <div className="export-menu" role="menu">
-                          <button type="button" onClick={() => handleExport("md")}><FileCode aria-hidden="true" /> Markdown (.md)</button>
-                          <button type="button" onClick={() => handleExport("html")}><Globe aria-hidden="true" /> HTML (.html)</button>
+                          {active.type === "code" ? (
+                            <button type="button" onClick={() => handleExport("code")}><FileCode aria-hidden="true" /> Exportar Código</button>
+                          ) : (
+                            <>
+                              <button type="button" onClick={() => handleExport("md")}><FileCode aria-hidden="true" /> Markdown (.md)</button>
+                              <button type="button" onClick={() => handleExport("html")}><Globe aria-hidden="true" /> HTML (.html)</button>
+                            </>
+                          )}
                           <button type="button" onClick={() => handleExport("txt")}><FileText aria-hidden="true" /> Texto (.txt)</button>
                         </div>
                       )}
                     </div>
                     <button className={`icon-button ${active.pinnedAt ? "active-pin" : ""}`} onClick={() => void togglePinActiveNote()} title={active.pinnedAt ? "Desafixar nota" : "Fixar nota"} aria-label={active.pinnedAt ? "Desafixar nota" : "Fixar nota"}><Pin aria-hidden="true" /></button>
                     <button className="icon-button danger-button" onClick={() => void deleteNote(active)} title="Mover para Apagadas recentemente" aria-label="Apagar nota"><Trash2 aria-hidden="true" /></button>
-                    <button className="icon-button" onClick={createNote} title="Nova nota (Ctrl+N)" aria-label="Nova nota"><FilePenLine aria-hidden="true" /></button>
+                    <button className="icon-button" onClick={() => createNote("rtf")} title="Nova nota (Ctrl+N)" aria-label="Nova nota"><FilePenLine aria-hidden="true" /></button>
                   </>
                 )}
               </div>
@@ -1398,7 +1477,25 @@ export function App() {
                   </div>
                 )}
 
-                <StructuredEditor key={active.id} value={active.body} readOnly={view === "deleted"} onChange={(document, text) => save({ body: document, bodyText: text })} onBlur={() => void flushNote(active.id)} />
+                {active.type === "code" ? (
+                  <CodeEditor 
+                    key={`code-${active.id}`} 
+                    value={active.body} 
+                    language={active.language || "plaintext"} 
+                    readOnly={view === "deleted"} 
+                    onChange={(text) => save({ body: text, bodyText: text })} 
+                    onLanguageChange={(lang) => save({ language: lang })}
+                    onBlur={() => void flushNote(active.id)} 
+                  />
+                ) : (
+                  <StructuredEditor 
+                    key={active.id} 
+                    value={active.body} 
+                    readOnly={view === "deleted"} 
+                    onChange={(document, text) => save({ body: document, bodyText: text })} 
+                    onBlur={() => void flushNote(active.id)} 
+                  />
+                )}
               </div>
             </div>
           </>
@@ -1406,7 +1503,7 @@ export function App() {
           <div className="empty-editor">
             {view === "deleted" ? <Trash2 aria-hidden="true" /> : <Sparkles aria-hidden="true" />}
             <strong>{view === "deleted" ? "Nenhuma nota apagada" : "Nenhuma nota selecionada"}</strong>
-            {view === "notes" && <button onClick={createNote}>Criar uma nota</button>}
+            {view === "notes" && <button onClick={() => createNote("rtf")}>Criar uma nota</button>}
           </div>
         )}
       </article>

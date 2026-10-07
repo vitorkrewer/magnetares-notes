@@ -3,6 +3,8 @@ export type Note = {
   title: string;
   body: string;
   bodyText?: string;
+  type?: string;
+  language?: string;
   folder: string;
   folderId?: string;
   revision?: number;

@@ -2,6 +2,22 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## [v1.5.0] - 2026-10-07
+
+### Added
+
+- **Nova funcionalidade Code Snippets:** Suporte nativo e de primeira classe para notas de código, transformando o Magnetares Notes em um poderoso repositório para desenvolvedores (Gist-like).
+- **Tipos de Notas Integrados:** Qualquer pasta agora pode conter anotações ricas (texto/Tiptap) ou snippets de código, garantindo que documentações de projeto e scripts convivam de forma harmônica na mesma árvore de pastas.
+- **Integração com Monaco Editor:** O motor que alimenta o VS Code foi incorporado para Notas de Código, oferecendo numeração de linhas nativa, *code folding*, auto-fechamento de chaves, *syntax highlighting* perfeito e suporte avançado.
+- **Seletor de Linguagens & Color Badges:** O cabeçalho das notas agora exibe um dropdown para a escolha entre dezenas de linguagens (Python, JS, Go, HTML, CSS, Bash, SQL, C++, etc). Na barra lateral da biblioteca, uma mini-etiqueta colorida (Color Badge) exibe o logotipo real da linguagem (graças à injeção da biblioteca Devicons), facilitando a localização visual dos arquivos.
+- **Botão Inteligente "Copiar Código":** Inserido diretamente no novo *toolbar* do editor, permitindo copiar o script completo para a área de transferência em um clique com feedback visual animado.
+- **Criação Rápida de Código:** A interface de navegação recebeu um ícone dedicado (<>) para criar Notas de Código diretamente na pasta ativa com um clique, sem precisar criar uma nota de texto primeiro e convertê-la.
+- **Exportação Nativa:** O mecanismo de exportação entende a linguagem do seu snippet e exporta automaticamente com a extensão técnica correta (ex: salvar em arquivo `.py`, `.js`, `.sh`, `.go`).
+
+### Changed
+
+- A estrutura do banco SQLite (através da migração `0011_code_notes.sql`) foi expandida sem impacto de performance, acrescentando colunas dedicadas `note_type` e `language` nas anotações já existentes.
+
 ## [v1.4.0] - 2026-10-06
 
 ### Added

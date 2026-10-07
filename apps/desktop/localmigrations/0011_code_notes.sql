@@ -1,0 +1,2 @@
+ALTER TABLE notes ADD COLUMN note_type TEXT NOT NULL DEFAULT 'rtf';
+ALTER TABLE notes ADD COLUMN language TEXT NOT NULL DEFAULT 'plaintext';
