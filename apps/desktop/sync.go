@@ -1224,6 +1224,11 @@ func (s *noteStore) applyRemoteNote(remote syncRemoteNote) (bool, error) {
 	}
 
 	remoteUpdatedAtMilli := remote.UpdatedAt.UnixMilli()
+
+	if notFound && remote.DeletedAt != nil {
+		return false, nil
+	}
+
 	if !notFound {
 		if reconciled, err := s.reconcileEquivalentRemote(remote); err != nil {
 			return false, err

@@ -18,6 +18,8 @@ export function DeleteStickerBoard(arg1:string):Promise<void>;
 
 export function DeleteTag(arg1:string):Promise<void>;
 
+export function EmptyDeletedNotes():Promise<void>;
+
 export function ExportNoteFile(arg1:string,arg2:string):Promise<string>;
 
 export function GetDatabasePath():Promise<string>;
@@ -45,6 +47,8 @@ export function MinimizeWindow():Promise<void>;
 export function MoveNote(arg1:string,arg2:string):Promise<void>;
 
 export function MoveSticker(arg1:string,arg2:string,arg3:string):Promise<main.Sticker>;
+
+export function PermanentlyDeleteNote(arg1:string):Promise<void>;
 
 export function QueryNotes(arg1:main.NoteQuery):Promise<Array<main.Note>>;
 

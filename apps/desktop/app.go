@@ -67,6 +67,14 @@ func (a *App) DeleteNote(id string) error {
 	return a.store.setDeleted(id, true)
 }
 
+func (a *App) PermanentlyDeleteNote(id string) error {
+	return a.store.permanentlyDeleteNote(id)
+}
+
+func (a *App) EmptyDeletedNotes() error {
+	return a.store.emptyDeletedNotes()
+}
+
 func (a *App) RestoreNote(id string) error {
 	return a.store.setDeleted(id, false)
 }

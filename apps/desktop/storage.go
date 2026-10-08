@@ -560,6 +560,51 @@ func (s *noteStore) setDeleted(id string, deleted bool) error {
 	return tx.Commit()
 }
 
+func (s *noteStore) permanentlyDeleteNote(id string) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin perm delete tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec("DELETE FROM note_conflicts WHERE note_id = ?", id); err != nil {
+		return err
+	}
+	if _, err := tx.Exec("DELETE FROM sync_outbox WHERE entity_id = ?", id); err != nil {
+		return err
+	}
+	if _, err := tx.Exec("DELETE FROM note_tags WHERE note_id = ?", id); err != nil {
+		return err
+	}
+	if _, err := tx.Exec("DELETE FROM notes WHERE id = ?", id); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (s *noteStore) emptyDeletedNotes() error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin empty trash tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Only permanently delete notes that have already synced their soft-delete to the cloud
+	if _, err := tx.Exec("DELETE FROM notes WHERE deleted_at IS NOT NULL AND sync_state = 'clean'"); err != nil {
+		return err
+	}
+	if _, err := tx.Exec("DELETE FROM note_tags WHERE note_id NOT IN (SELECT id FROM notes)"); err != nil {
+		return err
+	}
+	if _, err := tx.Exec("DELETE FROM note_conflicts WHERE note_id NOT IN (SELECT id FROM notes)"); err != nil {
+		return err
+	}
+	if _, err := tx.Exec("DELETE FROM sync_outbox WHERE entity_id NOT IN (SELECT id FROM notes)"); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
 type noteScanner interface {
 	Scan(dest ...any) error
 }

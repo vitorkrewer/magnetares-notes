@@ -791,6 +791,27 @@ export function App() {
     }
   };
 
+  const permanentlyDeleteNote = async (note: Note) => {
+    try {
+      await window.go?.main?.App?.PermanentlyDeleteNote?.(note.id);
+      const remaining = deletedNotes.filter((item) => item.id !== note.id);
+      setDeletedNotes(remaining);
+      setActiveId(remaining[0]?.id ?? "");
+    } catch {
+      setSaveState("error");
+    }
+  };
+
+  const emptyDeletedNotes = async () => {
+    try {
+      await window.go?.main?.App?.EmptyDeletedNotes?.();
+      setDeletedNotes([]);
+      setActiveId("");
+    } catch {
+      setSaveState("error");
+    }
+  };
+
   const reloadNavigation = async () => {
     const bridge = window.go?.main?.App;
     if (!bridge?.ListNavigation) return;
@@ -1343,9 +1364,16 @@ export function App() {
           <button className="icon-button compose-button" onClick={() => createNote("code")} title="Novo código" aria-label="Novo código"><FileCode2 aria-hidden="true" /></button>
           <button className="icon-button compose-button" onClick={() => createNote("rtf")} title="Nova nota (Ctrl+N)" aria-label="Nova nota"><FilePenLine aria-hidden="true" /></button>
         </div>
-        <div className="list-heading">
-          <h1>{view === "deleted" ? "Apagadas recentemente" : "Notas"}</h1>
-          <p>{visible.length} {visible.length === 1 ? "nota" : "notas"}</p>
+        <div className="list-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1>{view === "deleted" ? "Apagadas recentemente" : "Notas"}</h1>
+            <p>{visible.length} {visible.length === 1 ? "nota" : "notas"}</p>
+          </div>
+          {view === "deleted" && deletedNotes.length > 0 && (
+            <button className="action-button danger" style={{ fontSize: '12px', padding: '4px 8px' }} onClick={() => void emptyDeletedNotes()} title="Esvaziar lixeira" aria-label="Esvaziar lixeira">
+              <Trash2 aria-hidden="true" size={14} /> Esvaziar
+            </button>
+          )}
         </div>
         <div className="notes" aria-live="polite">
           {isLoading && <div className="list-message">Abrindo notas…</div>}
@@ -1400,7 +1428,10 @@ export function App() {
                   {view === "notes" && saveState === "error" && "Falha ao salvar"}
                 </span>
                 {view === "deleted" ? (
-                  <button className="icon-button restore-button" onClick={() => void restoreNote(active)} title="Restaurar nota" aria-label="Restaurar nota"><RotateCcw aria-hidden="true" /></button>
+                  <>
+                    <button className="icon-button restore-button" onClick={() => void restoreNote(active)} title="Restaurar nota" aria-label="Restaurar nota"><RotateCcw aria-hidden="true" /></button>
+                    <button className="icon-button delete-button" onClick={() => void permanentlyDeleteNote(active)} title="Excluir definitivamente" aria-label="Excluir definitivamente"><Trash2 aria-hidden="true" /></button>
+                  </>
                 ) : (
                   <>
                     <button className="icon-button" onClick={handlePrint} title="Imprimir nota" aria-label="Imprimir nota"><Printer aria-hidden="true" /></button>

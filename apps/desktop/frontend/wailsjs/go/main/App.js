@@ -34,6 +34,10 @@ export function DeleteTag(arg1) {
   return window['go']['main']['App']['DeleteTag'](arg1);
 }
 
+export function EmptyDeletedNotes() {
+  return window['go']['main']['App']['EmptyDeletedNotes']();
+}
+
 export function ExportNoteFile(arg1, arg2) {
   return window['go']['main']['App']['ExportNoteFile'](arg1, arg2);
 }
@@ -88,6 +92,10 @@ export function MoveNote(arg1, arg2) {
 
 export function MoveSticker(arg1, arg2, arg3) {
   return window['go']['main']['App']['MoveSticker'](arg1, arg2, arg3);
+}
+
+export function PermanentlyDeleteNote(arg1) {
+  return window['go']['main']['App']['PermanentlyDeleteNote'](arg1);
 }
 
 export function QueryNotes(arg1) {
