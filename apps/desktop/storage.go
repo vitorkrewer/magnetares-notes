@@ -229,9 +229,9 @@ func (s *noteStore) close() error {
 }
 
 func (s *noteStore) listNotes(deleted bool) ([]Note, error) {
-	condition := "n.deleted_at IS NULL"
+	condition := "n.deleted_at IS NULL AND n.folder_id != 'tombstone'"
 	if deleted {
-		condition = "n.deleted_at IS NOT NULL"
+		condition = "n.deleted_at IS NOT NULL AND n.folder_id != 'tombstone'"
 	}
 	return s.queryNotesWhere(condition)
 }
@@ -567,17 +567,16 @@ func (s *noteStore) permanentlyDeleteNote(id string) error {
 	}
 	defer tx.Rollback()
 
-	if _, err := tx.Exec("DELETE FROM note_conflicts WHERE note_id = ?", id); err != nil {
-		return err
-	}
-	if _, err := tx.Exec("DELETE FROM sync_outbox WHERE entity_id = ?", id); err != nil {
-		return err
-	}
-	if _, err := tx.Exec("DELETE FROM note_tags WHERE note_id = ?", id); err != nil {
-		return err
-	}
-	if _, err := tx.Exec("DELETE FROM notes WHERE id = ?", id); err != nil {
-		return err
+	var syncState string
+	var deletedAt sql.NullInt64
+	err = tx.QueryRow("SELECT sync_state, deleted_at FROM notes WHERE id = ?", id).Scan(&syncState, &deletedAt)
+	if err == nil && syncState == "clean" && deletedAt.Valid {
+		if _, err := tx.Exec("DELETE FROM note_conflicts WHERE note_id = ?", id); err != nil { return err }
+		if _, err := tx.Exec("DELETE FROM sync_outbox WHERE entity_id = ?", id); err != nil { return err }
+		if _, err := tx.Exec("DELETE FROM note_tags WHERE note_id = ?", id); err != nil { return err }
+		if _, err := tx.Exec("DELETE FROM notes WHERE id = ?", id); err != nil { return err }
+	} else if err == nil {
+		if _, err := tx.Exec(`UPDATE notes SET folder_id = 'tombstone', deleted_at = COALESCE(deleted_at, ?), updated_at = ? WHERE id = ?`, time.Now().UTC().UnixMilli(), time.Now().UTC().UnixMilli(), id); err != nil { return err }
 	}
 	return tx.Commit()
 }
@@ -600,6 +599,11 @@ func (s *noteStore) emptyDeletedNotes() error {
 		return err
 	}
 	if _, err := tx.Exec("DELETE FROM sync_outbox WHERE entity_id NOT IN (SELECT id FROM notes)"); err != nil {
+		return err
+	}
+
+	// For notes that are pending sync, mark them as tombstones so they vanish from the UI
+	if _, err := tx.Exec("UPDATE notes SET folder_id = 'tombstone' WHERE deleted_at IS NOT NULL AND sync_state != 'clean'"); err != nil {
 		return err
 	}
 	return tx.Commit()
