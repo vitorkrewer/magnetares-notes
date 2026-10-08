@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Magnetares Notes: Central de Ajuda, Tutoriais e Perguntas Frequentes (FAQ)." />
+  <link rel="icon" type="image/png" href="assets/magnetar-icon.png" />
+  <title>Ajuda & FAQ — Magnetares Notes</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Space+Grotesk:wght@500;700&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .help-hero {
+      position: relative;
+      padding: 120px 20px 80px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-subtle);
+      overflow: hidden;
+    }
+
+    .help-hero h1 {
+      font-size: clamp(34px, 4.5vw, 56px);
+      font-weight: 800;
+      color: #ffffff;
+      margin: 0 0 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .help-hero p {
+      color: #9da3c9;
+      font-size: 18px;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .help-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px 20px 100px;
+    }
+
+    .help-section-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: #ffffff;
+      margin: 60px 0 24px;
+      letter-spacing: -0.02em;
+      border-bottom: 2px solid var(--border-subtle);
+      padding-bottom: 12px;
+    }
+
+    .faq-item {
+      background: var(--glass-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .faq-item:hover {
+      border-color: rgba(104, 140, 255, 0.35);
+      transform: translateY(-2px);
+    }
+
+    .faq-item summary {
+      padding: 20px 24px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 17px;
+      color: #ffffff;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .faq-item summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .faq-item summary::after {
+      content: '+';
+      font-size: 22px;
+      color: var(--blue-400);
+      transition: transform 0.3s ease;
+      font-family: monospace;
+    }
+
+    .faq-item[open] summary::after {
+      content: '−';
+      transform: rotate(180deg);
+    }
+
+    .faq-content {
+      padding: 0 24px 24px;
+      color: #9da3c9;
+      font-size: 15px;
+      line-height: 1.7;
+      border-top: 1px solid var(--border-subtle);
+      margin-top: 0;
+      padding-top: 20px;
+    }
+
+    .faq-content p {
+      margin: 0 0 16px;
+    }
+
+    .faq-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    .faq-content ul {
+      margin: 0 0 16px;
+      padding-left: 20px;
+    }
+
+    .faq-content li {
+      margin-bottom: 8px;
+    }
+
+    .faq-content strong {
+      color: #ffffff;
+    }
+    
+    .faq-content code {
+      background: rgba(255,255,255,0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: "Space Grotesk", monospace;
+      color: var(--blue-400);
+      font-size: 13px;
+    }
+
+    /* Novos estilos para Cards de Ajuda e Busca */
+    .help-search-box {
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .help-search-box input {
+      width: 100%;
+      background: var(--glass-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 16px 20px 16px 50px;
+      color: #fff;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      font-family: inherit;
+    }
+
+    .help-search-box input:focus {
+      border-color: var(--blue-400);
+      box-shadow: 0 0 0 3px rgba(104, 140, 255, 0.15);
+    }
+
+    .help-search-box .search-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      color: #8c8fa7;
+      pointer-events: none;
+    }
+
+    .help-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 20px;
+    }
+
+    .help-card {
+      background: var(--glass-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+
+    .help-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(104, 140, 255, 0.35);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+    }
+
+    .help-card-icon {
+      font-size: 24px;
+      margin-bottom: 12px;
+      background: rgba(255,255,255,0.05);
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .help-card-title {
+      font-size: 18px;
+      font-weight: 750;
+      color: #fff;
+      margin: 0 0 12px;
+      line-height: 1.3;
+    }
+
+    .help-card-content {
+      color: #9da3c9;
+      font-size: 14px;
+      line-height: 1.6;
+      max-height: 65px;
+      overflow: hidden;
+      position: relative;
+      transition: max-height 0.4s ease;
+    }
+
+    .help-card.expanded .help-card-content {
+      max-height: 1000px;
+    }
+
+    .help-card-content::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 30px;
+      background: linear-gradient(transparent, #131a40);
+      transition: opacity 0.3s ease;
+    }
+
+    .help-card.expanded .help-card-content::after {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .help-card-read-more {
+      display: inline-block;
+      margin-top: 12px;
+      color: var(--blue-400);
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .help-card-read-more::after {
+      content: ' Ler mais ▾';
+    }
+
+    .help-card.expanded .help-card-read-more::after {
+      content: ' Mostrar menos ▴';
+    }
+
+    .help-card-content p {
+      margin: 0 0 12px;
+    }
+
+    .help-card-content p:last-child {
+      margin-bottom: 0;
+    }
+    
+    .help-card-content a {
+      color: var(--blue-400);
+      text-decoration: underline;
+    }
+    
+    .help-card-content ul {
+      padding-left: 18px;
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- HEADER FIXO COM GLASSMORPHISM -->
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="Magnetares Notes">
+      <img src="assets/magnetar-icon.png" alt="Logo Magnetares" />
+      <span>Magnetares</span>
+    </a>
+
+    <nav class="header-nav" aria-label="Navegação principal">
+      <a href="recursos.html">Recursos</a>
+      <a href="index.html#arquitetura">Arquitetura</a>
+      <a href="screenshots.html">Screenshots</a>
+      <a class="active" href="#top">Ajuda & FAQ</a>
+      <a href="index.html#downloads">Downloads</a>
+    </nav>
+
+    <div class="header-actions">
+      <a class="header-github" href="https://github.com/vitorkrewer/magnetares-notes" target="_blank" rel="noreferrer"
+        aria-label="Repositório no GitHub">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+        </svg>
+        <span>GitHub</span>
+      </a>
+      <a class="header-download-btn" href="index.html#downloads">
+        <span>Baixar</span>
+        <span id="header-version-badge">v1.6.0</span>
+      </a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="help-hero">
+      <div class="starfield" aria-hidden="true"></div>
+      <p class="kicker">Central de Conhecimento</p>
+      <h1>Ajuda e Tutoriais</h1>
+      <p>Entenda como as engrenagens do Magnetares Notes funcionam. Dicas rápidas, configuração de nuvem e respostas às perguntas mais frequentes.</p>
+    </section>
+
+    <div class="help-container">
+      
+      <div class="help-search-box">
+        <input type="text" id="help-search-input" placeholder="Buscar nas perguntas frequentes..." aria-label="Buscar na ajuda">
+        <svg viewBox="0 0 24 24" class="search-icon"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      </div>
+      
+      <div class="help-grid" id="help-grid">
+        
+        <div class="help-card" data-category="nuvem" data-text="O Magnetares guarda meus dados em qual nuvem? turso sqlite local-first">
+          <div class="help-card-icon">☁️</div>
+          <h3 class="help-card-title">Onde meus dados são salvos?</h3>
+          <div class="help-card-content">
+            <p>Atualmente, o Magnetares Notes utiliza o <strong>Turso (SQLite Edge Database)</strong> como provedor de banco de dados em nuvem para sincronização.</p>
+            <p>O aplicativo opera de forma <em>Local-First</em>: isso significa que a fonte da verdade dos seus dados é o <strong>banco local SQLite gravado no seu computador</strong>. A nuvem é totalmente opcional.</p>
+          </div>
+          <div class="help-card-read-more"></div>
+        </div>
+
+        <div class="help-card" data-category="nuvem" data-text="Como configuro a sincronização com o Turso token url">
+          <div class="help-card-icon">🔑</div>
+          <h3 class="help-card-title">Como configuro a sincronização com o Turso?</h3>
+          <div class="help-card-content">
+            <p>Para ativar a sincronização, crie uma conta gratuita no <a href="https://turso.tech/" target="_blank">Turso</a>.</p>
+            <ul>
+              <li>Crie um banco de dados no Turso (ex: <code>magnetares-db</code>).</li>
+              <li>Gere e copie um <strong>Token de Acesso</strong>.</li>
+              <li>Copie a <strong>URL do banco de dados</strong> (<code>libsql://...</code>).</li>
+              <li>No Magnetares, acesse Configurações > Nuvem e cole essas informações.</li>
+            </ul>
+          </div>
+          <div class="help-card-read-more"></div>
+        </div>
+
+        <div class="help-card" data-category="seguranca" data-text="O que acontece com minhas notas apagadas na nuvem tombstones lixeira">
+          <div class="help-card-icon">🗑️</div>
+          <h3 class="help-card-title">Notas apagadas e Tombstones</h3>
+          <div class="help-card-content">
+            <p>O Magnetares utiliza <strong>Tombstones</strong> para exclusão segura. Quando você move uma nota para a Lixeira ou apaga definitivamente, o aplicativo não deleta o dado local imediatamente se houver sincronização pendente.</p>
+            <p>Ele cria uma "lápide" (tombstone) e avisa ao Turso para também removê-la. Só após a confirmação da nuvem a nota é deletada do disco rígido, evitando "notas zumbis".</p>
+          </div>
+          <div class="help-card-read-more"></div>
+        </div>
+
+        <div class="help-card" data-category="editor" data-text="Como alternar entre Notas de Texto e Notas de Código monaco editor vscode">
+          <div class="help-card-icon">&lt;/&gt;</div>
+          <h3 class="help-card-title">Notas de Texto vs Notas de Código</h3>
+          <div class="help-card-content">
+            <p>Use o botão <strong>+</strong> para criar notas de texto (ricas), ou o ícone <strong>&lt;/&gt;</strong> para criar Snippets de Código.</p>
+            <p>O editor de Código usa o Monaco Editor (o mesmo do VS Code) oferecendo autocomplete, syntax highlighting e ícones para cada linguagem (Go, JS, Python, etc).</p>
+          </div>
+          <div class="help-card-read-more"></div>
+        </div>
+
+        <div class="help-card" data-category="editor" data-text="Como utilizo as Sugestões de Etiquetas Tags label dropdown">
+          <div class="help-card-icon">🏷️</div>
+          <h3 class="help-card-title">Sugestões de Etiquetas (Tags)</h3>
+          <div class="help-card-content">
+            <p>Ao criar uma tag (abaixo do título), comece a digitar para ver um menu suspenso de <strong>tags existentes</strong>. Se a palavra não existir, aperte Enter para criar uma etiqueta nova instantaneamente.</p>
+          </div>
+          <div class="help-card-read-more"></div>
+        </div>
+
+        <div class="help-card" data-category="produtividade" data-text="Como funciona o Mural de Post-its Stickers adesivas cores">
+          <div class="help-card-icon">📌</div>
+          <h3 class="help-card-title">Mural de Stickers</h3>
+          <div class="help-card-content">
+            <p>Um quadro livre na barra lateral para anotações rápidas em post-its coloridos. Você pode criar vários quadros, arrastar as notas (drag & drop), alterar as cores em tons pasteis e fixá-las (pin) no topo.</p>
+          </div>
+          <div class="help-card-read-more"></div>
+        </div>
+
+        <div class="help-card" data-category="editor" data-text="Formatação de texto tiptap cores espaçamento alinhamento">
+          <div class="help-card-icon">🎨</div>
+          <h3 class="help-card-title">Formatação Rica e Cores</h3>
+          <div class="help-card-content">
+            <p>O Magnetares oferece opções avançadas no editor rich-text: selecione textos para ver o menu flutuante. Você pode alterar o <strong>alinhamento</strong>, definir <strong>espaçamento entre linhas</strong> e colorir a fonte utilizando uma paleta de 20 cores customizadas feitas para combinar com o design.</p>
+          </div>
+          <div class="help-card-read-more"></div>
+        </div>
+      </div>
+      
+      <div id="no-results" style="display: none; text-align: center; color: #9da3c9; margin-top: 40px; font-size: 16px;">
+        Nenhum resultado encontrado para a sua busca.
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-top">
+      <div class="footer-brand-col">
+        <a class="brand" href="#top" aria-label="Voltar ao topo">
+          <img src="assets/magnetar-icon.png" alt="" />
+          <span>Magnetares</span>
+        </a>
+        <p class="footer-tagline">
+          Onde pensamentos ganham gravidade própria. Um caderno local-first, rápido e privado para quem leva anotações a sério.
+        </p>
+        <div class="footer-badge-list">
+          <span class="footer-badge">
+            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" /></svg>
+            100% Local-First
+          </span>
+          <span class="footer-badge">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14h2v2h-2zm0-10h2v8h-2z" /></svg>
+            Zero Rastreamento
+          </span>
+          <span class="footer-badge">
+            <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z" /></svg>
+            Licença MIT
+          </span>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h5>Navegação</h5>
+        <ul>
+          <li><a href="recursos.html">Recursos do Editor</a></li>
+          <li><a href="index.html#arquitetura">Arquitetura Técnica</a></li>
+          <li><a href="screenshots.html">Galeria de Telas</a></li>
+          <li><a href="index.html#downloads">Instaladores & Builds</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Tecnologias</h5>
+        <ul>
+          <li><a href="https://wails.io" target="_blank" rel="noreferrer">Wails Framework</a></li>
+          <li><a href="https://golang.org" target="_blank" rel="noreferrer">Go Language</a></li>
+          <li><a href="https://turso.tech" target="_blank" rel="noreferrer">Turso LibSQL</a></li>
+          <li><a href="https://tiptap.dev" target="_blank" rel="noreferrer">Tiptap Editor</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Conectar & Código</h5>
+        <p style="font-size: 13px; line-height: 1.5; margin: 0 0 12px; color: #7d84a7;">Acompanhe o desenvolvimento ou contribua com o projeto no GitHub.</p>
+        <div class="social-icon-links">
+          <a class="social-icon-btn" href="https://github.com/vitorkrewer/magnetares-notes" target="_blank" rel="noreferrer" aria-label="Repositório no GitHub" title="Repositório GitHub">
+            <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" /></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-creator">
+        Desenvolvido por <a href="https://github.com/vitorkrewer" target="_blank" rel="noreferrer">Vitor Krewer</a>
+      </div>
+      <div>
+        © <span id="year"></span> Magnetares Notes · Todos os direitos reservados.
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const searchInput = document.getElementById("help-search-input");
+      const cards = document.querySelectorAll(".help-card");
+      const noResults = document.getElementById("no-results");
+
+      // Card Expansion Logic
+      cards.forEach(card => {
+        card.addEventListener('click', () => {
+          card.classList.toggle('expanded');
+        });
+      });
+
+      // Search Filter Logic
+      if (searchInput) {
+        searchInput.addEventListener("input", (e) => {
+          const query = e.target.value.toLowerCase().trim();
+          let count = 0;
+
+          cards.forEach(card => {
+            const text = card.getAttribute("data-text").toLowerCase();
+            if (text.includes(query)) {
+              card.style.display = "flex";
+              count++;
+            } else {
+              card.style.display = "none";
+            }
+          });
+
+          if (count === 0 && query !== "") {
+            noResults.style.display = "block";
+          } else {
+            noResults.style.display = "none";
+          }
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>
