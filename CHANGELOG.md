@@ -2,6 +2,21 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## [v1.7.0] - 2026-10-08
+
+### Added
+
+- **Live Preview & Modo Apresentação de Protótipos:** Novo visualizador pop-up interativo para Notas de Código de tecnologias web (`HTML`, `XML`/`SVG`) e documentos formatados (`Markdown`). Permite testar, interagir e apresentar protótipos de interfaces ao vivo durante reuniões de equipe.
+- **Simulador de Resoluções Responsivas (Viewport Switcher):** O modal de apresentação conta com alternância rápida entre três modos de tela:
+  - 🖥️ **Desktop:** Largura integral (100%).
+  - 📱 **Tablet:** Largura simulada de 768px com moldura e profundidade visual.
+  - 📱 **Mobile:** Largura de 375px para validação de layouts verticais e responsividade para dispositivos móveis.
+- **Modo Tela Cheia Imersivo (Presentation Mode):** Botão para expandir o protótipo para 100% da tela (100vw x 100vh) sem barras de ferramentas ou menus da biblioteca, ideal para compartilhamento de tela e demonstrações.
+- **Ambiente de Execução Seguro (Sandboxed):** Protótipos HTML rodam de forma segura dentro de um `iframe` com atributo `sandbox` rigoroso, permitindo scripts de interação e botões sem expor o sistema local ou os dados internos do aplicativo.
+- **Renderizador de Markdown Rico:** Notas de código em Markdown agora contam com pré-visualização completa estilizada de acordo com o design system do Magnetares (tabelas, citações, blocos de código com destaque, checklists e tipografia proporcional).
+- **Controles Rápidos no Preview:** Botão de recarregamento rápido (*hot reload*), botão para abrir em nova janela do navegador e atalho rápido no teclado (`Esc`) para fechar.
+- **Ícone Nativo para Texto Simples:** A linguagem *Texto simples* (`plaintext`) agora possui o ícone `FileText` dedicado no seletor de linguagem e na lista de sugestões.
+
 ## [v1.6.0] - 2026-10-08
 
 ### Added

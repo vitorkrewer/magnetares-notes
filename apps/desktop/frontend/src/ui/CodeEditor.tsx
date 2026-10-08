@@ -1,20 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import Editor from "@monaco-editor/react";
-import { Check, Copy, FileCode2 } from "lucide-react";
+import { Check, Copy, FileCode2, ChevronDown, Search, Eye, FileText } from "lucide-react";
+import { CodePreviewModal } from "./CodePreviewModal";
 
 type CodeEditorProps = {
   value: string;
   language: string;
   readOnly: boolean;
+  title?: string;
   onChange: (document: string) => void;
   onLanguageChange: (language: string) => void;
   onBlur: () => void;
 };
 
-import { ChevronDown, Search } from "lucide-react";
-
 const LANGUAGES = [
-  { id: "plaintext", label: "Texto simples", icon: "" },
+  { id: "plaintext", label: "Texto simples", icon: "lucide-file-text" },
   { id: "javascript", label: "JavaScript", icon: "devicon-javascript-plain colored" },
   { id: "typescript", label: "TypeScript", icon: "devicon-typescript-plain colored" },
   { id: "html", label: "HTML", icon: "devicon-html5-plain colored" },
@@ -44,13 +44,15 @@ const LANGUAGES = [
   { id: "scala", label: "Scala", icon: "devicon-scala-plain colored" }
 ];
 
-export function CodeEditor({ value, language, readOnly, onChange, onLanguageChange, onBlur }: CodeEditorProps) {
+export function CodeEditor({ value, language, readOnly, title, onChange, onLanguageChange, onBlur }: CodeEditorProps) {
   const [copied, setCopied] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [langSearch, setLangSearch] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
   const editorRef = useRef<any>(null);
 
   const activeLang = LANGUAGES.find(l => l.id === language);
+  const isPreviewSupported = ["html", "xml", "markdown"].includes(language);
 
   const handleCopy = async () => {
     try {
@@ -82,7 +84,9 @@ export function CodeEditor({ value, language, readOnly, onChange, onLanguageChan
               style={{ minWidth: "140px", justifyContent: "space-between", padding: "0 10px" }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                {activeLang?.icon ? (
+                {activeLang?.id === "plaintext" ? (
+                  <FileText aria-hidden="true" style={{ width: 16, height: 16, color: "var(--color-text-dim)" }} />
+                ) : activeLang?.icon ? (
                   <i className={activeLang.icon} style={{ fontSize: "16px" }} aria-hidden="true" />
                 ) : (
                   <FileCode2 aria-hidden="true" style={{ width: 16, height: 16, color: "var(--color-text-dim)" }} />
@@ -135,7 +139,9 @@ export function CodeEditor({ value, language, readOnly, onChange, onLanguageChan
                       fontWeight: language === lang.id ? 600 : 400
                     }}
                   >
-                    {lang.icon ? (
+                    {lang.id === "plaintext" ? (
+                      <FileText aria-hidden="true" style={{ width: 16, height: 16, opacity: 0.7 }} />
+                    ) : lang.icon ? (
                       <i className={lang.icon} style={{ fontSize: "16px", width: "16px", textAlign: "center" }} aria-hidden="true" />
                     ) : (
                       <span style={{ width: "16px", display: "inline-block" }} />
@@ -159,6 +165,34 @@ export function CodeEditor({ value, language, readOnly, onChange, onLanguageChan
             )}
           </div>
           <span className="toolbar-separator" />
+          
+          {isPreviewSupported && (
+            <>
+              <button 
+                type="button" 
+                className="format-button preview-btn-highlight" 
+                onClick={() => setPreviewOpen(true)} 
+                title={language === "markdown" ? "Visualizar documento Markdown formatado" : "Apresentar Protótipo / Live Preview"}
+                aria-label="Visualizar Protótipo"
+                style={{ 
+                  width: "auto", 
+                  padding: "0 10px", 
+                  flex: "none", 
+                  color: "var(--accent, #f0bd3b)", 
+                  borderColor: "rgba(240, 189, 59, 0.4)",
+                  background: "rgba(240, 189, 59, 0.08)",
+                  fontWeight: 600
+                }}
+              >
+                <Eye size={15} aria-hidden="true" />
+                <span style={{ fontSize: "13px", marginLeft: "6px" }}>
+                  {language === "markdown" ? "Visualizar Markdown" : "Visualizar Protótipo"}
+                </span>
+              </button>
+              <span className="toolbar-separator" />
+            </>
+          )}
+
           <button 
             type="button" 
             className="format-button" 
@@ -200,6 +234,14 @@ export function CodeEditor({ value, language, readOnly, onChange, onLanguageChan
           onMount={handleEditorDidMount}
         />
       </div>
+
+      <CodePreviewModal
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        code={value}
+        language={language}
+        title={title || "Protótipo / Apresentação"}
+      />
     </div>
   );
 }

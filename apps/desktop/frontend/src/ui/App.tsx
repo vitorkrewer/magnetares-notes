@@ -1552,6 +1552,7 @@ export function App() {
                     key={`code-${active.id}`} 
                     value={active.body} 
                     language={active.language || "plaintext"} 
+                    title={active.title || "Protótipo"}
                     readOnly={view === "deleted"} 
                     onChange={(text) => save({ body: text, bodyText: text })} 
                     onLanguageChange={(lang) => save({ language: lang })}
