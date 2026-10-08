@@ -78,6 +78,53 @@ export function SettingsDialog({
     }
   };
 
+  const handleCreateBackup = async () => {
+    const bridge = window.go?.main?.App;
+    if (!bridge?.CreateDatabaseBackup) return;
+    try {
+      const path = await bridge.CreateDatabaseBackup();
+      if (path) {
+        setDbPathMessage(`Backup criado com sucesso em: ${path}`);
+      }
+    } catch (err: any) {
+      setDbPathMessage(`Erro ao criar backup: ${err?.message || err}`);
+    }
+  };
+
+  const handleRestoreBackup = async () => {
+    const bridge = window.go?.main?.App;
+    if (!bridge?.RestoreDatabaseBackup) return;
+    try {
+      const path = await bridge.RestoreDatabaseBackup();
+      if (path) {
+        setDbPathMessage(`Backup restaurado com sucesso! A aplicação será recarregada.`);
+        setTimeout(() => window.location.reload(), 2000);
+      }
+    } catch (err: any) {
+      setDbPathMessage(`Erro ao restaurar backup: ${err?.message || err}`);
+    }
+  };
+
+  const handleRestoreFromCloud = async () => {
+    const bridge = window.go?.main?.App;
+    if (!bridge?.RestoreFromCloud) return;
+    if (!confirm("Isso apagará o banco local atual e fará o download completo da nuvem. Um backup de segurança será gerado. Deseja continuar?")) return;
+    try {
+      setSyncing(true);
+      setSyncStatus("syncing");
+      setSyncMessage("Restaurando banco da nuvem...");
+      const result = await bridge.RestoreFromCloud();
+      setSyncStatus("success");
+      setSyncMessage(result.message || "");
+      setTimeout(() => window.location.reload(), 3000);
+    } catch (err: any) {
+      setSyncStatus("error");
+      setSyncMessage(`Erro ao restaurar da nuvem: ${err?.message || err}`);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const handleSaveDbPath = async (e: FormEvent) => {
     e.preventDefault();
     if (!currentDbPath.trim()) return;
@@ -257,11 +304,28 @@ export function SettingsDialog({
                     value={currentDbPath}
                     onChange={(e) => setCurrentDbPath(e.target.value)}
                   />
-                  <button type="submit">Salvar Local</button>
+                  <button type="submit" className="test-connection-btn" style={{ height: 38, padding: "0 16px" }}>Salvar Local</button>
                 </div>
                 {dbPathMessage && <p className="sync-status-msg success">{dbPathMessage}</p>}
                 <small>As alterações no banco são salvas em tempo real com journal WAL e integridade transacional.</small>
               </form>
+
+              <div className="sync-actions-box" style={{ marginTop: 24, paddingTop: 18, borderTop: "1px solid var(--border)" }}>
+                <div className="sync-actions-header">
+                  <strong>Backup & Restauração:</strong>
+                  <p className="settings-desc" style={{ margin: "4px 0 10px" }}>
+                    Crie cópias de segurança do seu banco local ou restaure a partir de um backup existente. A versão Portable se beneficia muito de backups periódicos em mídias externas.
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button type="button" className="test-connection-btn" style={{ height: 38, padding: "0 16px" }} onClick={() => void handleCreateBackup()}>
+                    <HardDrive size={16} /> Fazer Backup Local
+                  </button>
+                  <button type="button" className="test-connection-btn" style={{ height: 38, padding: "0 16px" }} onClick={() => void handleRestoreBackup()}>
+                    <RefreshCw size={16} /> Restaurar de Backup
+                  </button>
+                </div>
+              </div>
 
               <div className="sync-actions-box" style={{ marginTop: 24, paddingTop: 18 }}>
                 <div className="sync-actions-header">
@@ -410,6 +474,20 @@ export function SettingsDialog({
                   </div>
                 )}
               </div>
+
+              {syncConfigured && (
+                <div className="sync-actions-box" style={{ marginTop: 32, borderTop: "1px solid var(--border)", paddingTop: 24 }}>
+                  <div className="sync-actions-header">
+                    <strong>Restauração de Emergência:</strong>
+                    <p className="settings-desc" style={{ margin: "4px 0 10px" }}>
+                      Em caso de corrupção ou necessidade de baixar o banco de dados inteiro da nuvem do zero, você pode forçar uma restauração completa. O banco local será recriado.
+                    </p>
+                  </div>
+                  <button type="button" className="test-connection-btn" style={{ height: 38, padding: "0 16px" }} onClick={() => void handleRestoreFromCloud()} disabled={syncing}>
+                    <Cloud size={16} /> Apagar Banco Local e Restaurar da Nuvem
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

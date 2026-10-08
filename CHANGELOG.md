@@ -5,6 +5,8 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 ## [v1.7.0] - 2026-10-08
 
 ### Added
+- **Armazenamento**: Adicionada funcionalidade de backup e restauração de banco de dados (`CreateDatabaseBackup` e `RestoreDatabaseBackup`) nas Configurações. Essencial para criar snapshots locais ou mover bancos de dados, especialmente na versão Portable.
+- **Armazenamento e Recuperação de Desastres**: Adicionado botão para *Apagar Banco Local e Restaurar da Nuvem* nas configurações avançadas, forçando o recarregamento do zero em caso de corrupção ou inconsistências graves. Um snapshot de segurança é criado automaticamente.
 - **Painel "Perfil de sincronização"** em Preferências > Nuvem: mostra o perfil em uso, sua origem e o motor; lista as partições do banco remoto (principal, deste dispositivo, antigas), permite **tornar principal** outra partição e **remover** partições antigas após incorporá-las.
 - Bridge: `GetSyncProfileInfo`, `ListRemoteSyncProfiles`, `SetPrimarySyncProfile`, `PurgeRemoteSyncProfile`; `SetSyncProfileID` passa a fixar o perfil no `config.json` (vazio volta ao automático).
 - Testes multi-máquina com um Turso falso em memória (`sync_profile_test.go`).

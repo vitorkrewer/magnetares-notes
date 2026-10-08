@@ -6,6 +6,8 @@ export function Close():Promise<void>;
 
 export function CloseWindow():Promise<void>;
 
+export function CreateDatabaseBackup():Promise<string>;
+
 export function DeleteFolder(arg1:string):Promise<void>;
 
 export function DeleteNote(arg1:string):Promise<void>;
@@ -59,6 +61,10 @@ export function PurgeRemoteSyncProfile(arg1:string):Promise<string>;
 export function QueryNotes(arg1:main.NoteQuery):Promise<Array<main.Note>>;
 
 export function ResolveNoteConflict(arg1:string,arg2:string):Promise<void>;
+
+export function RestoreDatabaseBackup():Promise<string>;
+
+export function RestoreFromCloud():Promise<main.SyncResult>;
 
 export function RestoreNote(arg1:string):Promise<void>;
 

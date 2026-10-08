@@ -10,6 +10,10 @@ export function CloseWindow() {
   return window['go']['main']['App']['CloseWindow']();
 }
 
+export function CreateDatabaseBackup() {
+  return window['go']['main']['App']['CreateDatabaseBackup']();
+}
+
 export function DeleteFolder(arg1) {
   return window['go']['main']['App']['DeleteFolder'](arg1);
 }
@@ -116,6 +120,14 @@ export function QueryNotes(arg1) {
 
 export function ResolveNoteConflict(arg1, arg2) {
   return window['go']['main']['App']['ResolveNoteConflict'](arg1, arg2);
+}
+
+export function RestoreDatabaseBackup() {
+  return window['go']['main']['App']['RestoreDatabaseBackup']();
+}
+
+export function RestoreFromCloud() {
+  return window['go']['main']['App']['RestoreFromCloud']();
 }
 
 export function RestoreNote(arg1) {

@@ -182,6 +182,9 @@ export type DesktopBridge = {
   IsWindowMaximized?: () => Promise<boolean>;
   CloseWindow?: () => Promise<void>;
   ExportNoteFile?: (defaultFilename: string, content: string) => Promise<string>;
+  CreateDatabaseBackup?: () => Promise<string>;
+  RestoreDatabaseBackup?: () => Promise<string>;
+  RestoreFromCloud?: () => Promise<SyncResult>;
 };
 
 declare global {

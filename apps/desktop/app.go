@@ -291,8 +291,130 @@ func sanitizeFilename(name string) string {
 		base = strings.ReplaceAll(base, char, "_")
 	}
 	base = strings.TrimSpace(base)
+	base = strings.TrimSpace(base)
 	if base == "" {
 		base = "Nota"
 	}
 	return base + ext
+}
+
+func (a *App) CreateDatabaseBackup() (string, error) {
+	if a.ctx == nil {
+		return "", errors.New("janela da aplicação não inicializada")
+	}
+
+	defaultFilename := fmt.Sprintf("magnetares-backup-%s.db", time.Now().Format("20060102"))
+
+	filters := []runtime.FileFilter{
+		{DisplayName: "Banco de Dados (*.db)", Pattern: "*.db"},
+		{DisplayName: "Todos os Arquivos (*.*)", Pattern: "*.*"},
+	}
+
+	savePath, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		DefaultFilename: defaultFilename,
+		Title:           "Salvar Backup do Banco de Dados",
+		Filters:         filters,
+	})
+	if err != nil {
+		return "", fmt.Errorf("erro ao abrir diálogo: %w", err)
+	}
+	if strings.TrimSpace(savePath) == "" {
+		return "", nil // Usuário cancelou
+	}
+
+	if _, err := a.store.db.Exec("VACUUM INTO ?", savePath); err != nil {
+		return "", fmt.Errorf("erro ao gerar backup: %w", err)
+	}
+
+	return savePath, nil
+}
+
+func (a *App) RestoreDatabaseBackup() (string, error) {
+	if a.ctx == nil {
+		return "", errors.New("janela da aplicação não inicializada")
+	}
+
+	filters := []runtime.FileFilter{
+		{DisplayName: "Banco de Dados (*.db)", Pattern: "*.db"},
+		{DisplayName: "Todos os Arquivos (*.*)", Pattern: "*.*"},
+	}
+
+	sourcePath, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
+		Title:   "Restaurar Backup do Banco de Dados",
+		Filters: filters,
+	})
+	if err != nil {
+		return "", fmt.Errorf("erro ao abrir diálogo: %w", err)
+	}
+	if strings.TrimSpace(sourcePath) == "" {
+		return "", nil // Usuário cancelou
+	}
+
+	dbPath := a.store.path
+
+	// Fechar o banco atual
+	if err := a.store.close(); err != nil {
+		return "", fmt.Errorf("erro ao fechar banco de dados atual: %w", err)
+	}
+
+	// Copiar o arquivo
+	if err := copyFile(sourcePath, dbPath); err != nil {
+		a.store, _ = openNoteStore(dbPath)
+		return "", fmt.Errorf("erro ao copiar arquivo de backup: %w", err)
+	}
+
+	// Reabrir o banco
+	newStore, err := openNoteStore(dbPath)
+	if err != nil {
+		return "", fmt.Errorf("erro ao reabrir banco restaurado: %w", err)
+	}
+	a.store = newStore
+
+	return sourcePath, nil
+}
+
+func (a *App) RestoreFromCloud() (SyncResult, error) {
+	databaseURL, authToken, err := a.syncCredentials()
+	if err != nil {
+		return SyncResult{}, err
+	}
+	cfg := loadAppConfig()
+	apiURL := cfg.SyncAPIURL
+
+	dbPath := a.store.path
+
+	// Faz backup automático antes de limpar
+	backupDir := filepath.Join(filepath.Dir(dbPath), "recovery")
+	_ = os.MkdirAll(backupDir, 0o700)
+	backupPath := filepath.Join(backupDir, fmt.Sprintf("magnetares-pre-restore-%s.db", time.Now().Format("20060102-150405")))
+
+	if _, err := a.store.db.Exec("VACUUM INTO ?", backupPath); err != nil {
+		return SyncResult{}, fmt.Errorf("erro ao gerar backup de segurança prévio: %w", err)
+	}
+
+	if err := a.store.close(); err != nil {
+		return SyncResult{}, fmt.Errorf("erro ao fechar banco de dados atual: %w", err)
+	}
+
+	// Apaga o banco local
+	_ = os.Remove(dbPath)
+	_ = os.Remove(dbPath + "-wal")
+	_ = os.Remove(dbPath + "-shm")
+
+	// Recria vazio
+	newStore, err := openNoteStore(dbPath)
+	if err != nil {
+		_ = copyFile(backupPath, dbPath)
+		a.store, _ = openNoteStore(dbPath)
+		return SyncResult{}, fmt.Errorf("erro ao criar banco de dados limpo: %w", err)
+	}
+	a.store = newStore
+
+	// Dispara sincronização
+	res, err := a.store.syncNowWithProfile(apiURL, databaseURL, authToken, cfg.SyncProfileID)
+	if err != nil {
+		return res, fmt.Errorf("erro ao puxar da nuvem: %w", err)
+	}
+	res.Message = fmt.Sprintf("Restauração da nuvem concluída. Backup prévio salvo em: %s\n\n%s", backupPath, res.Message)
+	return res, nil
 }
