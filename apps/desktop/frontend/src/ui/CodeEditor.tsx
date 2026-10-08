@@ -72,7 +72,7 @@ export function CodeEditor({ value, language, readOnly, onChange, onLanguageChan
   return (
     <div className={`structured-editor code-editor-container ${readOnly ? "read-only" : ""}`}>
       {!readOnly && (
-        <div className="format-toolbar" role="toolbar" aria-label="Formatação da nota">
+        <div className="format-toolbar" role="toolbar" aria-label="Formatação da nota" style={{ overflow: "visible" }}>
           <div className="export-popover-anchor" style={{ position: "relative" }}>
             <button
               type="button"
@@ -107,7 +107,7 @@ export function CodeEditor({ value, language, readOnly, onChange, onLanguageChan
                   padding: "6px"
                 }}
               >
-                <div style={{ padding: "4px 8px", position: "sticky", top: 0, backgroundColor: "var(--color-bg)", zIndex: 1, paddingBottom: "8px" }}>
+                <div style={{ padding: "4px 8px", position: "sticky", top: "-6px", margin: "-6px -6px 4px -6px", zIndex: 2, paddingBottom: "8px", borderBottom: "1px solid var(--color-border-subtle)", background: "var(--color-bg)" }}>
                   <div style={{ display: "flex", alignItems: "center", background: "var(--color-bg-inset)", borderRadius: "4px", padding: "4px 8px", border: "1px solid var(--color-border-subtle)" }}>
                     <Search size={14} style={{ opacity: 0.5, marginRight: "6px" }} />
                     <input 
