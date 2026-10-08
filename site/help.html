@@ -41,107 +41,14 @@
     }
 
     .help-container {
-      max-width: 800px;
+      max-width: 1240px;
       margin: 0 auto;
-      padding: 20px 20px 100px;
+      padding: 40px 24px 120px;
     }
 
-    .help-section-title {
-      font-size: 28px;
-      font-weight: 800;
-      color: #ffffff;
-      margin: 60px 0 24px;
-      letter-spacing: -0.02em;
-      border-bottom: 2px solid var(--border-subtle);
-      padding-bottom: 12px;
-    }
-
-    .faq-item {
-      background: var(--glass-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: 12px;
-      margin-bottom: 16px;
-      overflow: hidden;
-      transition: border-color 0.2s ease, transform 0.2s ease;
-    }
-
-    .faq-item:hover {
-      border-color: rgba(104, 140, 255, 0.35);
-      transform: translateY(-2px);
-    }
-
-    .faq-item summary {
-      padding: 20px 24px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 17px;
-      color: #ffffff;
-      list-style: none;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .faq-item summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .faq-item summary::after {
-      content: '+';
-      font-size: 22px;
-      color: var(--blue-400);
-      transition: transform 0.3s ease;
-      font-family: monospace;
-    }
-
-    .faq-item[open] summary::after {
-      content: '−';
-      transform: rotate(180deg);
-    }
-
-    .faq-content {
-      padding: 0 24px 24px;
-      color: #9da3c9;
-      font-size: 15px;
-      line-height: 1.7;
-      border-top: 1px solid var(--border-subtle);
-      margin-top: 0;
-      padding-top: 20px;
-    }
-
-    .faq-content p {
-      margin: 0 0 16px;
-    }
-
-    .faq-content p:last-child {
-      margin-bottom: 0;
-    }
-
-    .faq-content ul {
-      margin: 0 0 16px;
-      padding-left: 20px;
-    }
-
-    .faq-content li {
-      margin-bottom: 8px;
-    }
-
-    .faq-content strong {
-      color: #ffffff;
-    }
-    
-    .faq-content code {
-      background: rgba(255,255,255,0.1);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: "Space Grotesk", monospace;
-      color: var(--blue-400);
-      font-size: 13px;
-    }
-
-    /* Novos estilos para Cards de Ajuda e Busca */
     .help-search-box {
-      margin-bottom: 40px;
+      max-width: 640px;
+      margin: 0 auto 48px;
       position: relative;
     }
 
@@ -149,8 +56,8 @@
       width: 100%;
       background: var(--glass-card);
       border: 1px solid var(--border-subtle);
-      border-radius: 12px;
-      padding: 16px 20px 16px 50px;
+      border-radius: 14px;
+      padding: 16px 20px 16px 52px;
       color: #fff;
       font-size: 16px;
       outline: none;
@@ -160,7 +67,7 @@
 
     .help-search-box input:focus {
       border-color: var(--blue-400);
-      box-shadow: 0 0 0 3px rgba(104, 140, 255, 0.15);
+      box-shadow: 0 0 0 3px rgba(104, 140, 255, 0.2);
     }
 
     .help-search-box .search-icon {
@@ -174,33 +81,59 @@
       pointer-events: none;
     }
 
+    /* Grid com 3 Cards por Linha */
     .help-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 1080px) {
+      .help-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .help-grid {
+        grid-template-columns: 1fr;
+      }
+      .help-container {
+        padding: 24px 16px 80px;
+      }
     }
 
     .help-card {
       background: var(--glass-card);
       border: 1px solid var(--border-subtle);
-      border-radius: 16px;
-      padding: 24px;
+      border-radius: 18px;
+      padding: 26px 24px;
       display: flex;
       flex-direction: column;
-      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      justify-content: space-between;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
       cursor: pointer;
+      position: relative;
+      text-align: left;
     }
 
     .help-card:hover {
-      transform: translateY(-3px);
-      border-color: rgba(104, 140, 255, 0.35);
-      box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+      transform: translateY(-4px);
+      border-color: rgba(104, 140, 255, 0.45);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+    }
+
+    .help-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
     }
 
     .help-card-icon {
       font-size: 24px;
-      margin-bottom: 12px;
-      background: rgba(255,255,255,0.05);
+      background: rgba(255, 255, 255, 0.05);
       width: 48px;
       height: 48px;
       display: flex;
@@ -210,76 +143,277 @@
       border: 1px solid var(--border-subtle);
     }
 
+    .help-card-badge {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--blue-400);
+      background: rgba(75, 117, 255, 0.12);
+      border: 1px solid rgba(104, 140, 255, 0.25);
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
     .help-card-title {
       font-size: 18px;
       font-weight: 750;
       color: #fff;
-      margin: 0 0 12px;
-      line-height: 1.3;
+      margin: 0 0 10px;
+      line-height: 1.35;
     }
 
-    .help-card-content {
+    .help-card-snippet {
       color: #9da3c9;
       font-size: 14px;
       line-height: 1.6;
-      max-height: 65px;
+      margin: 0 0 20px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
       overflow: hidden;
-      position: relative;
-      transition: max-height 0.4s ease;
+      text-overflow: ellipsis;
     }
 
-    .help-card.expanded .help-card-content {
-      max-height: 1000px;
-    }
-
-    .help-card-content::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 30px;
-      background: linear-gradient(transparent, #131a40);
-      transition: opacity 0.3s ease;
-    }
-
-    .help-card.expanded .help-card-content::after {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .help-card-read-more {
-      display: inline-block;
-      margin-top: 12px;
+    .help-card-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       color: var(--blue-400);
       font-weight: 600;
       font-size: 13px;
+      margin-top: auto;
+      transition: gap 0.2s ease, color 0.2s ease;
     }
 
-    .help-card-read-more::after {
-      content: ' Ler mais ▾';
+    .help-card:hover .help-card-btn {
+      color: #60a5fa;
+      gap: 9px;
     }
 
-    .help-card.expanded .help-card-read-more::after {
-      content: ' Mostrar menos ▴';
+    .help-card-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
-    .help-card-content p {
-      margin: 0 0 12px;
+    /* Modal de Ajuda Completo */
+    .help-modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(5, 7, 19, 0.82);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.22s ease, visibility 0.22s ease;
     }
 
-    .help-card-content p:last-child {
+    .help-modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .help-modal-box {
+      background: #0f1330;
+      border: 1px solid rgba(104, 140, 255, 0.3);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 660px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 35px 80px rgba(0, 0, 0, 0.85);
+      transform: scale(0.95);
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .help-modal-overlay.active .help-modal-box {
+      transform: scale(1);
+    }
+
+    .help-modal-header {
+      padding: 20px 24px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      background: #0b0e26;
+    }
+
+    .help-modal-header-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .help-modal-header-icon {
+      font-size: 28px;
+      background: rgba(255, 255, 255, 0.06);
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
+    }
+
+    .help-modal-header-titles {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .help-modal-badge {
+      display: inline-block;
+      align-self: flex-start;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--blue-400);
+      background: rgba(75, 117, 255, 0.15);
+      border: 1px solid rgba(104, 140, 255, 0.25);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .help-modal-header h3 {
+      font-size: 20px;
+      font-weight: 750;
+      color: #ffffff;
+      margin: 0;
+      line-height: 1.3;
+    }
+
+    .help-modal-close {
+      background: rgba(255, 255, 255, 0.08);
+      border: 0;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      color: #9da3c9;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .help-modal-close:hover {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      transform: scale(1.05);
+    }
+
+    .help-modal-body {
+      padding: 28px 24px;
+      overflow-y: auto;
+      color: #c0c6e8;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .help-modal-body p {
+      margin: 0 0 16px;
+    }
+
+    .help-modal-body p:last-child {
       margin-bottom: 0;
     }
-    
-    .help-card-content a {
+
+    .help-modal-body strong {
+      color: #ffffff;
+    }
+
+    .help-modal-body a {
       color: var(--blue-400);
       text-decoration: underline;
+      transition: color 0.15s;
     }
-    
-    .help-card-content ul {
-      padding-left: 18px;
-      margin: 0;
+
+    .help-modal-body a:hover {
+      color: #60a5fa;
+    }
+
+    .help-modal-body ol,
+    .help-modal-body ul {
+      margin: 0 0 16px;
+      padding-left: 22px;
+    }
+
+    .help-modal-body li {
+      margin-bottom: 9px;
+    }
+
+    .help-modal-body h4 {
+      color: #ffffff;
+      font-size: 16px;
+      margin: 22px 0 10px;
+      font-weight: 700;
+    }
+
+    .help-modal-body h4:first-child {
+      margin-top: 0;
+    }
+
+    .help-callout {
+      background: rgba(75, 117, 255, 0.08);
+      border-left: 3px solid var(--blue-400);
+      padding: 12px 16px;
+      border-radius: 0 10px 10px 0;
+      margin: 16px 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .help-modal-body code {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-family: monospace;
+      color: #38bdf8;
+      font-size: 0.9em;
+    }
+
+    .help-modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-subtle);
+      background: #0b0e26;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .help-modal-btn-done {
+      background: rgba(75, 117, 255, 0.15);
+      border: 1px solid var(--blue-400);
+      color: #ffffff;
+      padding: 8px 22px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.15s ease;
+    }
+
+    .help-modal-btn-done:hover {
+      background: var(--blue-400);
+      transform: translateY(-1px);
     }
   </style>
 </head>
@@ -297,6 +431,7 @@
       <a href="index.html#arquitetura">Arquitetura</a>
       <a href="screenshots.html">Screenshots</a>
       <a class="active" href="#top">Ajuda & FAQ</a>
+      <a href="blog.html">Blog</a>
       <a href="index.html#downloads">Downloads</a>
     </nav>
 
@@ -311,7 +446,7 @@
       </a>
       <a class="header-download-btn" href="index.html#downloads">
         <span>Baixar</span>
-        <span id="header-version-badge">v1.6.0</span>
+        <span id="header-version-badge">v1.7.0</span>
       </a>
     </div>
   </header>
@@ -333,105 +468,514 @@
       
       <div class="help-grid" id="help-grid">
         
-        <div class="help-card" data-category="nuvem" data-text="O Magnetares guarda meus dados em qual nuvem? turso sqlite local-first">
-          <div class="help-card-icon">☁️</div>
-          <h3 class="help-card-title">Onde meus dados são salvos?</h3>
-          <div class="help-card-content">
-            <p>Atualmente, o Magnetares Notes utiliza o <strong>Turso (SQLite Edge Database)</strong> como provedor de banco de dados em nuvem para sincronização.</p>
-            <p>O aplicativo opera de forma <em>Local-First</em>: isso significa que a fonte da verdade dos seus dados é o <strong>banco local SQLite gravado no seu computador</strong>. A nuvem é totalmente opcional.</p>
+        <!-- Card 1: Onde meus dados são salvos? -->
+        <div class="help-card" data-category="Nuvem" data-icon="☁️" data-text="Onde meus dados são salvos turso sqlite local-first nuvem banco computador privacidade offline dados seguros">
+          <div>
+            <div class="help-card-header">
+              <div class="help-card-icon">☁️</div>
+              <span class="help-card-badge">Nuvem</span>
+            </div>
+            <h3 class="help-card-title">Onde meus dados são salvos?</h3>
+            <p class="help-card-snippet">O Magnetares Notes opera sob arquitetura Local-First. Suas notas são gravadas diretamente no SQLite em seu computador. A nuvem é 100% opcional.</p>
           </div>
-          <div class="help-card-read-more"></div>
-        </div>
-
-        <div class="help-card" data-category="nuvem" data-text="Como configuro a sincronização com o Turso token url">
-          <div class="help-card-icon">🔑</div>
-          <h3 class="help-card-title">Como configuro a sincronização com o Turso?</h3>
-          <div class="help-card-content">
-            <p>Para ativar a sincronização, crie uma conta gratuita no <a href="https://turso.tech/" target="_blank">Turso</a>.</p>
+          <div class="help-card-btn">
+            <span>Ver resposta completa</span>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <template class="help-card-full">
+            <p>O Magnetares Notes opera sob o paradigma <strong>Local-First</strong>: a fonte absoluta da verdade é o banco de dados SQLite (<code>notes.db</code>) gravado diretamente no disco rígido do seu computador.</p>
+            <div class="help-callout">
+              <strong>Privacidade por padrão:</strong> Se você nunca configurar uma conta de nuvem, suas anotações, etiquetas e códigos nunca sairão do seu dispositivo. O aplicativo continuará funcionando perfeitamente, com velocidade máxima e 100% offline.
+            </div>
+            <p>Quando você decide conectar a nuvem (utilizando o Turso LibSQL):</p>
             <ul>
-              <li>Crie um banco de dados no Turso (ex: <code>magnetares-db</code>).</li>
-              <li>Gere e copie um <strong>Token de Acesso</strong>.</li>
-              <li>Copie a <strong>URL do banco de dados</strong> (<code>libsql://...</code>).</li>
-              <li>No Magnetares, acesse Configurações > Nuvem e cole essas informações.</li>
+              <li>O banco remoto atua como uma réplica criptografada de sincronização para manter seus diferentes computadores atualizados.</li>
+              <li>Todas as gravações e leituras continuam acontecendo primeiro no seu disco local, garantindo latência zero (0ms) ao digitar.</li>
+              <li>A sincronização roda em segundo plano, enviando e recebendo apenas as alterações incrementais.</li>
             </ul>
-          </div>
-          <div class="help-card-read-more"></div>
+          </template>
         </div>
 
-        <div class="help-card" data-category="seguranca" data-text="O que acontece com minhas notas apagadas na nuvem tombstones lixeira">
-          <div class="help-card-icon">🗑️</div>
-          <h3 class="help-card-title">Notas apagadas e Tombstones</h3>
-          <div class="help-card-content">
-            <p>O Magnetares utiliza <strong>Tombstones</strong> para exclusão segura. Quando você move uma nota para a Lixeira ou apaga definitivamente, o aplicativo não deleta o dado local imediatamente se houver sincronização pendente.</p>
-            <p>Ele cria uma "lápide" (tombstone) e avisa ao Turso para também removê-la. Só após a confirmação da nuvem a nota é deletada do disco rígido, evitando "notas zumbis".</p>
+        <!-- Card 2: Como configuro a sincronização com o Turso? (Visão Geral) -->
+        <div class="help-card" data-category="Nuvem" data-icon="🔑" data-text="Como configuro a sincronização com o Turso token url chave banco libsql sincronizar multi-dispositivo credenciais">
+          <div>
+            <div class="help-card-header">
+              <div class="help-card-icon">🔑</div>
+              <span class="help-card-badge">Nuvem</span>
+            </div>
+            <h3 class="help-card-title">Como configuro a sincronização com o Turso?</h3>
+            <p class="help-card-snippet">Para ativar a sincronização entre computadores, utilize sua conta Turso, informe a URL libsql:// e o Token de Acesso em Configurações > Nuvem.</p>
           </div>
-          <div class="help-card-read-more"></div>
-        </div>
-
-        <div class="help-card" data-category="editor" data-text="Como alternar entre Notas de Texto e Notas de Código monaco editor vscode">
-          <div class="help-card-icon">&lt;/&gt;</div>
-          <h3 class="help-card-title">Notas de Texto vs Notas de Código</h3>
-          <div class="help-card-content">
-            <p>Use o botão <strong>+</strong> para criar notas de texto (ricas), ou o ícone <strong>&lt;/&gt;</strong> para criar Snippets de Código.</p>
-            <p>O editor de Código usa o Monaco Editor (o mesmo do VS Code) oferecendo autocomplete, syntax highlighting e ícones para cada linguagem (Go, JS, Python, etc).</p>
+          <div class="help-card-btn">
+            <span>Ver resposta completa</span>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </div>
-          <div class="help-card-read-more"></div>
-        </div>
-
-        <div class="help-card" data-category="editor" data-text="Como utilizo as Sugestões de Etiquetas Tags label dropdown">
-          <div class="help-card-icon">🏷️</div>
-          <h3 class="help-card-title">Sugestões de Etiquetas (Tags)</h3>
-          <div class="help-card-content">
-            <p>Ao criar uma tag (abaixo do título), comece a digitar para ver um menu suspenso de <strong>tags existentes</strong>. Se a palavra não existir, aperte Enter para criar uma etiqueta nova instantaneamente.</p>
-          </div>
-          <div class="help-card-read-more"></div>
-        </div>
-
-        <div class="help-card" data-category="produtividade" data-text="Como funciona o Mural de Post-its Stickers adesivas cores">
-          <div class="help-card-icon">📌</div>
-          <h3 class="help-card-title">Mural de Stickers</h3>
-          <div class="help-card-content">
-            <p>Um quadro livre na barra lateral para anotações rápidas em post-its coloridos. Você pode criar vários quadros, arrastar as notas (drag & drop), alterar as cores em tons pasteis e fixá-las (pin) no topo.</p>
-          </div>
-          <div class="help-card-read-more"></div>
-        </div>
-
-        <div class="help-card" data-category="editor" data-text="Formatação de texto tiptap cores espaçamento alinhamento">
-          <div class="help-card-icon">🎨</div>
-          <h3 class="help-card-title">Formatação Rica e Cores</h3>
-          <div class="help-card-content">
-            <p>O Magnetares oferece opções avançadas no editor rich-text: selecione textos para ver o menu flutuante. Você pode alterar o <strong>alinhamento</strong>, definir <strong>espaçamento entre linhas</strong> e colorir a fonte utilizando uma paleta de 20 cores customizadas feitas para combinar com o design.</p>
-          </div>
-          <div class="help-card-read-more"></div>
-        </div>
-
-        <div class="help-card" data-category="geral" data-text="Qual é a licença do Magnetares Notes? Posso usar para trabalho comercial? Código fonte regras modificação">
-          <div class="help-card-icon">⚖️</div>
-          <h3 class="help-card-title">Licença e Termos de Uso</h3>
-          <div class="help-card-content">
-            <p>O <strong>Magnetares Notes</strong> é gratuito para <strong>download, estudo e uso pessoal (não-comercial)</strong>. Os usuários podem inspecionar e compilar o código-fonte livremente para fins privados.</p>
-            <p style="margin-top: 8px;"><strong>Regras importantes:</strong></p>
-            <ul style="margin: 6px 0 0 16px; padding: 0;">
-              <li><strong>Proibido uso comercial:</strong> É vedada a venda, distribuição ou utilização corporativa/comercial sem autorização prévia por escrito.</li>
-              <li><strong>Modificações informadas previamente:</strong> Qualquer alteração, fork ou trabalho derivado deve ser formalmente comunicado ao autor antes da publicação/distribuição.</li>
+          <template class="help-card-full">
+            <p>Para sincronizar suas notas entre computadores pessoais ou profissionais sem intermediários comerciais, o Magnetares conecta-se à sua própria instância do <a href="https://turso.tech" target="_blank" rel="noreferrer">Turso</a>.</p>
+            <p><strong>Configuração rápida em 4 passos:</strong></p>
+            <ul>
+              <li><strong>URL do banco:</strong> É o endereço com prefixo <code>libsql://</code> fornecido pelo painel do Turso para o seu banco.</li>
+              <li><strong>Token de autenticação:</strong> É a chave secreta de longa duração gerada na aba de Tokens do seu banco Turso.</li>
+              <li><strong>Configurações do Magnetares:</strong> Abra o aplicativo, clique no ícone de engrenagem na barra superior e acesse a aba <strong>Nuvem</strong>.</li>
+              <li><strong>Testar e Conectar:</strong> Cole a URL e o Token, clique em <strong>Testar Conexão</strong> e depois em <strong>Conectar Nuvem</strong>.</li>
             </ul>
-          </div>
-          <div class="help-card-read-more"></div>
+            <div class="help-callout">
+              <strong>Proteção nativa:</strong> O seu token de acesso não fica salvo em arquivos de texto plano; ele é armazenado de forma criptografada no cofre de credenciais nativo do seu sistema operacional (Windows Credential Manager / macOS Keychain / Linux Secret Service).
+            </div>
+            <p><em>Para um passo a passo completo ilustrado para iniciantes, veja o card "Guia Prático Turso para Iniciantes".</em></p>
+          </template>
         </div>
 
-        <div class="help-card" data-category="armazenamento" data-text="Como usar a versão portátil em um pendrive? Portable isolado sem instalar">
-          <div class="help-card-icon">🧳</div>
-          <h3 class="help-card-title">Versão Portátil (Pendrive)</h3>
-          <div class="help-card-content">
-            <p>A versão <strong>Portátil (.zip)</strong> é 100% autocontida. Ao descompactar no seu pendrive ou pasta externa, o aplicativo detecta automaticamente o diretório <code>data/</code> local e mantém todo o seu banco de dados (SQLite) e configurações salvos dentro do próprio pendrive.</p>
-            <p style="margin-top: 8px;">Você pode conectar o pendrive em qualquer computador Windows e abrir suas notas diretamente sem deixar rastros no sistema host. <em>Dica: lembre-se de fechar o Magnetares antes de ejetar o pendrive com segurança!</em></p>
+        <!-- Card 3: Guia Prático Turso para Iniciantes: Do Zero à Nuvem -->
+        <div class="help-card" data-category="Tutorial Nuvem" data-icon="🚀" data-text="Guia Prático Turso para Iniciantes Do Zero à Nuvem criar banco passo a passo dashboard token leigo sem programar brasil gru signup gratuito">
+          <div>
+            <div class="help-card-header">
+              <div class="help-card-icon">🚀</div>
+              <span class="help-card-badge">Tutorial Nuvem</span>
+            </div>
+            <h3 class="help-card-title">Guia Prático Turso para Iniciantes: Do Zero à Nuvem</h3>
+            <p class="help-card-snippet">Passo a passo descomplicado para criar sua conta gratuita no Turso, criar o banco no painel web e conectar suas notas sem precisar de terminal ou código.</p>
           </div>
-          <div class="help-card-read-more"></div>
+          <div class="help-card-btn">
+            <span>Ver resposta completa</span>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <template class="help-card-full">
+            <p>Se você nunca configurou um banco de dados na nuvem, não se preocupe! Você não precisa instalar terminal ou digitar comandos. Siga este tutorial visual pelo próprio navegador:</p>
+            
+            <h4>1. Criar sua conta gratuita no Turso</h4>
+            <ul>
+              <li>Acesse <a href="https://app.turso.tech/signup" target="_blank" rel="noreferrer">app.turso.tech/signup</a>.</li>
+              <li>O plano gratuito (<em>Starter/Hobby</em>) oferece espaço de sobra para centenas de milhares de notas.</li>
+              <li>Você pode fazer login com 1 clique usando sua conta do <strong>GitHub</strong> ou se cadastrar com seu <strong>e-mail</strong>.</li>
+            </ul>
+
+            <h4>2. Criar seu Banco de Dados no Painel</h4>
+            <ul>
+              <li>Após entrar no painel (<em>Dashboard</em>), clique no botão <strong>"+ Create Database"</strong> no canto superior direito.</li>
+              <li><strong>Nome do banco:</strong> Digite um nome simples, como <code>meu-magnetares-db</code>.</li>
+              <li><strong>Escolha a região:</strong> O Turso possui servidores distribuídos globalmente. Se você está na América do Sul, escolha <strong>Brazil / São Paulo (<code>gru</code>)</strong> para ter resposta ultrarrápida. Se estiver em outro local, escolha a região mais próxima de você.</li>
+              <li>Clique no botão azul <strong>"Create Database"</strong>. Em segundos seu banco estará pronto no ar!</li>
+            </ul>
+
+            <h4>3. Copiar a URL de Conexão</h4>
+            <ul>
+              <li>Na página do banco recém-criado, procure pelo campo <strong>Database URL</strong>.</li>
+              <li>A URL tem o formato: <code>libsql://meu-magnetares-db-seunome.turso.io</code>.</li>
+              <li>Clique no ícone de cópia ao lado dela.</li>
+            </ul>
+
+            <h4>4. Gerar o Token de Acesso (Chave Secreta)</h4>
+            <ul>
+              <li>Na mesma página do banco, clique no botão ou aba <strong>"Generate Token"</strong> (ou <em>Tokens</em>).</li>
+              <li>Deixe as permissões padrão de leitura e gravação e confirme.</li>
+              <li>Copie o código longo exibido na tela (guarde-o em segurança).</li>
+            </ul>
+
+            <h4>5. Conectar no Magnetares Notes</h4>
+            <ul>
+              <li>Abra o <strong>Magnetares Notes</strong> no seu computador.</li>
+              <li>Clique no ícone de <strong>Configurações</strong> (engrenagem no topo da barra lateral) e escolha a aba <strong>Nuvem</strong>.</li>
+              <li>Cole a URL no primeiro campo e o Token no segundo campo.</li>
+              <li>Clique em <strong>Testar Conexão</strong>. Uma mensagem verde indicará sucesso!</li>
+              <li>Clique em <strong>Conectar Nuvem</strong>. O Magnetares cuidará de todo o resto automaticamente!</li>
+            </ul>
+
+            <div class="help-callout">
+              <strong>Dica Multi-Máquinas:</strong> Para conectar seu notebook ou outro computador pessoal, basta instalar o Magnetares nele, abrir <em>Configurações &gt; Nuvem</em> e colar <strong>a mesma URL e o mesmo Token</strong>. Todas as suas notas, pastas e stickers serão sincronizadas instantaneamente!
+            </div>
+          </template>
         </div>
+
+        <!-- Card 4: Como Fazer Backup e Restaurar o Banco Localmente -->
+        <div class="help-card" data-category="Armazenamento" data-icon="💾" data-text="Como Fazer Backup e Restaurar o Banco Localmente snapshot sqlite vacuum into copia seguranca pendrive restaurar v1.7.0 arquivo db">
+          <div>
+            <div class="help-card-header">
+              <div class="help-card-icon">💾</div>
+              <span class="help-card-badge">Armazenamento</span>
+            </div>
+            <h3 class="help-card-title">Como Fazer Backup e Restaurar o Banco Localmente (v1.7.0)</h3>
+            <p class="help-card-snippet">Crie snapshots completos (.db) do seu banco com 1 clique usando SQLite VACUUM INTO, ou restaure backups anteriores com segurança e integridade transacional.</p>
+          </div>
+          <div class="help-card-btn">
+            <span>Ver resposta completa</span>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <template class="help-card-full">
+            <p>A partir da <strong>versão 1.7.0</strong>, o Magnetares Notes traz ferramentas nativas de Backup e Restauração desenhadas para quem valoriza a custódia total dos seus próprios dados.</p>
+            
+            <h4>O que é o Snapshot Atômico (VACUUM INTO)</h4>
+            <p>O Magnetares não realiza uma cópia crua de arquivos enquanto o banco está aberto (o que em outros programas pode corromper dados). Ele utiliza a avançada instrução SQLite <code>VACUUM INTO</code>, que gera um arquivo <code>.db</code> perfeitamente íntegro, limpo e desfragmentado em milissegundos.</p>
+
+            <h4>Como Criar uma Cópia de Segurança (Backup):</h4>
+            <ul>
+              <li>Abra o menu de <strong>Configurações</strong> e clique na aba <strong>Armazenamento</strong>.</li>
+              <li>Na seção <em>Backup &amp; Restauração</em>, clique no botão <strong>"Fazer Backup Local"</strong>.</li>
+              <li>A caixa de diálogo do seu sistema operacional abrirá com uma sugestão de nome: <code>magnetares-backup-AAAAMMDD.db</code>.</li>
+              <li>Escolha onde salvar (em um pendrive, HD externo ou pasta de sua preferência) e confirme. Pronto!</li>
+            </ul>
+
+            <h4>Como Restaurar um Backup Antigo:</h4>
+            <ul>
+              <li>Em <strong>Configurações &gt; Armazenamento</strong>, clique em <strong>"Restaurar de Backup"</strong>.</li>
+              <li>Selecione o arquivo <code>.db</code> desejado na caixa de arquivos.</li>
+              <li>O sistema fecha as conexões ativas com o banco atual com segurança, substitui a base de dados pela versão do backup e recarrega o aplicativo automaticamente.</li>
+            </ul>
+
+            <div class="help-callout">
+              <strong>Essencial para a versão Portátil (Pendrive):</strong> Se você roda o aplicativo direto de um pendrive, é uma excelente prática fazer um backup local periódico antes de ejetar o dispositivo ou antes de atualizar executáveis.
+            </div>
+          </template>
+        </div>
+
+        <!-- Card 5: Recuperação de Desastres: Restaurar da Nuvem -->
+        <div class="help-card" data-category="Recuperação" data-icon="🛡️" data-text="Recuperação de Desastres Restaurar da Nuvem apagar banco local puxar emergência corrupção snapshot recovery v1.7.0 formatacao recriar">
+          <div>
+            <div class="help-card-header">
+              <div class="help-card-icon">🛡️</div>
+              <span class="help-card-badge">Recuperação</span>
+            </div>
+            <h3 class="help-card-title">Recuperação de Desastres: Restaurar da Nuvem (v1.7.0)</h3>
+            <p class="help-card-snippet">Em caso de pane no computador ou inconsistências locais, force o download completo do seu repositório mestre direto da nuvem Turso com snapshot de emergência.</p>
+          </div>
+          <div class="help-card-btn">
+            <span>Ver resposta completa</span>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <template class="help-card-full">
+            <p>Se o seu computador desligou de forma abrupta por falta de energia, se você sofreu corrupção de sistema de arquivos ou se o banco local apresentar inconsistências insolúveis, a <strong>v1.7.0</strong> oferece a ferramenta de <strong>Recuperação de Desastres</strong>.</p>
+            
+            <h4>Como Funciona a Restauração da Nuvem:</h4>
+            <ul>
+              <li>Abra <strong>Configurações &gt; Nuvem</strong> (com suas credenciais do Turso ativas).</li>
+              <li>Role a tela até a seção <strong>Restauração de Emergência</strong> no rodapé da página.</li>
+              <li>Clique no botão <strong>"Apagar Banco Local e Restaurar da Nuvem"</strong>.</li>
+            </ul>
+
+            <h4>Rede de Segurança Automática (Pre-Restore Snapshot):</h4>
+            <p>Para sua proteção absoluta, o Magnetares <strong>nunca apaga dados às cegas</strong>:</p>
+            <ul>
+              <li>Antes de excluir qualquer arquivo, o sistema executa um snapshot automático e salva na pasta interna <code>recovery/</code> com o nome <code>magnetares-pre-restore-DATA-HORA.db</code>.</li>
+              <li>Em seguida, o banco local danificado é removido (incluindo arquivos temporários <code>-wal</code> e <code>-shm</code>).</li>
+              <li>Um novo banco zerado com as tabelas estruturadas é criado.</li>
+              <li>O motor de sincronização conecta-se diretamente ao Turso e baixa integralmente todas as suas notas, pastas, stickers e etiquetas salvas no perfil principal.</li>
+              <li>Ao final, o aplicativo recarrega e restaura seu ambiente de trabalho 100% atualizado.</li>
+            </ul>
+
+            <div class="help-callout">
+              <strong>Nota de tranquilidade:</strong> Mesmo em caso de falha de conexão no meio do processo, o snapshot em <code>recovery/</code> garante que seus dados prévios continuem intactos para análise manual.
+            </div>
+          </template>
+        </div>
+
+        <!-- Card 6: Notas apagadas e Tombstones (Lápides Digitais) -->
+        <div class="help-card" data-category="Segurança" data-icon="🗑️" data-text="Notas apagadas e Tombstones lixeira exclusão segura zumbis nuvem sincronização soft delete integridade">
+          <div>
+            <div class="help-card-header">
+              <div class="help-card-icon">🗑️</div>
+              <span class="help-card-badge">Segurança</span>
+            </div>
+            <h3 class="help-card-title">Notas apagadas e Tombstones</h3>
+            <p class="help-card-snippet">O Magnetares utiliza Tombstones (lápides digitais) para que exclusões sejam propagadas com integridade absoluta entre todos os seus dispositivos sem reviver notas.</p>
+          </div>
+          <div class="help-card-btn">
+            <span>Ver resposta completa</span>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <template class="help-card-full">
+            <p>O Magnetares Notes implementa o conceito de <strong>Tombstones (Lápides Digitais)</strong> para garantir a integridade absoluta das exclusões em ambientes multi-máquinas.</p>
+            <p>Quando você move uma nota para a Lixeira ou a exclui em definitivo, o sistema não apaga o registro local bruscamente se houver sincronização remota ativa:</p>
+            <ul>
+              <li>Ele marca a entidade com uma lápide contendo a data e hora da exclusão (soft-delete).</li>
+              <li>Essa lápide é enviada para o banco remoto na nuvem durante a próxima sincronização.</li>
+              <li>Quando seus outros computadores sincronizam, eles leem a lápide e purgam a nota localmente, eliminando de vez o clássico problema de "notas zumbis" que renasciam indevidamente em outros PCs.</li>
+              <li>Somente após a confirmação da nuvem o registro é eliminado definitivamente do disco. Se você estiver usando o app sem nuvem, a exclusão local é imediata e direta.</li>
+            </ul>
+          </template>
+        </div>
+
+        <!-- Card 7: Live Preview & Modo Apresentação de Protótipos -->
+        <div class="help-card" data-category="Novidade v1.7.0" data-icon="🖥️" data-text="Live Preview Modo Apresentação de Protótipos HTML SVG Markdown viewport desktop tablet mobile sandbox tela cheia v1.7.0 prototipo">
+          <div>
+            <div class="help-card-header">
+              <div class="help-card-icon">🖥️</div>
+              <span class="help-card-badge">Novidade v1.7.0</span>
+            </div>
+            <h3 class="help-card-title">Live Preview & Modo Apresentação (v1.7.0)</h3>
+            <p class="help-card-snippet">Visualize, interaja e apresente protótipos de interfaces web (HTML/SVG) e documentos Markdown com simulador de telas responsivas e modo tela cheia.</p>
+          </div>
+          <div class="help-card-btn">
+            <span>Ver resposta completa</span>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <template class="help-card-full">
+            <p>Na <strong>versão 1.7.0</strong>, o Magnetares Notes ganhou um poderoso <strong>Live Preview &amp; Modo Apresentação de Protótipos</strong> para Notas de Código em tecnologias web (<code>HTML</code>, <code>XML/SVG</code>) e documentos formatados (<code>Markdown</code>).</p>
+            
+            <h4>Recursos Principais do Preview:</h4>
+            <ul>
+              <li><strong>Execução Interativa ao Vivo:</strong> Veja o resultado visual dos seus scripts, botões e formulários em tempo real enquanto escreve o código.</li>
+              <li><strong>Simulador de Telas (Viewport Switcher):</strong> Alterne com 1 clique entre três resoluções para testar design responsivo:
+                <ul>
+                  <li>🖥️ <strong>Desktop:</strong> Largura integral (100%).</li>
+                  <li>📱 <strong>Tablet:</strong> Largura simulada de 768px com moldura elegante.</li>
+                  <li>📱 <strong>Mobile:</strong> Largura de 375px para validar menus, formulários e layouts móveis.</li>
+                </ul>
+              </li>
+              <li><strong>Modo Apresentação (100vw x 100vh):</strong> Expanda o protótipo para tela cheia total sem menus ou barras do editor. Excelente para reuniões de alinhamento com clientes ou compartilhamento de tela no Teams/Meet/Zoom.</li>
+              <li><strong>Sandbox Seguro:</strong> O código roda isolado em um <code>iframe</code> com regras estritas de segurança, permitindo interações visuais sem nenhum risco ao seu computador.</li>
+              <li><strong>Atalhos Ágeis:</strong> Tecla <code>Esc</code> para sair imediatamente, botão de Hot Reload e botão para abrir a página no seu navegador padrão.</li>
+            </ul>
+          </template>
+        </div>
+
+        <!-- Card 8: Notas de Texto vs Notas de Código -->
+        <div class="help-card" data-category="Editor" data-icon="&lt;/&gt;" data-text="Notas de Texto vs Notas de Código monaco editor vscode tiptap rich text snippets programador linguagens syntax highlighting">
+          <div>
+            <div class="help-card-header">
+              <div class="help-card-icon">&lt;/&gt;</div>
+              <span class="help-card-badge">Editor</span>
+            </div>
+            <h3 class="help-card-title">Notas de Texto vs Notas de Código</h3>
+            <p class="help-card-snippet">Escreva textos ricos no Tiptap ou crie Snippets com o Monaco Editor (o mesmo do VS Code) com syntax highlighting para dezenas de linguagens.</p>
+          </div>
+          <div class="help-card-btn">
+            <span>Ver resposta completa</span>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <template class="help-card-full">
+            <p>No Magnetares Notes, você pode organizar documentações textuais e scripts técnicos lado a lado na mesma árvore de pastas:</p>
+            <ul>
+              <li><strong>Notas de Texto (Rich Text):</strong> Criadas pelo botão <strong>+</strong>, utilizam o motor Tiptap com suporte a títulos, checklists interativas com progresso dinâmico, tabelas dinâmicas, avaliador matemático e formatação livre.</li>
+              <li><strong>Notas de Código (Snippets):</strong> Criadas pelo ícone <strong>&lt;/&gt;</strong>, rodam o <strong>Monaco Editor</strong> (a engine oficial do Visual Studio Code), com numeração de linhas, syntax highlighting, code folding, botão rápido de cópia e badges coloridos para linguagens como Go, Python, JavaScript, TypeScript, HTML, CSS, SQL, Bash, Rust e muito mais.</li>
+              <li><strong>Exportação Inteligente:</strong> Ao exportar um snippet, o aplicativo salva o arquivo com a extensão técnica correta (ex: <code>.py</code>, <code>.go</code>, <code>.html</code>).</li>
+            </ul>
+          </template>
+        </div>
+
+        <!-- Card 9: Formatação Avançada de Texto e Cores -->
+        <div class="help-card" data-category="Editor" data-icon="🎨" data-text="Formatação Avançada de Texto e Cores tiptap alinhamento espaçamento entre linhas paleta cores texto toolbar v1.6.0 tipografia">
+          <div>
+            <div class="help-card-header">
+              <div class="help-card-icon">🎨</div>
+              <span class="help-card-badge">Editor</span>
+            </div>
+            <h3 class="help-card-title">Formatação Avançada de Texto e Cores (v1.6.0)</h3>
+            <p class="help-card-snippet">Selecione textos no editor para acessar o menu flutuante com alinhamento, espaçamento entre linhas ajustável e uma paleta com 20 cores customizadas.</p>
+          </div>
+          <div class="help-card-btn">
+            <span>Ver resposta completa</span>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <template class="help-card-full">
+            <p>O editor Rich Text do Magnetares Notes conta com recursos refinados de tipografia e diagramação introduzidos na <strong>versão 1.6.0</strong>:</p>
+            <ul>
+              <li><strong>Menu Flutuante Contextual:</strong> Selecione qualquer palavra ou parágrafo para abrir as opções de estilo imediatamente sobre a seleção.</li>
+              <li><strong>Alinhamento Completo de Parágrafo:</strong> Alinhe seu texto à esquerda, ao centro, à direita ou justificado.</li>
+              <li><strong>Espaçamento entre Linhas Dinâmico:</strong> Ajuste o ritmo de leitura escolhendo entre Simples (1.0), 1.15, 1.5 ou Duplo (2.0).</li>
+              <li><strong>Paleta de 20 Cores de Alta Harmonia:</strong> Tons selecionados com contraste perfeito para temas claro e escuro, além de botão dedicado para restaurar a cor padrão do sistema.</li>
+              <li><strong>Barra de Ferramentas Otimizada:</strong> Botões de Desfazer e Refazer reposicionados na extremidade esquerda para acesso rápido e natural.</li>
+            </ul>
+          </template>
+        </div>
+
+        <!-- Card 10: Mural de Stickers (Post-its) e Drag & Drop -->
+        <div class="help-card" data-category="Produtividade" data-icon="📌" data-text="Mural de Post-its Stickers adesivas cores quadros boards drag drop fixar pin tarefas lembretes hrana turso float v1.7.0">
+          <div>
+            <div class="help-card-header">
+              <div class="help-card-icon">📌</div>
+              <span class="help-card-badge">Produtividade</span>
+            </div>
+            <h3 class="help-card-title">Mural de Stickers (Post-its) e Drag & Drop</h3>
+            <p class="help-card-snippet">Um mural dinâmico em tela cheia com post-its coloridos, múltiplos quadros (Boards), reordenação livre por arrastar e soltar e sincronização em nuvem.</p>
+          </div>
+          <div class="help-card-btn">
+            <span>Ver resposta completa</span>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <template class="help-card-full">
+            <p>O <strong>Mural de Stickers</strong> oferece uma área de trabalho visual para notas autoadesivas, ideias rápidas e lembretes visuais:</p>
+            <ul>
+              <li><strong>Múltiplos Quadros (Boards):</strong> Crie murais separados para trabalho, projetos pessoais ou ideias livres. O quadro inicial "Geral" fica sempre protegido contra exclusão acidental.</li>
+              <li><strong>Layout Full-Width Fluido:</strong> Aproveita toda a largura da tela em uma grade responsiva que acomoda dezenas de cartões sem aperto.</li>
+              <li><strong>Paleta de 8 Cores Pastel:</strong> Amarelo, Laranja, Rosa, Roxo, Azul, Turquesa, Verde e Neutro com contraste calibrado.</li>
+              <li><strong>Drag &amp; Drop Poderoso:</strong> Reorganize os stickers arrastando-os pelo mural, solte no espaço vazio para mover para o fim da fila, ou arraste o card diretamente sobre outro quadro na barra lateral para movê-lo de categoria instantaneamente.</li>
+              <li><strong>Fixação no Topo:</strong> Destaque lembretes cruciais fixando-os com uma moldura dourada elegante.</li>
+              <li><strong>Sincronização na Nuvem (v1.7.0):</strong> Compatibilidade estrita com números reais (float) no protocolo Hrana do Turso e tratamento inteligente de colisões de nomes entre múltiplos computadores.</li>
+            </ul>
+          </template>
+        </div>
+
+        <!-- Card 11: Sugestões de Etiquetas Inteligentes (Tags) -->
+        <div class="help-card" data-category="Organização" data-icon="🏷️" data-text="Sugestões de Etiquetas Tags label dropdown inteligente organizar categorizar autocompletar cores colapsavel v1.6.0">
+          <div>
+            <div class="help-card-header">
+              <div class="help-card-icon">🏷️</div>
+              <span class="help-card-badge">Organização</span>
+            </div>
+            <h3 class="help-card-title">Sugestões de Etiquetas Inteligentes (v1.6.0)</h3>
+            <p class="help-card-snippet">Menu suspenso inteligente que sugere tags cadastradas enquanto você digita, filtra duplicatas e permite criar novas etiquetas com a tecla Enter.</p>
+          </div>
+          <div class="help-card-btn">
+            <span>Ver resposta completa</span>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <template class="help-card-full">
+            <p>O sistema de etiquetas (Tags) organiza conteúdos horizontalmente entre diferentes pastas. Na <strong>versão 1.6.0</strong>, a experiência foi totalmente aprimorada:</p>
+            <ul>
+              <li><strong>Menu Suspenso com Autocomplete:</strong> Ao digitar no campo de etiqueta abaixo do título da nota, sugestões inteligentes surgem imediatamente baseadas nas tags já existentes na sua biblioteca.</li>
+              <li><strong>Ícones e Cores Visuais:</strong> O menu exibe os ícones coloridos de cada etiqueta para identificação visual instantânea.</li>
+              <li><strong>Filtro Anti-Duplicata:</strong> Etiquetas que a nota já possui não aparecem nas sugestões, evitando repetições acidentais.</li>
+              <li><strong>Criação Instantânea:</strong> Se a etiqueta digitada for nova, basta pressionar <strong>Enter</strong> para cadastrá-la no mesmo instante.</li>
+              <li><strong>Seção Colapsável na Barra Lateral:</strong> A lista de etiquetas na barra de navegação pode ser expandida ou recolhida para economizar espaço de tela.</li>
+            </ul>
+          </template>
+        </div>
+
+        <!-- Card 12: Perfil de Sincronização & Múltiplas Máquinas -->
+        <div class="help-card" data-category="Sincronização" data-icon="🔄" data-text="Perfil de Sincronização Múltiplas Máquinas partição turso conflitos primary profile unificação rebase v1.7.0 multi computador">
+          <div>
+            <div class="help-card-header">
+              <div class="help-card-icon">🔄</div>
+              <span class="help-card-badge">Sincronização</span>
+            </div>
+            <h3 class="help-card-title">Perfil de Sincronização & Multi-Máquinas (v1.7.0)</h3>
+            <p class="help-card-snippet">A v1.7.0 unifica automaticamente todos os seus computadores no mesmo perfil mestre na nuvem Turso, eliminando partições divergentes e conflitos.</p>
+          </div>
+          <div class="help-card-btn">
+            <span>Ver resposta completa</span>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <template class="help-card-full">
+            <p>A sincronização na <strong>versão 1.7.0</strong> foi reformulada para garantir convergência matemática e transparência quando você usa o aplicativo em mais de um computador:</p>
+            
+            <h4>Unificação Automática de Partições</h4>
+            <p>O próprio banco de dados remoto no Turso passa a registrar o <strong>Perfil Principal (Primary Profile ID)</strong>. Todas as suas máquinas atualizadas adotam o mesmo perfil automaticamente, eliminando qualquer risco de um computador salvar em partição separada por pequenas variações na digitação da URL.</p>
+
+            <h4>Painel "Perfil de Sincronização" nas Preferências</h4>
+            <ul>
+              <li>Acesse <strong>Configurações &gt; Nuvem</strong> para ver em tempo real o perfil ativo e o histórico de partições remotas.</li>
+              <li>Permite inspecionar partições antigas criadas por versões legadas, torná-las principais ou expurgá-las após a consolidação dos dados.</li>
+            </ul>
+
+            <h4>Resolução Transparente de Conflitos</h4>
+            <p>Se você editar a mesma nota offline em dois computadores ao mesmo tempo, nenhuma versão é sobrescrita silenciosamente. Ao conectar à internet, o Magnetares abre uma janela de resolução com 3 opções claras:</p>
+            <ul>
+              <li><strong>Manter minha versão:</strong> Rebaseia sua edição local sobre os dados da nuvem.</li>
+              <li><strong>Usar versão da nuvem:</strong> Substitui a nota local pela versão remota.</li>
+              <li><strong>Mesclar conteúdo:</strong> Une os dois textos na mesma nota com marcadores visuais para você comparar com calma.</li>
+            </ul>
+          </template>
+        </div>
+
+        <!-- Card 13: Auditoria de Integridade Local e Compliance -->
+        <div class="help-card" data-category="Manutenção" data-icon="🛠️" data-text="Auditoria de Integridade Local e Compliance autorreparo sqlite manutencao reatribuir orfas checklists outbox reparo v1.6.0 v1.7.0">
+          <div>
+            <div class="help-card-header">
+              <div class="help-card-icon">🛠️</div>
+              <span class="help-card-badge">Manutenção</span>
+            </div>
+            <h3 class="help-card-title">Auditoria de Integridade e Compliance</h3>
+            <p class="help-card-snippet">Execute uma varredura transacional que reatribui notas órfãs, recalcula totais de checklists e normaliza o estado de sincronização com 1 clique.</p>
+          </div>
+          <div class="help-card-btn">
+            <span>Ver resposta completa</span>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <template class="help-card-full">
+            <p>O Magnetares Notes inclui um mecanismo inteligente de autorreparo chamado <strong>Auditoria de Compliance de Dados</strong>. Ele garante que mesmo bancos de dados com muitos anos de uso continuem rápidos e 100% íntegros.</p>
+            
+            <h4>Como Executar a Auditoria:</h4>
+            <ul>
+              <li>Abra o menu de <strong>Configurações</strong> e clique na aba <strong>Armazenamento</strong>.</li>
+              <li>Na seção <em>Integridade &amp; Compliance de Dados</em>, clique no botão <strong>"Executar Auditoria de Compliance"</strong>.</li>
+            </ul>
+
+            <h4>O que o Sistema Inspeciona e Corrige Automaticamente:</h4>
+            <ul>
+              <li><strong>Reparação de Notas Órfãs:</strong> Se alguma nota perdeu o vínculo de pasta por migrações antigas, ela é automaticamente movida para a pasta padrão ("Notas").</li>
+              <li><strong>Auditoria de Checklists:</strong> Recalcula a contagem exata de itens concluídos e pendentes, corrigindo discrepâncias nos indicadores de progresso.</li>
+              <li><strong>Normalização de Dados:</strong> Padroniza timestamps, tipos de notas (rich text vs code snippets) e linguagens.</li>
+              <li><strong>Saneamento de Fila de Envio (Outbox):</strong> Limpa pendências órfãs e revalida os estados de sincronização para garantir que tudo o que você alterou suba corretamente para o Turso.</li>
+            </ul>
+          </template>
+        </div>
+
+        <!-- Card 14: Versão Portátil (Pendrive & Modo Isolado) -->
+        <div class="help-card" data-category="Armazenamento" data-icon="🧳" data-text="Versão Portátil Pendrive usb sem instalar data isolado sqlite portatil zip sem rastros v1.6.0 v1.7.0">
+          <div>
+            <div class="help-card-header">
+              <div class="help-card-icon">🧳</div>
+              <span class="help-card-badge">Armazenamento</span>
+            </div>
+            <h3 class="help-card-title">Versão Portátil (Pendrive & Modo Isolado)</h3>
+            <p class="help-card-snippet">A versão .zip portátil funciona direto do seu pendrive sem instalação, salvando o banco SQLite e configurações de forma 100% isolada e autocontida.</p>
+          </div>
+          <div class="help-card-btn">
+            <span>Ver resposta completa</span>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <template class="help-card-full">
+            <p>O modo portátil foi projetado para profissionais e estudantes que precisam de mobilidade e privacidade total entre diferentes computadores:</p>
+            <ul>
+              <li><strong>Execução Standalone:</strong> Baixe o arquivo <code>.zip</code> portátil na página inicial do site ou nas Releases do GitHub e extraia em qualquer pendrive ou HD externo.</li>
+              <li><strong>Pasta <code>data/</code> Autocontida:</strong> O executável reconhece a pasta local e grava o banco SQLite (<code>notes.db</code>), suas preferências e logs dentro do próprio pendrive.</li>
+              <li><strong>Sem Rastros no Host:</strong> Ao abrir em qualquer PC com Windows, nenhum arquivo ou chave de registro é gravada no sistema operacional hospedeiro.</li>
+              <li><strong>Dica de Segurança:</strong> Lembre-se sempre de fechar a janela do Magnetares Notes antes de ejetar o seu pendrive com segurança no Windows para garantir que todas as transações em disco sejam concluídas.</li>
+            </ul>
+          </template>
+        </div>
+
+        <!-- Card 15: Licença e Termos de Uso -->
+        <div class="help-card" data-category="Licença" data-icon="⚖️" data-text="Licença e Termos de Uso pessoal gratuito não-comercial regras modificação comercial autoria vitor krewer source-available">
+          <div>
+            <div class="help-card-header">
+              <div class="help-card-icon">⚖️</div>
+              <span class="help-card-badge">Licença</span>
+            </div>
+            <h3 class="help-card-title">Licença e Termos de Uso</h3>
+            <p class="help-card-snippet">Uso pessoal e estudo 100% gratuitos. Proibido uso comercial e qualquer modificação ou fork deve ser previamente comunicada ao autor.</p>
+          </div>
+          <div class="help-card-btn">
+            <span>Ver resposta completa</span>
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <template class="help-card-full">
+            <p>O <strong>Magnetares Notes</strong> é um software de código com fonte disponível (<em>Source-Available</em>), gratuito para download, estudo, auditoria técnica e uso pessoal (não-comercial).</p>
+            <p><strong>Diretrizes e Termos Importantes:</strong></p>
+            <ul>
+              <li><strong>Uso Pessoal Gratuito:</strong> Você pode compilar, instalar e usar o Magnetares em quantos computadores pessoais desejar sem restrições de tempo ou limites de notas.</li>
+              <li><strong>Proibido Uso Comercial:</strong> É terminantemente vedada a venda, comercialização, distribuição paga ou exploração comercial direta/indireta do software ou de partes dele sem autorização formal prévia por escrito do autor.</li>
+              <li><strong>Modificações e Derivados:</strong> Qualquer alteração, fork ou trabalho derivado destinado à publicação pública deve ser previamente comunicado por escrito ao criador do projeto (Vitor Krewer).</li>
+            </ul>
+          </template>
+        </div>
+
       </div>
       
       <div id="no-results" style="display: none; text-align: center; color: #9da3c9; margin-top: 40px; font-size: 16px;">
         Nenhum resultado encontrado para a sua busca.
+      </div>
+    </div>
+
+    <!-- MODAL DE AJUDA COMPLETA -->
+    <div class="help-modal-overlay" id="help-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+      <div class="help-modal-box" id="help-modal-box">
+        <div class="help-modal-header">
+          <div class="help-modal-header-info">
+            <div class="help-modal-header-icon" id="help-modal-icon">☁️</div>
+            <div class="help-modal-header-titles">
+              <span class="help-modal-badge" id="help-modal-badge">Nuvem</span>
+              <h3 id="help-modal-title">Título do Artigo</h3>
+            </div>
+          </div>
+          <button class="help-modal-close" id="help-modal-close" type="button" aria-label="Fechar modal" title="Fechar">✕</button>
+        </div>
+        <div class="help-modal-body" id="help-modal-body">
+          <!-- Conteúdo completo injetado dinamicamente -->
+        </div>
+        <div class="help-modal-footer">
+          <button class="help-modal-btn-done" id="help-modal-btn-close" type="button">Fechar</button>
+        </div>
       </div>
     </div>
   </main>
@@ -468,6 +1012,8 @@
           <li><a href="recursos.html">Recursos do Editor</a></li>
           <li><a href="index.html#arquitetura">Arquitetura Técnica</a></li>
           <li><a href="screenshots.html">Galeria de Telas</a></li>
+          <li><a href="help.html">Ajuda & FAQ</a></li>
+          <li><a href="blog.html">Blog</a></li>
           <li><a href="index.html#downloads">Instaladores & Builds</a></li>
         </ul>
       </div>
@@ -510,22 +1056,77 @@
       const cards = document.querySelectorAll(".help-card");
       const noResults = document.getElementById("no-results");
 
-      // Card Expansion Logic
+      // Elementos do Modal
+      const modal = document.getElementById("help-modal");
+      const modalIcon = document.getElementById("help-modal-icon");
+      const modalBadge = document.getElementById("help-modal-badge");
+      const modalTitle = document.getElementById("help-modal-title");
+      const modalBody = document.getElementById("help-modal-body");
+      const modalClose = document.getElementById("help-modal-close");
+      const modalBtnClose = document.getElementById("help-modal-btn-close");
+
+      function openModal(card) {
+        const title = card.querySelector(".help-card-title").textContent;
+        const icon = card.dataset.icon || "📄";
+        const badge = card.dataset.category || "Ajuda";
+        const fullContent = card.querySelector(".help-card-full");
+
+        modalTitle.textContent = title;
+        modalIcon.textContent = icon;
+        modalBadge.textContent = badge;
+        modalBody.innerHTML = fullContent ? fullContent.innerHTML : "";
+
+        modal.classList.add("active");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeModal() {
+        modal.classList.remove("active");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+      }
+
+      // Adiciona eventos aos cards
       cards.forEach(card => {
-        card.addEventListener('click', () => {
-          card.classList.toggle('expanded');
+        card.setAttribute("tabindex", "0");
+        card.setAttribute("role", "button");
+        card.setAttribute("aria-haspopup", "dialog");
+
+        card.addEventListener("click", () => openModal(card));
+        card.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openModal(card);
+          }
         });
       });
 
-      // Search Filter Logic
+      // Fechamento do modal
+      if (modalClose) modalClose.addEventListener("click", closeModal);
+      if (modalBtnClose) modalBtnClose.addEventListener("click", closeModal);
+
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal.classList.contains("active")) {
+          closeModal();
+        }
+      });
+
+      // Busca e filtro em tempo real
       if (searchInput) {
         searchInput.addEventListener("input", (e) => {
           const query = e.target.value.toLowerCase().trim();
           let count = 0;
 
           cards.forEach(card => {
-            const text = card.getAttribute("data-text").toLowerCase();
-            if (text.includes(query)) {
+            const text = (card.getAttribute("data-text") || "").toLowerCase();
+            const title = (card.querySelector(".help-card-title")?.textContent || "").toLowerCase();
+            const snippet = (card.querySelector(".help-card-snippet")?.textContent || "").toLowerCase();
+            if (text.includes(query) || title.includes(query) || snippet.includes(query)) {
               card.style.display = "flex";
               count++;
             } else {

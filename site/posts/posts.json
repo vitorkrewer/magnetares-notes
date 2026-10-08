@@ -1,0 +1,50 @@
+[
+  {
+    "id": "v1-7-0",
+    "title": "Magnetares Notes v1.7.0: Backup, Live Preview e Sincronização Unificada!",
+    "date": "2026-10-08",
+    "summary": "O aguardado modo de backup e restauração local chegou. Além disso, incluímos um novo painel de sincronização, suporte a renderização rica de Markdown e um Live Preview poderoso para protótipos de desenvolvimento."
+  },
+  {
+    "id": "v1-6-0",
+    "title": "Magnetares Notes v1.6.0: Formatação Avançada, Portable Mode Nativo e Cores",
+    "date": "2026-10-08",
+    "summary": "A versão v1.6.0 eleva a edição rich text com suporte completo a cores e alinhamento de texto. Apresentamos também o novo Portable Mode e sugestões de tags super dinâmicas."
+  },
+  {
+    "id": "v1-5-0",
+    "title": "Magnetares Notes v1.5.0: Code Snippets de Primeira Classe",
+    "date": "2026-10-07",
+    "summary": "Transformamos o Magnetares em um repositório poderoso para desenvolvedores. Notas de código nativas impulsionadas pelo Monaco Editor com syntax highlighting para dezenas de linguagens."
+  },
+  {
+    "id": "v1-4-0",
+    "title": "Magnetares Notes v1.4.0: Mural de Stickers e Quadros Dinâmicos",
+    "date": "2026-10-06",
+    "summary": "Novo mural em tela cheia para gerenciar dezenas de notas adesivas (Stickers) coloridas com Drag & Drop e suporte nativo a múltiplos quadros (Boards)."
+  },
+  {
+    "id": "v1-3-0",
+    "title": "Magnetares Notes v1.3.0: Novo AppImage e Site Atualizado",
+    "date": "2026-10-06",
+    "summary": "Trazendo a experiência Magnetares nativamente para distribuições Linux (Debian/Ubuntu via .deb e AppImage universal). Melhorias severas de sincronização de estado."
+  },
+  {
+    "id": "v1-2-0",
+    "title": "Magnetares Notes v1.2.0: Editor Ampliado e Sincronização Automática",
+    "date": "2026-09-28",
+    "summary": "Editor Tiptap super carregado com hiperlinks, formatação de código inline e criação rica de tabelas. Sincronização em nuvem agora rodando em background perfeitamente."
+  },
+  {
+    "id": "v1-1-0",
+    "title": "Magnetares Notes v1.1.0: Pastas Personalizadas, Cores, Ícones e Integridade Local",
+    "date": "2026-09-25",
+    "summary": "Personalização expressiva de pastas com 8 cores e 8 ícones, ferramenta de auditoria e autorreparo local do banco de dados SQLite, e diálogo de exclusão transparente com lixeira."
+  },
+  {
+    "id": "v1-0-0",
+    "title": "Bem-vindo ao Magnetares Notes: Onde Pensamentos Ganham Gravidade Própria",
+    "date": "2026-09-24",
+    "summary": "Lançamento inaugural da v1.0.0! Conheça o caderno desktop Local-First com SQLite WAL, interface estilo macOS, editor rich text dinâmico, pastas inteligentes e privacidade absoluta sem telemetria."
+  }
+]
