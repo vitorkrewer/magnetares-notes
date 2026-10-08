@@ -70,13 +70,13 @@ func (s *noteStore) EnsureDataCompliance() (ComplianceReport, error) {
 		}
 	}
 
-	// 4. Corrigir notas órfãs (folder_id nulo/vazio ou pasta inexistente OU pasta excluída)
+	// 4. Corrigir notas ativas órfãs (folder_id nulo/vazio ou pasta inexistente OU pasta excluída)
 	// Notas já sincronizadas (clean) ficam clean após realocação — evita re-upload desnecessário.
 	res, err = tx.Exec(`UPDATE notes SET folder_id = 'folder-default', folder = 'Notas',
 		sync_state = CASE WHEN sync_state = 'clean' THEN 'clean' ELSE 'pending' END,
 		updated_at = ?
-		WHERE folder_id IS NULL OR folder_id = ''
-		   OR folder_id NOT IN (SELECT id FROM folders WHERE deleted_at IS NULL)`, now)
+		WHERE deleted_at IS NULL AND (folder_id IS NULL OR folder_id = ''
+		   OR folder_id NOT IN (SELECT id FROM folders WHERE deleted_at IS NULL))`, now)
 	if err == nil {
 		if affected, _ := res.RowsAffected(); affected > 0 {
 			report.OrphanNotesFixed += int(affected)
@@ -85,9 +85,9 @@ func (s *noteStore) EnsureDataCompliance() (ComplianceReport, error) {
 		}
 	}
 
-	// 5. Corrigir incompatibilidade entre note.folder (nome textual) e folders.name
+	// 5. Corrigir incompatibilidade entre note.folder (nome textual) e folders.name para notas ativas
 	res, err = tx.Exec(`UPDATE notes SET folder = (SELECT f.name FROM folders f WHERE f.id = notes.folder_id), sync_state = 'pending', updated_at = ?
-		WHERE folder_id IN (SELECT id FROM folders) AND folder != (SELECT f.name FROM folders f WHERE f.id = notes.folder_id)`, now)
+		WHERE deleted_at IS NULL AND folder_id IN (SELECT id FROM folders) AND folder != (SELECT f.name FROM folders f WHERE f.id = notes.folder_id)`, now)
 	if err == nil {
 		if affected, _ := res.RowsAffected(); affected > 0 {
 			report.RepairedNotes += int(affected)
@@ -108,8 +108,8 @@ func (s *noteStore) EnsureDataCompliance() (ComplianceReport, error) {
 		}
 	}
 
-	// 7. Recalcular e verificar projeções de checklist (checklist_total & checklist_open)
-	rows, err := tx.Query(`SELECT id, body, checklist_total, checklist_open FROM notes WHERE body IS NOT NULL AND body != ''`)
+	// 7. Recalcular e verificar projeções de checklist (checklist_total & checklist_open) apenas em notas ativas
+	rows, err := tx.Query(`SELECT id, body, checklist_total, checklist_open FROM notes WHERE deleted_at IS NULL AND body IS NOT NULL AND body != ''`)
 	if err == nil {
 		defer rows.Close()
 		type checklistPatch struct {
@@ -133,7 +133,7 @@ func (s *noteStore) EnsureDataCompliance() (ComplianceReport, error) {
 		}
 
 		for _, p := range patches {
-			if _, err := tx.Exec(`UPDATE notes SET checklist_total = ?, checklist_open = ?, sync_state = 'pending', updated_at = ? WHERE id = ?`, p.total, p.open, now, p.id); err == nil {
+			if _, err := tx.Exec(`UPDATE notes SET checklist_total = ?, checklist_open = ?, sync_state = 'pending', updated_at = ? WHERE id = ? AND deleted_at IS NULL`, p.total, p.open, now, p.id); err == nil {
 				report.ChecklistsCorrected++
 				report.RepairedNotes++
 			}
