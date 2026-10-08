@@ -179,6 +179,17 @@ O checklist completo está em [Release e deploy](docs/release-and-deployment.md)
 | [Testes](docs/testing.md) | Cobertura atual e checklist de regressão. |
 | [Feature status](docs/feature-status.md) | Recursos implementados, beta e roadmap. |
 
+## Licença e Termos de Uso
+
+Este projeto está sob o modelo **Source-Available (Personal & Non-Commercial Use Only)**:
+
+- 💻 **Modelo:** *Source-Available Software License* (Código de Fonte Disponível para Auditoria e Uso Pessoal).
+- ✅ **Download e Execução:** Gratuito e liberado para estudo, auditoria pessoal e uso individual diário (não-comercial).
+- 🚫 **Restrição Não-Comercial (NC):** Vedado o uso comercial, corporativo, venda ou oferta como serviço pago (SaaS) sem autorização expressa por escrito.
+- ⚠️ **Modificações Prévias (Prior Notice):** Qualquer alteração, trabalho derivado ou fork público deve ser previamente informado ao autor via Issue / PR no repositório.
+
+Para ler os termos integrais e disposições legais, consulte o arquivo [LICENSE](LICENSE).
+
 ---
 
 <p align="center">

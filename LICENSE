@@ -1,0 +1,39 @@
+# Licença Magnetares Notes
+
+**Classificação Legal / Legal Classification:**  
+*Source-Available Software License (Personal & Non-Commercial Use Only)*  
+*Licença com Código de Fonte Disponível para Uso Pessoal e Não-Comercial*
+
+---
+
+Copyright (c) 2026 Vitor Krewer. Todos os direitos reservados / All rights reserved.
+
+---
+
+### 1. Modelo de Licenciamento (Source-Available)
+
+Este software é distribuído sob o modelo **Source-Available** (Código de Fonte Disponível). Ele **NÃO** constitui software de código aberto nos termos da Open Source Initiative (OSI), por conter restrições de uso comercial e requisitos prévios de modificação para proteção da propriedade intelectual do autor.
+
+É concedida a qualquer pessoa que obtenha uma cópia deste software e arquivos de documentação associados (o "Software"), permissão estrita para:
+
+1. **Uso e Execução (Personal Use):** Baixar, instalar, compilar e executar o Software para fins exclusivamente pessoais, acadêmicos, de estudo ou individuais, sem fins lucrativos diretos ou indiretos.
+2. **Acesso e Inspeção ao Código-Fonte (Code Audit & Learning):** Visualizar, depurar e inspecionar o código-fonte para aprendizado, auditoria pessoal de privacidade e uso individual.
+
+---
+
+### 2. Condições e Restrições Obrigatórias
+
+1. **Cláusula Não-Comercial (Non-Commercial - NC):**
+   O Software, seus binários compilados, código-fonte ou quaisquer partes derivadas **NÃO PODEM** ser utilizados, comercializados, distribuídos, hospedados como serviço (SaaS/Cloud), sublicenciados ou integrados em produtos para qualquer fim corporativo, comercial ou com objetivo de lucro, direto ou indireto, sem autorização prévia por escrito e expressa do detentor dos direitos autorais (Vitor Krewer).
+
+2. **Notificação e Autorização Prévia para Modificações (Prior Notice for Modifications):**
+   Qualquer alteração, criação de trabalho derivado (fork), adaptação pública ou redistribuição de versões modificadas **DEVE SER OBRIGATORIAMENTE INFORMADA E SUBMETIDA PREVIAMENTE** ao autor original (via Pull Request / Issue formal no repositório oficial do projeto ou contato direto). Nenhuma redistribuição pública com modificações pode ser feita sem o conhecimento e concordância do autor.
+
+3. **Preservação de Avisos de Direitos Autorais (Attribution & Notice Preservation):**
+   O aviso de direitos autorais acima, esta identificação de licença e as condições de uso devem constar em todas as cópias ou partes substanciais do Software.
+
+---
+
+### 3. Isenção de Garantia (Disclaimer of Warranty)
+
+O SOFTWARE É FORNECIDO "NO ESTADO EM QUE SE ENCONTRA" (AS IS), SEM NENHUMA GARANTIA EXPRESSA OU IMPLÍCITA, INCLUINDO, MAS NÃO SE LIMITANDO A, GARANTIAS DE COMERCIALIZAÇÃO, ADEQUAÇÃO A UM DETERMINADO FIM E NÃO INFRAÇÃO. EM NENHUMA HIPÓTESE O AUTOR OU DETENTOR DOS DIREITOS AUTORAIS SERÁ RESPONSÁVEL POR QUAISQUER DANOS, PERDAS DE DADOS OU OUTRAS RESPONSABILIDADES DECORRENTES DO USO OU DA INCAPACIDADE DE USAR ESTE SOFTWARE.
