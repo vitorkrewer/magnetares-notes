@@ -12,6 +12,7 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 - **Controle de Janela Dinâmico:** Botões de controle de janela no Windows (Minimizar, Maximizar e Fechar) foram movidos e reorganizados para a extremidade direita da `TitleBar`, alinhando-se ao comportamento padrão do sistema operacional.
 - **Interface Otimizada:** O ícone de configurações foi transferido do rodapé (footer) para a barra superior de ferramentas na biblioteca (Sidebar).
 - **Seção Colapsável:** A seção de Etiquetas da barra lateral agora permite contrair e expandir (com animação fluida) para economizar espaço de visualização quando existem muitas tags.
+- **Sugestões de Etiquetas Inteligentes:** Ao adicionar uma etiqueta na nota, um elegante menu suspenso surge com sugestões enquanto você digita, baseando-se nas etiquetas que você já possui. Exibe os ícones coloridos, filtra as tags que a nota já contém, permite a navegação e a criação instantânea de novas caso não existam.
 
 ### Changed
 
@@ -20,7 +21,8 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ### Fixed
 
-- **Exclusão Definitiva Segura (Tombstones):** Aprimorada a integridade de exclusões durante a sincronização em nuvem. Notas e etiquetas apagadas de vez ou movidas para a lixeira agora persistem seu status "apagado" de forma robusta e não renascem mais indevidamente de outras máquinas por sincronizações ativas.
+- **Exclusão Definitiva Segura (Tombstones):** Aprimorada a integridade de exclusões durante a sincronização em nuvem. Notas e etiquetas apagadas de vez ou movidas para a lixeira agora persistem seu status "apagado" de forma robusta e não renascem mais indevidamente de outras máquinas por sincronizações ativas. Além disso, as notas deletadas só são fisicamente apagadas após a nuvem confirmar o soft-delete, ocultando-se imediatamente da lixeira de forma transparente.
+- **Legibilidade na Lixeira (Tema Escuro):** Resolvido o problema onde o conteúdo do editor se tornava invisível no tema escuro ao visualizar uma nota que estava na lixeira (somente-leitura). A estilização agora usa opacidade adaptativa ao invés de cor fixa, restaurando a leitura.
 
 ## [v1.5.0] - 2026-10-07
 
