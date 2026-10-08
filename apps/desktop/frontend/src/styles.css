@@ -1345,6 +1345,7 @@ textarea:focus-visible {
   align-items: center;
   display: flex;
   gap: 4px;
+  position: relative;
 }
 
 .new-tag-input-box input {
@@ -1374,6 +1375,59 @@ textarea:focus-visible {
 .new-tag-input-box button svg {
   height: 12px;
   width: 12px;
+}
+
+.tag-suggestions-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: #ffffff;
+  border: 1px solid #dcdad0;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 50;
+  padding: 4px;
+}
+
+[data-theme="dark"] .tag-suggestions-popover {
+  background: #22221f;
+  border-color: #3a3933;
+}
+
+.tag-suggestions-popover button {
+  background: transparent !important;
+  border: 0;
+  border-radius: 4px;
+  color: #2b2a26 !important;
+  cursor: pointer;
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px !important;
+  text-align: left;
+  font-size: 13px;
+  width: 100% !important;
+  height: auto !important;
+  justify-content: flex-start !important;
+}
+
+[data-theme="dark"] .tag-suggestions-popover button {
+  color: #e6e5df !important;
+}
+
+.tag-suggestions-popover button:hover,
+.tag-suggestions-popover button.focused {
+  background: #fdf3d8 !important;
+}
+
+[data-theme="dark"] .tag-suggestions-popover button:hover,
+[data-theme="dark"] .tag-suggestions-popover button.focused {
+  background: #2e2e2a !important;
 }
 
 .dialog-backdrop {
@@ -2911,7 +2965,7 @@ textarea:focus-visible {
 
 .title[readonly],
 .structured-editor.read-only .tiptap {
-  color: #66645e;
+  opacity: 0.55;
   cursor: default;
 }
 

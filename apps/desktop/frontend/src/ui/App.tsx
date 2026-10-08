@@ -1492,7 +1492,13 @@ export function App() {
                         <button type="button" onClick={() => void removeTagFromActiveNote(tag)} title={`Remover etiqueta #${tag}`} aria-label={`Remover etiqueta #${tag}`}><X aria-hidden="true" /></button>
                       </span>
                     ))}
-                    {tagInputOpen ? (
+                    {tagInputOpen ? (() => {
+                      const lowerInput = newTagInput.trim().toLowerCase();
+                      const suggestedTags = navigation.tags.filter((t) => 
+                        !active.tags?.includes(t.name) &&
+                        (lowerInput === "" || t.name.toLowerCase().includes(lowerInput))
+                      );
+                      return (
                       <div className="new-tag-input-box">
                         <input
                           autoFocus
@@ -1501,7 +1507,9 @@ export function App() {
                           onKeyDown={(event) => {
                             if (event.key === "Enter") {
                               event.preventDefault();
-                              void addTagToActiveNote(newTagInput);
+                              // If they typed something and hit enter, try to use exact match if there's only 1, or just the input string
+                              const exactMatch = suggestedTags.find(t => t.name.toLowerCase() === lowerInput);
+                              void addTagToActiveNote(exactMatch ? exactMatch.name : newTagInput);
                             } else if (event.key === "Escape") {
                               setTagInputOpen(false);
                               setNewTagInput("");
@@ -1509,9 +1517,29 @@ export function App() {
                           }}
                           placeholder="etiqueta..."
                         />
+                        {suggestedTags.length > 0 && (
+                          <div className="tag-suggestions-popover">
+                            {suggestedTags.map((tag) => {
+                              const Icon = getTagIconComponent(tag.icon);
+                              return (
+                                <button 
+                                  key={tag.id} 
+                                  type="button" 
+                                  onMouseDown={(e) => { 
+                                    e.preventDefault(); // Prevents input from losing focus
+                                    void addTagToActiveNote(tag.name); 
+                                  }}
+                                >
+                                  <Icon size={14} /> {tag.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
                         <button type="button" onClick={() => void addTagToActiveNote(newTagInput)} title="Adicionar"><Check aria-hidden="true" /></button>
                       </div>
-                    ) : (
+                      );
+                    })() : (
                       <button type="button" className="add-tag-chip" onClick={() => setTagInputOpen(true)}>
                         <Plus aria-hidden="true" /> Etiqueta
                       </button>
