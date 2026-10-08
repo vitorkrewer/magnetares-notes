@@ -480,7 +480,7 @@ func (s *noteStore) syncTagsDirect(turso *TursoClient, profileID string) error {
 						normalized_name = CASE WHEN excluded.updated_at >= updated_at THEN excluded.normalized_name ELSE normalized_name END,
 						icon = CASE WHEN excluded.updated_at >= updated_at THEN excluded.icon ELSE icon END,
 						managed = CASE WHEN excluded.updated_at >= updated_at THEN excluded.managed ELSE managed END,
-						deleted_at = CASE WHEN excluded.updated_at >= updated_at THEN deleted_at ELSE deleted_at END,
+						deleted_at = CASE WHEN excluded.updated_at >= updated_at THEN excluded.deleted_at ELSE deleted_at END,
 						updated_at = MAX(excluded.updated_at, updated_at)`,
 					profileID, id, name, normalized, icon, managedInt, dAt, createdAt, updatedAt)
 				if pushErr == nil {
