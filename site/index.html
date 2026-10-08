@@ -422,14 +422,23 @@
         </div>
 
         <div class="download-details">
+          <div class="download-formats" id="windows-formats" role="tablist" aria-label="Formatos Windows">
+            <button class="format-pill active" type="button" data-platform-target="windows" data-format="exe">
+              <span class="pill-spark">✦</span> Executável Direto <span class="pill-tag">Recomendado</span>
+            </button>
+            <button class="format-pill" type="button" data-platform-target="windows" data-format="portable">
+              🧳 Versão Portátil (Pendrive) <span class="pill-tag">.zip</span>
+            </button>
+          </div>
+
           <div class="download-formats" id="linux-formats" style="display: none;" role="tablist" aria-label="Formatos Linux">
-            <button class="format-pill active" type="button" data-format="appimage">
+            <button class="format-pill active" type="button" data-platform-target="linux" data-format="appimage">
               <span class="pill-spark">✦</span> AppImage <span class="pill-tag">Recomendado</span>
             </button>
-            <button class="format-pill" type="button" data-format="deb">
+            <button class="format-pill" type="button" data-platform-target="linux" data-format="deb">
               .deb <span class="pill-tag">Debian / Ubuntu</span>
             </button>
-            <button class="format-pill" type="button" data-format="targz">
+            <button class="format-pill" type="button" data-platform-target="linux" data-format="targz">
               .tar.gz <span class="pill-tag">Portátil</span>
             </button>
           </div>

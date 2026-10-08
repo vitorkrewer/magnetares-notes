@@ -69,7 +69,28 @@ type appConfig struct {
 	AutoSyncIntervalMinutes int    `json:"autoSyncIntervalMinutes,omitempty"`
 }
 
+func getPortableDataDir() string {
+	exePath, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	exeDir := filepath.Dir(exePath)
+	dataDir := filepath.Join(exeDir, "data")
+	if info, err := os.Stat(dataDir); err == nil && info.IsDir() {
+		return dataDir
+	}
+	markerFile := filepath.Join(exeDir, "portable.dat")
+	if _, err := os.Stat(markerFile); err == nil {
+		_ = os.MkdirAll(dataDir, 0o700)
+		return dataDir
+	}
+	return ""
+}
+
 func configFilePath() (string, error) {
+	if portableDir := getPortableDataDir(); portableDir != "" {
+		return filepath.Join(portableDir, "config.json"), nil
+	}
 	baseDir := os.Getenv("LOCALAPPDATA")
 	if baseDir == "" {
 		var err error
@@ -123,6 +144,13 @@ func saveConfiguredDatabasePath(dbPath string) error {
 }
 
 func defaultDatabasePath() (string, error) {
+	if portableDir := getPortableDataDir(); portableDir != "" {
+		if customPath := loadConfiguredDatabasePath(); customPath != "" {
+			return customPath, nil
+		}
+		return filepath.Join(portableDir, "magnetares.db"), nil
+	}
+
 	if customPath := loadConfiguredDatabasePath(); customPath != "" {
 		return customPath, nil
 	}

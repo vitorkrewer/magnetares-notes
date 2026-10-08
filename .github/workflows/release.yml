@@ -97,6 +97,14 @@ jobs:
           $binary = Get-ChildItem "apps/desktop/build/bin" -Filter *.exe | Select-Object -First 1
           Copy-Item $binary.FullName "release-assets/Magnetares-Notes-Windows-x64.exe"
 
+          # 2. Gerar versão Portátil (Zip com pasta data/ e marcador portable.dat)
+          $portableDir = "release-assets/Magnetares-Notes-Windows-Portable"
+          New-Item -ItemType Directory -Force -Path "$portableDir/data"
+          Set-Content -Path "$portableDir/portable.dat" -Value "# Modo Portatil Ativado - Dados e banco salvos nesta pasta"
+          Copy-Item $binary.FullName "$portableDir/Magnetares-Notes.exe"
+          Compress-Archive -Path "$portableDir/*" -DestinationPath "release-assets/Magnetares-Notes-Windows-x64-Portable.zip" -Force
+          Remove-Item -Recurse -Force $portableDir
+
       - name: Prepare Linux artifact
         if: runner.os == 'Linux'
         shell: bash

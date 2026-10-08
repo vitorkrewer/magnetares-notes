@@ -13,6 +13,8 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 - **Interface Otimizada:** O ícone de configurações foi transferido do rodapé (footer) para a barra superior de ferramentas na biblioteca (Sidebar).
 - **Seção Colapsável:** A seção de Etiquetas da barra lateral agora permite contrair e expandir (com animação fluida) para economizar espaço de visualização quando existem muitas tags.
 - **Sugestões de Etiquetas Inteligentes:** Ao adicionar uma etiqueta na nota, um elegante menu suspenso surge com sugestões enquanto você digita, baseando-se nas etiquetas que você já possui. Exibe os ícones coloridos, filtra as tags que a nota já contém, permite a navegação e a criação instantânea de novas caso não existam.
+- **Modo Portátil Nativo (Pendrive Ready):** Suporte automático à execução portátil. Quando o aplicativo detecta a pasta `data/` ou o marcador `portable.dat` junto do seu executável, todas as configurações e o banco SQLite passam a ser salvos de maneira 100% isolada e autocontida no próprio dispositivo móvel/pendrive.
+- **Licenciamento Source-Available (Não-Comercial):** Atualização formal da licença do projeto para uso pessoal e código de fonte disponível, assegurando a privacidade e transparência do código sem permitir uso comercial ou modificações sem aviso prévio.
 
 ### Changed
 

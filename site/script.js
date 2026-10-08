@@ -8,9 +8,26 @@ const DOWNLOADS = {
   windows: {
     label: "Baixar para Windows (x64)",
     heroLabel: "Baixar para Windows",
-    note: "Windows 10 ou superior · Instalador nativo (.exe)",
+    note: "Windows 10 ou superior · Executável nativo (.exe)",
     meta: "Versão mais recente · 64-bit",
-    url: LATEST_RELEASE_PAGE
+    url: LATEST_RELEASE_PAGE,
+    selectedFormat: "exe",
+    formats: {
+      exe: {
+        label: "Baixar Executável Windows (x64)",
+        heroLabel: "Baixar para Windows",
+        note: "Executável standalone direto, sem instalador · Dados salvos no perfil do usuário",
+        meta: "Versão mais recente · 64-bit (.exe)",
+        url: LATEST_RELEASE_PAGE
+      },
+      portable: {
+        label: "Baixar Versão Portátil (Pendrive .zip)",
+        heroLabel: "Baixar Portátil (.zip)",
+        note: "Ideal para pendrives · Mantém banco e configurações na própria pasta (100% isolado)",
+        meta: "Versão mais recente · 64-bit (.zip)",
+        url: LATEST_RELEASE_PAGE
+      }
+    }
   },
   macos: {
     label: "Baixar para macOS (Universal)",
@@ -74,6 +91,7 @@ const downloadMeta = document.querySelector("#download-meta");
 const heroDownloadBtn = document.querySelector("#hero-download-btn");
 const heroDownloadText = document.querySelector("#hero-download-text");
 const headerVersionBadge = document.querySelector("#header-version-badge");
+const windowsFormatsContainer = document.querySelector("#windows-formats");
 const linuxFormatsContainer = document.querySelector("#linux-formats");
 const downloadAltLinks = document.querySelector("#download-alt-links");
 const formatPills = document.querySelectorAll(".format-pill");
@@ -88,14 +106,43 @@ function updateDownloadUI(platform) {
     item.setAttribute("aria-selected", String(isSelected));
   });
 
-  if (platform === "linux") {
+  if (platform === "windows") {
+    if (windowsFormatsContainer) windowsFormatsContainer.style.display = "flex";
+    if (linuxFormatsContainer) linuxFormatsContainer.style.display = "none";
+
+    const fmtKey = data.selectedFormat || "exe";
+    const fmt = data.formats[fmtKey] || data.formats.exe;
+
+    formatPills.forEach((pill) => {
+      if (pill.dataset.platformTarget === "windows") {
+        pill.classList.toggle("active", pill.dataset.format === fmtKey);
+      }
+    });
+
+    if (downloadLink) downloadLink.href = fmt.url;
+    if (downloadLabel) downloadLabel.textContent = fmt.label;
+    if (platformNote) platformNote.textContent = fmt.note;
+    if (downloadMeta) downloadMeta.textContent = fmt.meta;
+
+    if (heroDownloadBtn) heroDownloadBtn.href = fmt.url;
+    if (heroDownloadText) heroDownloadText.textContent = fmt.heroLabel;
+
+    if (downloadAltLinks) {
+      const otherKey = fmtKey === "exe" ? "portable" : "exe";
+      const otherFmt = data.formats[otherKey];
+      downloadAltLinks.innerHTML = `<span>Outro formato disponível: <a href="${otherFmt.url}">${otherKey === "portable" ? "Versão Portátil (.zip)" : "Executável (.exe)"}</a></span>`;
+    }
+  } else if (platform === "linux") {
+    if (windowsFormatsContainer) windowsFormatsContainer.style.display = "none";
     if (linuxFormatsContainer) linuxFormatsContainer.style.display = "flex";
 
     const fmtKey = data.selectedFormat || "appimage";
     const fmt = data.formats[fmtKey] || data.formats.appimage;
 
     formatPills.forEach((pill) => {
-      pill.classList.toggle("active", pill.dataset.format === fmtKey);
+      if (pill.dataset.platformTarget === "linux") {
+        pill.classList.toggle("active", pill.dataset.format === fmtKey);
+      }
     });
 
     if (downloadLink) downloadLink.href = fmt.url;
@@ -120,6 +167,7 @@ function updateDownloadUI(platform) {
       downloadAltLinks.innerHTML = `<span>Também disponível em: ${alts.join(" · ")}</span>`;
     }
   } else {
+    if (windowsFormatsContainer) windowsFormatsContainer.style.display = "none";
     if (linuxFormatsContainer) linuxFormatsContainer.style.display = "none";
     if (downloadAltLinks) downloadAltLinks.innerHTML = "";
 
@@ -145,8 +193,11 @@ if (buttons.length > 0) {
 if (formatPills.length > 0) {
   formatPills.forEach((pill) => {
     pill.addEventListener("click", () => {
-      DOWNLOADS.linux.selectedFormat = pill.dataset.format;
-      updateDownloadUI("linux");
+      const targetPlatform = pill.dataset.platformTarget || "linux";
+      if (DOWNLOADS[targetPlatform] && DOWNLOADS[targetPlatform].formats) {
+        DOWNLOADS[targetPlatform].selectedFormat = pill.dataset.format;
+        updateDownloadUI(targetPlatform);
+      }
     });
   });
 }
@@ -161,7 +212,7 @@ async function fetchLatestRelease() {
     const res = await fetch(RELEASE_API);
     if (!res.ok) return;
     const data = await res.json();
-    const version = data.tag_name || "v1.5.0";
+    const version = data.tag_name || "v1.6.0";
     const assets = data.assets || [];
 
     if (headerVersionBadge) {
@@ -177,10 +228,14 @@ async function fetchLatestRelease() {
       const name = asset.name.toLowerCase();
       const downloadUrl = asset.browser_download_url;
 
-      if (name.includes("windows") || name.endsWith(".exe")) {
+      if (name.includes("portable") && name.endsWith(".zip")) {
+        DOWNLOADS.windows.formats.portable.url = downloadUrl;
+        DOWNLOADS.windows.formats.portable.meta = `Versão ${version} · Portátil (.zip)`;
+      } else if (name.includes("windows") && name.endsWith(".exe")) {
+        DOWNLOADS.windows.formats.exe.url = downloadUrl;
+        DOWNLOADS.windows.formats.exe.meta = `Versão ${version} · x64 (.exe)`;
         DOWNLOADS.windows.url = downloadUrl;
-        DOWNLOADS.windows.meta = `Versão ${version} · x64 (.exe)`;
-      } else if (name.includes("macos") || name.includes("darwin") || name.endsWith(".zip")) {
+      } else if (name.includes("macos") || name.includes("darwin") || (name.endsWith(".zip") && !name.includes("portable"))) {
         DOWNLOADS.macos.url = downloadUrl;
         DOWNLOADS.macos.meta = `Versão ${version} · Universal (.zip)`;
       } else if (name.endsWith(".appimage")) {
