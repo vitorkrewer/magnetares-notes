@@ -2,9 +2,27 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
-## [v1.5.0] - 2026-10-07
+## [v1.6.0] - 2026-10-08
 
 ### Added
+
+- **Formatação Avançada de Texto:** O editor *Rich Text* (Tiptap) ganhou suporte para Alinhamento de texto (Esquerda, Centro, Direita e Justificado).
+- **Cores Customizadas:** Inserida ferramenta de coloração de texto com um menu flutuante elegante que inclui 20 cores predefinidas e modo de limpeza (Automático), removendo o antigo seletor nativo.
+- **Espaçamento entre Linhas:** Inserido menu *dropdown* flutuante para alterar o espaçamento entre as linhas do texto (Simples, 1.15, 1.5 e Duplo).
+- **Controle de Janela Dinâmico:** Botões de controle de janela no Windows (Minimizar, Maximizar e Fechar) foram movidos e reorganizados para a extremidade direita da `TitleBar`, alinhando-se ao comportamento padrão do sistema operacional.
+- **Interface Otimizada:** O ícone de configurações foi transferido do rodapé (footer) para a barra superior de ferramentas na biblioteca (Sidebar).
+- **Seção Colapsável:** A seção de Etiquetas da barra lateral agora permite contrair e expandir (com animação fluida) para economizar espaço de visualização quando existem muitas tags.
+
+### Changed
+
+- Reorganização na barra de formatação (Toolbar): Os botões de Desfazer e Refazer foram reposicionados à esquerda do editor para facilitar o alcance e evitar grandes espaçamentos na versão contraída da janela.
+- Resolução visual no dropdown de Linguagens das Notas de Código para evitar corte (clipping) do conteúdo pelo z-index conflitante do editor Monaco.
+
+### Fixed
+
+- **Exclusão Definitiva Segura (Tombstones):** Aprimorada a integridade de exclusões durante a sincronização em nuvem. Notas e etiquetas apagadas de vez ou movidas para a lixeira agora persistem seu status "apagado" de forma robusta e não renascem mais indevidamente de outras máquinas por sincronizações ativas.
+
+## [v1.5.0] - 2026-10-07
 
 - **Nova funcionalidade Code Snippets:** Suporte nativo e de primeira classe para notas de código, transformando o Magnetares Notes em um poderoso repositório para desenvolvedores (Gist-like).
 - **Tipos de Notas Integrados:** Qualquer pasta agora pode conter anotações ricas (texto/Tiptap) ou snippets de código, garantindo que documentações de projeto e scripts convivam de forma harmônica na mesma árvore de pastas.

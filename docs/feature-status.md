@@ -9,6 +9,7 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 | Criar notas normais | Implementado | Criação, edição, autosave e persistência SQLite local. |
 | Notas rápidas globais | Planejado | Falta atalho global, tray e janela flutuante. |
 | Títulos e subtítulos | Implementado | Nós estruturados Tiptap. |
+| Formatação Avançada | Implementado (v1.6.0) | Alinhamento (esquerda/centro/direita/justificado), Cores no texto (popover) e Espaçamento entre linhas. |
 | Negrito, itálico, destaque e hyperlinks | Implementado | Toolbar do editor com inserção, edição e remoção de links. |
 | Blocos de código | Implementado | Lowlight com seleção de linguagem e syntax highlighting. |
 | Listas e citações | Implementado | Listas com marcador/numeradas e blockquote. |
@@ -21,7 +22,7 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 | Stickers (Mural de Post-its) | Implementado (v1.4.0) | Quadros organizadores, mural full-width, cards pastel em 8 cores, ordenação fluida por drag-and-drop, busca local e fixação. |
 | Pastas Inteligentes | Implementado | Tag, período e checklist com atualização automática. |
 | Busca por texto local | Implementado | Título e `body_text`; não usa FTS/OCR. |
-| Lixeira e restauração | Implementado | Exclusão lógica com confirmação e redirecionamento seguro para a pasta padrão. |
+| Lixeira e restauração | Implementado | Exclusão lógica com confirmação, persistência de Tombstones para o Sync (v1.6.0) e redirecionamento seguro para a pasta padrão. |
 | Importar Markdown/texto | Implementado | `.md`, `.markdown` e `.txt`. |
 | Exportar Markdown/HTML/texto | Implementado | Exportação pelo editor com diálogo nativo de salvamento (v1.3.0). |
 | Impressão/PDF | Implementado | `window.print()` e CSS de impressão. |
@@ -48,6 +49,7 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 - **Entregue na v1.2.0:** revisão-base, `409 Conflict`, cursor, snapshots por evento, exclusões, transações remotas, idempotência e resolução local/remota/merge.
 - **Entregue na v1.2.0:** laboratório de cinco computadores para concorrência e retry.
 - **Entregue na v1.3.0:** sync de etiquetas e ícones, LWW em etiquetas/pastas, flush completo de gravações antes do sync e propagação de renomeação de etiquetas às notas.
+- **Entregue na v1.6.0:** Persistência de estado apagado (Tombstones) para impedir o ressurgimento de notas que já foram deletadas, em conformidade estrita com o servidor.
 - Contrato OpenAPI ainda precisa ser alinhado a todos os campos atuais de metadata e snapshots.
 - Autenticação de usuário contra API própria.
 - Tokens Turso exclusivos do ambiente da API.

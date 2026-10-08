@@ -43,14 +43,14 @@ flowchart LR
 
 | Área | Disponível hoje |
 | --- | --- |
-| **Editor** | Títulos, negrito, itálico, destaque, listas, citações, checklists, tabelas, cálculos inline, hyperlinks e blocos de código integrados. |
+| **Editor** | Títulos, cores customizáveis, alinhamento, espaçamento entre linhas, negrito, itálico, destaque, listas, citações, checklists, tabelas, cálculos inline, hyperlinks e blocos de código. |
 | **Code Snippets** | Notas de código independentes com motor Monaco Editor (o mesmo do VS Code). Syntax highlighting avançado, dropdown com diversas linguagens, Color Badges elegantes na interface, e botão de cópia com 1 clique. |
 | **Stickers** | Mural full-width de notas autoadesivas (post-its) organizado por quadros dedicados, 8 cores pastel (temas claro/escuro), fixação no topo, busca instantânea e reordenação por Drag & Drop (no mural e entre quadros na barra lateral). |
 | **Organização** | Pastas/subpastas com cores HSL e 8 ícones personalizáveis, CRUD de etiquetas com 6 ícones, edição de pastas legadas, notas fixadas e Pastas Inteligentes. |
 | **Dados locais & Compliance** | SQLite com WAL, migrações automáticas, lixeira, auditoria de integridade (`EnsureDataCompliance`) e autorreparo em Preferências. |
 | **Portabilidade** | Importação Markdown/TXT, exportação Markdown/HTML/TXT com diálogo nativo para escolher o destino e impressão limpa. |
 | **Experiência** | Tema claro/escuro, barra de título desktop, layout responsivo de três painéis para notas e full-width para stickers, árvore de pastas alinhada, botão voltar ao topo e tratamento avançado de tags longas. |
-| **Sync Nuvem** | Outbox local, transações remotas, snapshots por cursor, sync automático configurável com indicador de nuvem animado, resolução local/remota/merge e sync de pastas e etiquetas (nomes e ícones) com Last-Write-Wins. |
+| **Sync Nuvem** | Lógica segura de Tombstones (evitando retorno de notas deletadas), Outbox local, transações remotas, snapshots por cursor, sync automático com indicador de nuvem animado, resolução local/remota/merge e sync de pastas e etiquetas (nomes e ícones) com Last-Write-Wins. |
 
 > Confira a [matriz de funcionalidades](docs/feature-status.md) para status detalhado de recursos implementados, beta e planejados.
 
