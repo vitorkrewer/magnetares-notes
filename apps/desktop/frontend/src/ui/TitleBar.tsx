@@ -38,17 +38,8 @@ export function TitleBar({ title = "Magnetares Notes" }: TitleBarProps) {
         className={`traffic-lights ${isHovered ? "hovered" : ""}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        style={{ "--wails-draggable": "no-drag" } as React.CSSProperties}
+        style={{ "--wails-draggable": "no-drag", marginLeft: "auto" } as React.CSSProperties}
       >
-        <button
-          type="button"
-          className="traffic-light close"
-          onClick={handleClose}
-          title="Fechar"
-          aria-label="Fechar janela"
-        >
-          {isHovered && <X className="traffic-icon" aria-hidden="true" />}
-        </button>
         <button
           type="button"
           className="traffic-light minimize"
@@ -72,6 +63,15 @@ export function TitleBar({ title = "Magnetares Notes" }: TitleBarProps) {
               <Maximize2 className="traffic-icon" aria-hidden="true" />
             )
           )}
+        </button>
+        <button
+          type="button"
+          className="traffic-light close"
+          onClick={handleClose}
+          title="Fechar"
+          aria-label="Fechar janela"
+        >
+          {isHovered && <X className="traffic-icon" aria-hidden="true" />}
         </button>
       </div>
       <div className="titlebar-title">{title}</div>
