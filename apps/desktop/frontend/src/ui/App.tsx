@@ -114,6 +114,7 @@ export function App() {
   const [syncNotification, setSyncNotification] = useState<{ type: "success" | "warning" | "error" | "info"; message: string } | null>(null);
   const [conflicts, setConflicts] = useState<SyncConflict[]>([]);
   const [conflictsOpen, setConflictsOpen] = useState(false);
+  const [tagsExpanded, setTagsExpanded] = useState(false);
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(new Set());
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null);
   const [draggedFolderId, setDraggedFolderId] = useState<string | null>(null);
@@ -1258,27 +1259,37 @@ export function App() {
         </>
 
         <>
-          <div className="sidebar-section-header">
-            <span className="folder-label">ETIQUETAS</span>
-            <button className="icon-button mini-add" onClick={() => setDialogMode({ kind: "tag" })} title="Nova etiqueta" aria-label="Nova etiqueta"><Plus aria-hidden="true" /></button>
+          <div 
+            className="sidebar-section-header" 
+            style={{ cursor: "pointer", userSelect: "none" }} 
+            onClick={() => setTagsExpanded(prev => !prev)}
+            title={tagsExpanded ? "Recolher Etiquetas" : "Expandir Etiquetas"}
+          >
+            <span className="folder-label" style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+              <ChevronRight aria-hidden="true" style={{ width: 14, height: 14, transform: tagsExpanded ? "rotate(90deg)" : "none", transition: "transform 0.15s ease", opacity: 0.7 }} />
+              ETIQUETAS
+            </span>
+            <button className="icon-button mini-add" onClick={(e) => { e.stopPropagation(); setDialogMode({ kind: "tag" }); }} title="Nova etiqueta" aria-label="Nova etiqueta"><Plus aria-hidden="true" /></button>
           </div>
-          <div className="folder-tree">
-            {navigation.tags.map((tag) => {
-              const TagIcon = getTagIconComponent(tag.icon);
-              return (
-                <button key={tag.id} className={`nav-item tag-item ${selectedQuery.kind === "tag" && selectedQuery.id === tag.id ? "selected" : ""}`} onClick={() => selectQuery({ kind: "tag", id: tag.id })} title={`#${tag.name}`}>
-                  <span><TagIcon className="tag-icon" aria-hidden="true" /><span className="nav-item-title">{tag.name}</span></span>
-                  <div className="folder-item-actions">
-                    <small className="folder-note-count">{tag.noteCount}</small>
-                    <div className="folder-hover-btns">
-                      <span className="folder-action-btn" role="button" tabIndex={0} title="Editar etiqueta" aria-label={`Editar etiqueta ${tag.name}`} onClick={(event) => { event.stopPropagation(); setDialogMode({ kind: "tag", tagToEdit: tag }); }}><FilePenLine size={13} aria-hidden="true" /></span>
-                      <span className="folder-action-btn danger" role="button" tabIndex={0} title="Excluir etiqueta" aria-label={`Excluir etiqueta ${tag.name}`} onClick={(event) => { event.stopPropagation(); setDeleteTagTarget(tag); }}><Trash2 size={13} aria-hidden="true" /></span>
+          {tagsExpanded && (
+            <div className="folder-tree">
+              {navigation.tags.map((tag) => {
+                const TagIcon = getTagIconComponent(tag.icon);
+                return (
+                  <button key={tag.id} className={`nav-item tag-item ${selectedQuery.kind === "tag" && selectedQuery.id === tag.id ? "selected" : ""}`} onClick={() => selectQuery({ kind: "tag", id: tag.id })} title={`#${tag.name}`}>
+                    <span><TagIcon className="tag-icon" aria-hidden="true" /><span className="nav-item-title">{tag.name}</span></span>
+                    <div className="folder-item-actions">
+                      <small className="folder-note-count">{tag.noteCount}</small>
+                      <div className="folder-hover-btns">
+                        <span className="folder-action-btn" role="button" tabIndex={0} title="Editar etiqueta" aria-label={`Editar etiqueta ${tag.name}`} onClick={(event) => { event.stopPropagation(); setDialogMode({ kind: "tag", tagToEdit: tag }); }}><FilePenLine size={13} aria-hidden="true" /></span>
+                        <span className="folder-action-btn danger" role="button" tabIndex={0} title="Excluir etiqueta" aria-label={`Excluir etiqueta ${tag.name}`} onClick={(event) => { event.stopPropagation(); setDeleteTagTarget(tag); }}><Trash2 size={13} aria-hidden="true" /></span>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </>
 
         <button className={`nav-item trash-item ${view === "deleted" ? "selected" : ""}`} onClick={() => selectQuery({ kind: "deleted" })}>
