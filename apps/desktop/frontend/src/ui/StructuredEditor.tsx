@@ -11,9 +11,18 @@ import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
 import { EditorContent, useEditor, type Editor, type JSONContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import TextAlign from "@tiptap/extension-text-align";
+import { TextStyle } from "@tiptap/extension-text-style";
+import { Color } from "@tiptap/extension-color";
+import { LineHeight } from "./LineHeightExtension";
 import { common, createLowlight } from "lowlight";
-import { Bold, Calculator, Code2, Columns3, Highlighter, Italic, Link2, List as BulletList, ListChecks, ListOrdered, Quote, Redo2, Rows3, Table2, Trash2, Undo2, Unlink } from "lucide-react";
+import { Bold, Calculator, Code2, Columns3, Highlighter, Italic, Link2, List as BulletList, ListChecks, ListOrdered, Quote, Redo2, Rows3, Table2, Trash2, Undo2, Unlink, AlignLeft, AlignCenter, AlignRight, AlignJustify, Palette, Space } from "lucide-react";
 import { calculateExpression, CalculationNode } from "./CalculationNode";
+
+const PRESET_COLORS = [
+  "#000000", "#434343", "#666666", "#999999", "#b7b7b7", "#cccccc", "#d9d9d9", "#efefef", "#f3f3f3", "#ffffff",
+  "#980000", "#ff0000", "#ff9900", "#ffff00", "#00ff00", "#00ffff", "#4a86e8", "#0000ff", "#9900ff", "#ff00ff"
+];
 
 type StructuredEditorProps = {
   value: string;
@@ -42,7 +51,11 @@ const extensions = [
   TaskList,
   TaskItem.configure({ nested: true }),
   CalculationNode,
-  Placeholder.configure({ placeholder: "Comece a escrever" })
+  Placeholder.configure({ placeholder: "Comece a escrever" }),
+  TextAlign.configure({ types: ["heading", "paragraph"] }),
+  TextStyle,
+  Color,
+  LineHeight
 ];
 
 const codeLanguages = [
@@ -95,6 +108,8 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkURL, setLinkURL] = useState("");
   const [linkError, setLinkError] = useState("");
+  const [colorOpen, setColorOpen] = useState(false);
+  const [lineHeightOpen, setLineHeightOpen] = useState(false);
   const insideTable = editor.isActive("table");
   const insideCodeBlock = editor.isActive("codeBlock");
   const codeLanguage = editor.getAttributes("codeBlock").language || "plaintext";
@@ -158,9 +173,68 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
         <option value="2">Subtítulo</option>
       </select>
       <span className="toolbar-separator" />
+      <ToolButton label="Desfazer" disabled={!editor.can().chain().focus().undo().run()} onClick={() => editor.chain().focus().undo().run()}><Undo2 aria-hidden="true" /></ToolButton>
+      <ToolButton label="Refazer" disabled={!editor.can().chain().focus().redo().run()} onClick={() => editor.chain().focus().redo().run()}><Redo2 aria-hidden="true" /></ToolButton>
+      <span className="toolbar-separator" />
       <ToolButton label="Negrito" active={editor.isActive("bold")} disabled={!editor.can().chain().focus().toggleBold().run()} onClick={() => editor.chain().focus().toggleBold().run()}><Bold aria-hidden="true" /></ToolButton>
       <ToolButton label="Itálico" active={editor.isActive("italic")} disabled={!editor.can().chain().focus().toggleItalic().run()} onClick={() => editor.chain().focus().toggleItalic().run()}><Italic aria-hidden="true" /></ToolButton>
       <ToolButton label="Destaque" active={editor.isActive("highlight")} onClick={() => editor.chain().focus().toggleHighlight().run()}><Highlighter aria-hidden="true" /></ToolButton>
+      <div style={{ position: "relative", display: "inline-block" }}>
+        <ToolButton label="Cor do texto" active={colorOpen} onClick={() => { setColorOpen(!colorOpen); setLineHeightOpen(false); setLinkOpen(false); setCalculationOpen(false); }}>
+          <Palette aria-hidden="true" />
+        </ToolButton>
+        {colorOpen && (
+          <div className="color-popover" style={{ position: "absolute", top: "100%", left: 0, marginTop: "4px", display: "grid", gridTemplateColumns: "repeat(10, 1fr)", gap: "4px", padding: "8px", background: "var(--paper)", border: "1px solid #d8d5cc", borderRadius: "6px", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", zIndex: 100 }}>
+            {PRESET_COLORS.map(color => (
+              <button
+                key={color}
+                type="button"
+                title={color}
+                style={{
+                  width: "18px", height: "18px", borderRadius: "50%", backgroundColor: color,
+                  border: "1px solid #d8d5cc", cursor: "pointer", padding: 0
+                }}
+                onClick={() => {
+                  editor.chain().focus().setColor(color).run();
+                  setColorOpen(false);
+                }}
+              />
+            ))}
+            <button type="button" onClick={() => { editor.chain().focus().unsetColor().run(); setColorOpen(false); }} style={{ gridColumn: "span 10", marginTop: "4px", background: "transparent", border: "1px solid #d8d5cc", borderRadius: "4px", padding: "4px", cursor: "pointer", fontSize: "11px", color: "inherit" }}>Automático (Remover cor)</button>
+          </div>
+        )}
+      </div>
+      <span className="toolbar-separator" />
+      <ToolButton label="Alinhar à esquerda" active={editor.isActive({ textAlign: "left" })} onClick={() => editor.chain().focus().setTextAlign("left").run()}><AlignLeft aria-hidden="true" /></ToolButton>
+      <ToolButton label="Centralizar" active={editor.isActive({ textAlign: "center" })} onClick={() => editor.chain().focus().setTextAlign("center").run()}><AlignCenter aria-hidden="true" /></ToolButton>
+      <ToolButton label="Alinhar à direita" active={editor.isActive({ textAlign: "right" })} onClick={() => editor.chain().focus().setTextAlign("right").run()}><AlignRight aria-hidden="true" /></ToolButton>
+      <ToolButton label="Justificar" active={editor.isActive({ textAlign: "justify" })} onClick={() => editor.chain().focus().setTextAlign("justify").run()}><AlignJustify aria-hidden="true" /></ToolButton>
+      <div style={{ position: "relative", display: "inline-block" }}>
+        <ToolButton label="Espaçamento entre linhas" active={lineHeightOpen} onClick={() => { setLineHeightOpen(!lineHeightOpen); setColorOpen(false); setLinkOpen(false); setCalculationOpen(false); }}>
+          <Space aria-hidden="true" style={{ width: 16 }} />
+        </ToolButton>
+        {lineHeightOpen && (
+          <div className="link-popover" style={{ position: "absolute", top: "100%", left: 0, marginTop: "4px", display: "flex", flexDirection: "column", padding: "4px", background: "var(--paper)", border: "1px solid #d8d5cc", borderRadius: "6px", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", zIndex: 100, minWidth: "120px" }}>
+            {[
+              { label: "Simples (1.0)", value: "1" },
+              { label: "1,15", value: "1.15" },
+              { label: "1,5", value: "1.5" },
+              { label: "Duplo (2.0)", value: "2" },
+            ].map(opt => (
+              <button 
+                key={opt.value} 
+                type="button" 
+                style={{ textAlign: "left", padding: "6px 12px", background: editor.getAttributes("paragraph").lineHeight === opt.value ? "#f0efe9" : "transparent", border: "none", cursor: "pointer", borderRadius: "4px", fontSize: "12px", display: "flex", alignItems: "center", justifyContent: "space-between", color: "inherit" }}
+                onClick={() => { editor.chain().focus().setLineHeight(opt.value).run(); setLineHeightOpen(false); }}
+              >
+                {opt.label}
+                {editor.getAttributes("paragraph").lineHeight === opt.value && <span style={{ color: "inherit", fontWeight: "bold" }}>✓</span>}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <span className="toolbar-separator" />
       <ToolButton label="Bloco de código" active={editor.isActive("codeBlock")} onClick={() => editor.chain().focus().toggleCodeBlock().run()}><Code2 aria-hidden="true" /></ToolButton>
       {insideCodeBlock && (
         <select
@@ -188,9 +262,6 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
       {insideTable && <ToolButton label="Excluir linha" onClick={() => editor.chain().focus().deleteRow().run()}><Trash2 aria-hidden="true" /></ToolButton>}
       {insideTable && <ToolButton label="Excluir coluna" onClick={() => editor.chain().focus().deleteColumn().run()}><Trash2 aria-hidden="true" /></ToolButton>}
       {insideTable && <ToolButton label="Excluir tabela" onClick={() => editor.chain().focus().deleteTable().run()}><Trash2 aria-hidden="true" /></ToolButton>}
-      <span className="toolbar-spacer" />
-      <ToolButton label="Desfazer" disabled={!editor.can().chain().focus().undo().run()} onClick={() => editor.chain().focus().undo().run()}><Undo2 aria-hidden="true" /></ToolButton>
-      <ToolButton label="Refazer" disabled={!editor.can().chain().focus().redo().run()} onClick={() => editor.chain().focus().redo().run()}><Redo2 aria-hidden="true" /></ToolButton>
       </div>
       {calculationOpen && (
         <form className="calculation-popover" onSubmit={insertCalculation}>
