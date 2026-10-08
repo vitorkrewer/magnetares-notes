@@ -18,6 +18,8 @@ type RemoteNote struct {
 	Title          string     `json:"title"`
 	Body           string     `json:"body"`
 	BodyText       string     `json:"bodyText"`
+	NoteType       string     `json:"noteType"`
+	Language       string     `json:"language"`
 	Folder         string     `json:"folder"`
 	FolderID       string     `json:"folderId"`
 	Revision       int64      `json:"revision"`
@@ -34,6 +36,8 @@ type NotePayload struct {
 	Title          string     `json:"title"`
 	Body           string     `json:"body"`
 	BodyText       string     `json:"bodyText"`
+	NoteType       string     `json:"noteType"`
+	Language       string     `json:"language"`
 	Folder         string     `json:"folder"`
 	FolderID       string     `json:"folderId"`
 	PinnedAt       *time.Time `json:"pinnedAt"`
@@ -413,7 +417,7 @@ func (s *syncService) changes(profile string, cursor int64, limit int) (ChangesP
 	if s.turso == nil {
 		return ChangesPage{}, errors.New("sincronização remota não configurada no servidor")
 	}
-	_, rows, err := s.turso.Query(`SELECT c.cursor, c.snapshot_json, n.id, n.title, n.body, n.body_text, n.folder, n.folder_id, n.pinned_at, n.checklist_total, n.checklist_open, n.tags, n.revision, n.deleted_at, n.created_at, n.updated_at
+	_, rows, err := s.turso.Query(`SELECT c.cursor, c.snapshot_json, n.id, n.title, n.body, n.body_text, n.folder, n.folder_id, n.pinned_at, n.checklist_total, n.checklist_open, n.tags, n.revision, n.deleted_at, n.created_at, n.updated_at, n.note_type, n.language
 		FROM sync_note_changes c JOIN sync_notes n ON n.user_id = c.user_id AND n.id = c.note_id
 		WHERE c.user_id = ? AND c.cursor > ? ORDER BY c.cursor ASC LIMIT ?`, profile, cursor, limit+1)
 	if err != nil {
@@ -480,6 +484,8 @@ func (s *syncService) putNote(profile, id string, mutation NoteMutation) (Mutati
 		Title:          mutation.Note.Title,
 		Body:           mutation.Note.Body,
 		BodyText:       mutation.Note.BodyText,
+		NoteType:       mutation.Note.NoteType,
+		Language:       mutation.Note.Language,
 		Folder:         folder,
 		FolderID:       folderID,
 		PinnedAt:       mutation.Note.PinnedAt,
@@ -577,14 +583,15 @@ func (s *syncService) commitRemoteMutation(profile, mutationID string, note Remo
 			pinnedAt = note.PinnedAt.UnixMilli()
 		}
 		noteStatement = TursoStatement{
-			SQL: `INSERT INTO sync_notes(user_id, id, title, body, body_text, folder, folder_id, pinned_at, checklist_total, checklist_open, tags, revision, deleted_at, created_at, updated_at)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
+			SQL: `INSERT INTO sync_notes(user_id, id, title, body, body_text, note_type, language, folder, folder_id, pinned_at, checklist_total, checklist_open, tags, revision, deleted_at, created_at, updated_at)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
 				ON CONFLICT(user_id, id) DO UPDATE SET title = excluded.title, body = excluded.body, body_text = excluded.body_text,
+				note_type = excluded.note_type, language = excluded.language,
 				folder = excluded.folder, folder_id = excluded.folder_id, pinned_at = excluded.pinned_at,
 				checklist_total = excluded.checklist_total, checklist_open = excluded.checklist_open, tags = excluded.tags,
 				revision = excluded.revision, deleted_at = NULL, updated_at = excluded.updated_at
 				WHERE sync_notes.revision = ?`,
-			Args: []any{profile, note.ID, note.Title, note.Body, note.BodyText, note.Folder, note.FolderID, pinnedAt, note.ChecklistTotal, note.ChecklistOpen, string(tagsJSON), note.Revision, note.CreatedAt.UnixMilli(), note.UpdatedAt.UnixMilli(), baseRevision},
+			Args: []any{profile, note.ID, note.Title, note.Body, note.BodyText, note.NoteType, note.Language, note.Folder, note.FolderID, pinnedAt, note.ChecklistTotal, note.ChecklistOpen, string(tagsJSON), note.Revision, note.CreatedAt.UnixMilli(), note.UpdatedAt.UnixMilli(), baseRevision},
 		}
 	}
 
@@ -629,7 +636,7 @@ func (s *syncService) commitRemoteMutation(profile, mutationID string, note Remo
 }
 
 func (s *syncService) remoteNote(profile, id string) (RemoteNote, bool, error) {
-	_, rows, err := s.turso.Query(`SELECT id, title, body, body_text, folder, folder_id, pinned_at, checklist_total, checklist_open, tags, revision, deleted_at, created_at, updated_at
+	_, rows, err := s.turso.Query(`SELECT id, title, body, body_text, folder, folder_id, pinned_at, checklist_total, checklist_open, tags, revision, deleted_at, created_at, updated_at, note_type, language
 		FROM sync_notes WHERE user_id = ? AND id = ?`, profile, id)
 	if err != nil {
 		return RemoteNote{}, false, err
@@ -642,7 +649,7 @@ func (s *syncService) remoteNote(profile, id string) (RemoteNote, bool, error) {
 }
 
 func (s *syncService) mutationResult(profile, mutationID string) (RemoteNote, int64, bool, error) {
-	_, rows, err := s.turso.Query(`SELECT m.cursor, n.id, n.title, n.body, n.body_text, n.folder, n.folder_id, n.pinned_at, n.checklist_total, n.checklist_open, n.tags, n.revision, n.deleted_at, n.created_at, n.updated_at
+	_, rows, err := s.turso.Query(`SELECT m.cursor, n.id, n.title, n.body, n.body_text, n.folder, n.folder_id, n.pinned_at, n.checklist_total, n.checklist_open, n.tags, n.revision, n.deleted_at, n.created_at, n.updated_at, n.note_type, n.language
 		FROM sync_mutations m JOIN sync_notes n ON n.user_id = m.user_id AND n.id = m.note_id
 		WHERE m.user_id = ? AND m.mutation_id = ?`, profile, mutationID)
 	if err != nil {
@@ -854,7 +861,7 @@ func noteFromChangeRow(row []TursoValue) (RemoteNote, error) {
 }
 
 func noteFromRow(row []TursoValue) (RemoteNote, error) {
-	if len(row) < 14 {
+	if len(row) < 16 {
 		return RemoteNote{}, errors.New("invalid remote note row")
 	}
 	checklistTotal, _ := tursoInt(row[7])
@@ -883,6 +890,8 @@ func noteFromRow(row []TursoValue) (RemoteNote, error) {
 		Revision:       revision,
 		CreatedAt:      createdAt,
 		UpdatedAt:      updatedAt,
+		NoteType:       row[14].Value,
+		Language:       row[15].Value,
 	}
 	if note.Folder == "" {
 		note.Folder = "Notas"

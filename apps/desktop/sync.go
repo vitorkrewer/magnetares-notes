@@ -66,6 +66,8 @@ type syncRemoteNote struct {
 	Title          string     `json:"title"`
 	Body           string     `json:"body"`
 	BodyText       string     `json:"bodyText"`
+	NoteType       string     `json:"noteType"`
+	Language       string     `json:"language"`
 	Folder         string     `json:"folder"`
 	FolderID       string     `json:"folderId"`
 	Revision       int64      `json:"revision"`
@@ -127,6 +129,8 @@ type pendingSyncNote struct {
 	Title          string
 	Body           string
 	BodyText       string
+	NoteType       string
+	Language       string
 	Folder         string
 	FolderID       string
 	PinnedAt       *time.Time
@@ -535,9 +539,11 @@ func (s *noteStore) syncViaAPI(apiURL, profileID, cursor, tursoDatabaseURL, turs
 		SyncedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	// Sincronizar pastas e etiquetas primeiro
+	// Sincronizar pastas, etiquetas e stickers primeiro
 	_ = s.syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAuthToken)
 	_ = s.syncTagsViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAuthToken)
+	_ = s.syncStickerBoardsDirect(NewTursoClient(tursoDatabaseURL, tursoAuthToken), profileID)
+	_ = s.syncStickersDirect(NewTursoClient(tursoDatabaseURL, tursoAuthToken), profileID)
 
 	pending, err := s.pendingSyncNotes()
 	if err != nil {
@@ -592,9 +598,11 @@ func (s *noteStore) syncDirectTurso(profileID, cursor, tursoDatabaseURL, tursoAu
 		SyncedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	// Sincronizar pastas e etiquetas primeiro
+	// Sincronizar pastas, etiquetas e stickers primeiro
 	_ = s.syncFoldersDirect(turso, profileID)
 	_ = s.syncTagsDirect(turso, profileID)
+	_ = s.syncStickerBoardsDirect(turso, profileID)
+	_ = s.syncStickersDirect(turso, profileID)
 
 	pending, err := s.pendingSyncNotes()
 	if err != nil {
@@ -610,7 +618,7 @@ func (s *noteStore) syncDirectTurso(profileID, cursor, tursoDatabaseURL, tursoAu
 	// Pull remote changes
 	intCursor, _ := strconv.ParseInt(cursor, 10, 64)
 	for {
-		_, rows, err := turso.Query(`SELECT c.cursor, c.snapshot_json, n.id, n.title, n.body, n.body_text, n.folder, n.folder_id, n.pinned_at, n.checklist_total, n.checklist_open, n.tags, n.revision, n.deleted_at, n.created_at, n.updated_at
+		_, rows, err := turso.Query(`SELECT c.cursor, c.snapshot_json, n.id, n.title, n.body, n.body_text, n.folder, n.folder_id, n.pinned_at, n.checklist_total, n.checklist_open, n.tags, n.revision, n.deleted_at, n.created_at, n.updated_at, n.note_type, n.language
 			FROM sync_note_changes c JOIN sync_notes n ON n.user_id = c.user_id AND n.id = c.note_id
 			WHERE c.user_id = ? AND c.cursor > ? ORDER BY c.cursor ASC LIMIT 201`, profileID, intCursor)
 		if err != nil {
@@ -695,6 +703,8 @@ func (s *noteStore) pushPendingNoteDirect(turso *TursoClient, profileID string, 
 		Title:          note.Title,
 		Body:           note.Body,
 		BodyText:       note.BodyText,
+		NoteType:       note.NoteType,
+		Language:       note.Language,
 		Folder:         note.Folder,
 		FolderID:       note.FolderID,
 		PinnedAt:       note.PinnedAt,
@@ -757,14 +767,15 @@ func (s *noteStore) commitDirectRemoteMutation(turso *TursoClient, profileID, mu
 			pinnedAt = note.PinnedAt.UnixMilli()
 		}
 		noteStatement = TursoStatement{
-			SQL: `INSERT INTO sync_notes(user_id, id, title, body, body_text, folder, folder_id, pinned_at, checklist_total, checklist_open, tags, revision, deleted_at, created_at, updated_at)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
+			SQL: `INSERT INTO sync_notes(user_id, id, title, body, body_text, note_type, language, folder, folder_id, pinned_at, checklist_total, checklist_open, tags, revision, deleted_at, created_at, updated_at)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
 				ON CONFLICT(user_id, id) DO UPDATE SET title = excluded.title, body = excluded.body, body_text = excluded.body_text,
+				note_type = excluded.note_type, language = excluded.language,
 				folder = excluded.folder, folder_id = excluded.folder_id, pinned_at = excluded.pinned_at,
 				checklist_total = excluded.checklist_total, checklist_open = excluded.checklist_open, tags = excluded.tags,
 				revision = excluded.revision, deleted_at = NULL, updated_at = excluded.updated_at
 				WHERE sync_notes.revision = ?`,
-			Args: []any{profileID, note.ID, note.Title, note.Body, note.BodyText, note.Folder, note.FolderID, pinnedAt, note.ChecklistTotal, note.ChecklistOpen, string(tagsJSON), note.Revision, note.CreatedAt.UnixMilli(), note.UpdatedAt.UnixMilli(), baseRevision},
+			Args: []any{profileID, note.ID, note.Title, note.Body, note.BodyText, note.NoteType, note.Language, note.Folder, note.FolderID, pinnedAt, note.ChecklistTotal, note.ChecklistOpen, string(tagsJSON), note.Revision, note.CreatedAt.UnixMilli(), note.UpdatedAt.UnixMilli(), baseRevision},
 		}
 	}
 
@@ -809,7 +820,7 @@ func (s *noteStore) commitDirectRemoteMutation(turso *TursoClient, profileID, mu
 }
 
 func (s *noteStore) remoteNoteFromTurso(turso *TursoClient, profileID, id string) (syncRemoteNote, bool, error) {
-	_, rows, err := turso.Query(`SELECT id, title, body, body_text, folder, folder_id, pinned_at, checklist_total, checklist_open, tags, revision, deleted_at, created_at, updated_at
+	_, rows, err := turso.Query(`SELECT id, title, body, body_text, folder, folder_id, pinned_at, checklist_total, checklist_open, tags, revision, deleted_at, created_at, updated_at, note_type, language
 		FROM sync_notes WHERE user_id = ? AND id = ?`, profileID, id)
 	if err != nil {
 		return syncRemoteNote{}, false, err
@@ -822,7 +833,7 @@ func (s *noteStore) remoteNoteFromTurso(turso *TursoClient, profileID, id string
 }
 
 func syncRemoteNoteFromRow(row []TursoValue) (syncRemoteNote, error) {
-	if len(row) < 14 {
+	if len(row) < 16 {
 		return syncRemoteNote{}, errors.New("linha remota inválida")
 	}
 	checklistTotal, _ := tursoInt(row[7])
@@ -888,6 +899,8 @@ func syncRemoteNoteFromRow(row []TursoValue) (syncRemoteNote, error) {
 		DeletedAt:      deletedAt,
 		CreatedAt:      createdAt,
 		UpdatedAt:      updatedAt,
+		NoteType:       row[14].Value,
+		Language:       row[15].Value,
 	}, nil
 }
 
@@ -937,7 +950,7 @@ func (s *noteStore) setPullCursor(cursor string) error {
 }
 
 func (s *noteStore) pendingSyncNotes() ([]pendingSyncNote, error) {
-	rows, err := s.db.Query(`SELECT n.id, n.title, n.body, n.body_text, n.folder, n.folder_id, n.pinned_at,
+	rows, err := s.db.Query(`SELECT n.id, n.title, n.body, n.body_text, n.note_type, n.language, n.folder, n.folder_id, n.pinned_at,
 		n.checklist_total, n.checklist_open, n.server_revision, n.deleted_at, n.created_at, n.updated_at,
 		COALESCE(n.pending_mutation_id, ''),
 		COALESCE((SELECT group_concat(t.name, char(31)) FROM note_tags nt JOIN tags t ON t.id = nt.tag_id WHERE nt.note_id = n.id), '')
@@ -957,7 +970,7 @@ func (s *noteStore) pendingSyncNotes() ([]pendingSyncNote, error) {
 		var pinnedAt, deletedAt sql.NullInt64
 		var createdAt, updatedAt int64
 		var tagsStr string
-		if err := rows.Scan(&item.ID, &item.Title, &item.Body, &item.BodyText, &item.Folder, &item.FolderID, &pinnedAt,
+		if err := rows.Scan(&item.ID, &item.Title, &item.Body, &item.BodyText, &item.NoteType, &item.Language, &item.Folder, &item.FolderID, &pinnedAt,
 			&item.ChecklistTotal, &item.ChecklistOpen, &item.ServerRev, &deletedAt, &createdAt, &updatedAt, &item.MutationID, &tagsStr); err != nil {
 			_ = rows.Close()
 			return nil, err
@@ -1019,6 +1032,8 @@ func (s *noteStore) pushPendingNote(apiURL, profileID, tursoDatabaseURL, tursoAu
 				"title":          note.Title,
 				"body":           note.Body,
 				"bodyText":       note.BodyText,
+				"noteType":       note.NoteType,
+				"language":       note.Language,
 				"folder":         note.Folder,
 				"folderId":       note.FolderID,
 				"pinnedAt":       note.PinnedAt,
@@ -1137,6 +1152,8 @@ func (s *noteStore) markEquivalentRemote(remote syncRemoteNote) error {
 
 func notesEquivalent(local Note, remote syncRemoteNote) bool {
 	if normalizeComparableText(local.Title) != normalizeComparableText(remote.Title) ||
+		local.Type != remote.NoteType ||
+		local.Language != remote.Language ||
 		normalizeComparableText(local.Folder) != normalizeComparableText(remote.Folder) ||
 		local.FolderID != remote.FolderID ||
 		normalizeBody(local.Body) != normalizeBody(remote.Body) ||
@@ -1304,13 +1321,15 @@ func (s *noteStore) applyRemoteNote(remote syncRemoteNote) (bool, error) {
 		folderID = "folder-default"
 	}
 
-	_, err = s.db.Exec(`INSERT INTO notes(id, title, body, body_text, folder, folder_id, revision, server_revision,
+	_, err = s.db.Exec(`INSERT INTO notes(id, title, body, body_text, note_type, language, folder, folder_id, revision, server_revision,
 		pinned_at, checklist_total, checklist_open, sync_state, pending_mutation_id, deleted_at, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, 'clean', NULL, ?, ?, ?)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, 'clean', NULL, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
 			title = excluded.title,
 			body = excluded.body,
 			body_text = excluded.body_text,
+			note_type = excluded.note_type,
+			language = excluded.language,
 			folder = excluded.folder,
 			folder_id = excluded.folder_id,
 			pinned_at = excluded.pinned_at,
@@ -1322,7 +1341,7 @@ func (s *noteStore) applyRemoteNote(remote syncRemoteNote) (bool, error) {
 			deleted_at = excluded.deleted_at,
 			created_at = MIN(created_at, excluded.created_at),
 			updated_at = excluded.updated_at`,
-		remote.ID, remote.Title, remote.Body, remote.BodyText, folder, folderID, remote.Revision,
+		remote.ID, remote.Title, remote.Body, remote.BodyText, remote.NoteType, remote.Language, folder, folderID, remote.Revision,
 		pinnedAtMilli, remote.ChecklistTotal, remote.ChecklistOpen, deletedAt, remote.CreatedAt.UnixMilli(), remoteUpdatedAtMilli)
 
 	if err == nil {
@@ -1375,4 +1394,168 @@ func requestSyncRaw(method, url, profileID, tursoDatabaseURL, tursoAuthToken str
 	defer response.Body.Close()
 	responseBody, err := io.ReadAll(response.Body)
 	return response.StatusCode, responseBody, err
+}
+
+func (s *noteStore) syncStickerBoardsDirect(turso *TursoClient, profileID string) error {
+	if turso == nil {
+		return nil
+	}
+	// 1. Push only pending local boards
+	rows, err := s.db.Query(`SELECT id, name, color, position, deleted_at, created_at, updated_at FROM sticker_boards WHERE sync_state = 'pending'`)
+	if err == nil {
+		var pushedIDs []string
+		defer rows.Close()
+		for rows.Next() {
+			var id, name, color string
+			var position float64
+			var deletedAt sql.NullInt64
+			var createdAt, updatedAt int64
+			if err := rows.Scan(&id, &name, &color, &position, &deletedAt, &createdAt, &updatedAt); err == nil {
+				var dAt any = nil
+				if deletedAt.Valid {
+					dAt = deletedAt.Int64
+				}
+				pushErr := turso.Execute(`INSERT INTO sync_sticker_boards(user_id, id, name, color, position, deleted_at, created_at, updated_at)
+					VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+					ON CONFLICT(user_id, id) DO UPDATE SET
+						name = CASE WHEN excluded.updated_at >= updated_at THEN excluded.name ELSE name END,
+						color = CASE WHEN excluded.updated_at >= updated_at THEN excluded.color ELSE color END,
+						position = CASE WHEN excluded.updated_at >= updated_at THEN excluded.position ELSE position END,
+						deleted_at = CASE WHEN excluded.updated_at >= updated_at THEN excluded.deleted_at ELSE deleted_at END,
+						updated_at = MAX(excluded.updated_at, updated_at)`,
+					profileID, id, name, color, position, dAt, createdAt, updatedAt)
+				if pushErr == nil {
+					pushedIDs = append(pushedIDs, id)
+				}
+			}
+		}
+		if err := rows.Err(); err != nil {
+			log.Printf("syncStickerBoardsDirect: error iterating rows: %v", err)
+		}
+		_ = rows.Close()
+		for _, id := range pushedIDs {
+			_, _ = s.db.Exec("UPDATE sticker_boards SET sync_state = 'clean' WHERE id = ?", id)
+		}
+	}
+
+	// 2. Pull remote boards — LWW
+	_, rRows, err := turso.Query(`SELECT id, name, color, position, deleted_at, created_at, updated_at FROM sync_sticker_boards WHERE user_id = ?`, profileID)
+	if err == nil {
+		for _, rRow := range rRows {
+			if len(rRow) < 7 {
+				continue
+			}
+			id := rRow[0].Value
+			name := rRow[1].Value
+			color := rRow[2].Value
+			position, _ := strconv.ParseFloat(rRow[3].Value, 64)
+			var dAt any = nil
+			if rRow[4].Type != "null" && rRow[4].Value != "" {
+				dAt, _ = tursoInt(rRow[4])
+			}
+			cAt, _ := tursoInt(rRow[5])
+			uAt, _ := tursoInt(rRow[6])
+			_, _ = s.db.Exec(`INSERT INTO sticker_boards(id, name, color, position, deleted_at, created_at, updated_at, sync_state)
+				VALUES (?, ?, ?, ?, ?, ?, ?, 'clean')
+				ON CONFLICT(id) DO UPDATE SET
+					name = CASE WHEN updated_at >= excluded.updated_at THEN name ELSE excluded.name END,
+					color = CASE WHEN updated_at >= excluded.updated_at THEN color ELSE excluded.color END,
+					position = CASE WHEN updated_at >= excluded.updated_at THEN position ELSE excluded.position END,
+					deleted_at = CASE WHEN updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
+					updated_at = CASE WHEN updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
+					sync_state = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN 'pending' ELSE 'clean' END`,
+				id, name, color, position, dAt, cAt, uAt)
+		}
+	}
+	return nil
+}
+
+func (s *noteStore) syncStickersDirect(turso *TursoClient, profileID string) error {
+	if turso == nil {
+		return nil
+	}
+	// 1. Push pending
+	rows, err := s.db.Query(`SELECT id, board_id, title, body, color, position, pinned_at, deleted_at, created_at, updated_at FROM stickers WHERE sync_state = 'pending'`)
+	if err == nil {
+		var pushedIDs []string
+		defer rows.Close()
+		for rows.Next() {
+			var id, boardId, title, body, color string
+			var position float64
+			var pinnedAt, deletedAt sql.NullInt64
+			var createdAt, updatedAt int64
+			if err := rows.Scan(&id, &boardId, &title, &body, &color, &position, &pinnedAt, &deletedAt, &createdAt, &updatedAt); err == nil {
+				var pAt any = nil
+				if pinnedAt.Valid {
+					pAt = pinnedAt.Int64
+				}
+				var dAt any = nil
+				if deletedAt.Valid {
+					dAt = deletedAt.Int64
+				}
+				pushErr := turso.Execute(`INSERT INTO sync_stickers(user_id, id, board_id, title, body, color, position, pinned_at, deleted_at, created_at, updated_at)
+					VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+					ON CONFLICT(user_id, id) DO UPDATE SET
+						board_id = CASE WHEN excluded.updated_at >= updated_at THEN excluded.board_id ELSE board_id END,
+						title = CASE WHEN excluded.updated_at >= updated_at THEN excluded.title ELSE title END,
+						body = CASE WHEN excluded.updated_at >= updated_at THEN excluded.body ELSE body END,
+						color = CASE WHEN excluded.updated_at >= updated_at THEN excluded.color ELSE color END,
+						position = CASE WHEN excluded.updated_at >= updated_at THEN excluded.position ELSE position END,
+						pinned_at = CASE WHEN excluded.updated_at >= updated_at THEN excluded.pinned_at ELSE pinned_at END,
+						deleted_at = CASE WHEN excluded.updated_at >= updated_at THEN excluded.deleted_at ELSE deleted_at END,
+						updated_at = MAX(excluded.updated_at, updated_at)`,
+					profileID, id, boardId, title, body, color, position, pAt, dAt, createdAt, updatedAt)
+				if pushErr == nil {
+					pushedIDs = append(pushedIDs, id)
+				}
+			}
+		}
+		if err := rows.Err(); err != nil {
+			log.Printf("syncStickersDirect: error iterating rows: %v", err)
+		}
+		_ = rows.Close()
+		for _, id := range pushedIDs {
+			_, _ = s.db.Exec("UPDATE stickers SET sync_state = 'clean' WHERE id = ?", id)
+		}
+	}
+
+	// 2. Pull remote
+	_, rRows, err := turso.Query(`SELECT id, board_id, title, body, color, position, pinned_at, deleted_at, created_at, updated_at FROM sync_stickers WHERE user_id = ?`, profileID)
+	if err == nil {
+		for _, rRow := range rRows {
+			if len(rRow) < 10 {
+				continue
+			}
+			id := rRow[0].Value
+			boardId := rRow[1].Value
+			title := rRow[2].Value
+			body := rRow[3].Value
+			color := rRow[4].Value
+			position, _ := strconv.ParseFloat(rRow[5].Value, 64)
+			var pAt any = nil
+			if rRow[6].Type != "null" && rRow[6].Value != "" {
+				pAt, _ = tursoInt(rRow[6])
+			}
+			var dAt any = nil
+			if rRow[7].Type != "null" && rRow[7].Value != "" {
+				dAt, _ = tursoInt(rRow[7])
+			}
+			cAt, _ := tursoInt(rRow[8])
+			uAt, _ := tursoInt(rRow[9])
+			_, _ = s.db.Exec(`INSERT INTO stickers(id, board_id, title, body, color, position, pinned_at, deleted_at, created_at, updated_at, sync_state)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'clean')
+				ON CONFLICT(id) DO UPDATE SET
+					board_id = CASE WHEN updated_at >= excluded.updated_at THEN board_id ELSE excluded.board_id END,
+					title = CASE WHEN updated_at >= excluded.updated_at THEN title ELSE excluded.title END,
+					body = CASE WHEN updated_at >= excluded.updated_at THEN body ELSE excluded.body END,
+					color = CASE WHEN updated_at >= excluded.updated_at THEN color ELSE excluded.color END,
+					position = CASE WHEN updated_at >= excluded.updated_at THEN position ELSE excluded.position END,
+					pinned_at = CASE WHEN updated_at >= excluded.updated_at THEN pinned_at ELSE excluded.pinned_at END,
+					deleted_at = CASE WHEN updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
+					updated_at = CASE WHEN updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
+					sync_state = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN 'pending' ELSE 'clean' END`,
+				id, boardId, title, body, color, position, pAt, dAt, cAt, uAt)
+		}
+	}
+	return nil
 }
