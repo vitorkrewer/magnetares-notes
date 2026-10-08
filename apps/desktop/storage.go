@@ -25,6 +25,8 @@ var localMigrations embed.FS
 
 type noteStore struct {
 	db *sql.DB
+	// path é o arquivo SQLite aberto; usado para backups de recuperação.
+	path string
 }
 
 const noteSelectColumns = `n.id, n.title, n.body, n.body_text, n.note_type, n.language, n.folder, n.folder_id,
@@ -54,7 +56,7 @@ func openNoteStore(databasePath string) (*noteStore, error) {
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(5)
 
-	store := &noteStore{db: db}
+	store := &noteStore{db: db, path: databasePath}
 	if err := store.prepare(); err != nil {
 		db.Close()
 		return nil, err
@@ -67,6 +69,11 @@ type appConfig struct {
 	CustomDatabasePath      string `json:"customDatabasePath,omitempty"`
 	TursoDatabaseURL        string `json:"tursoDatabaseUrl,omitempty"`
 	AutoSyncIntervalMinutes int    `json:"autoSyncIntervalMinutes,omitempty"`
+	// SyncProfileID fixa explicitamente a partição remota usada por esta máquina.
+	// Vazio = perfil derivado da URL canônica (igual em todas as máquinas).
+	SyncProfileID string `json:"syncProfileId,omitempty"`
+	// SyncAPIURL ativa o motor via API HTTP. Vazio = pipeline direto do Turso.
+	SyncAPIURL string `json:"syncApiUrl,omitempty"`
 }
 
 func getPortableDataDir() string {
@@ -626,7 +633,7 @@ func (s *noteStore) emptyDeletedNotes() error {
 	if _, err := tx.Exec("DELETE FROM note_conflicts WHERE note_id NOT IN (SELECT id FROM notes)"); err != nil {
 		return err
 	}
-	if _, err := tx.Exec("DELETE FROM sync_outbox WHERE entity_id NOT IN (SELECT id FROM notes)"); err != nil {
+	if _, err := tx.Exec("DELETE FROM sync_outbox WHERE entity_type = 'note' AND entity_id NOT IN (SELECT id FROM notes)"); err != nil {
 		return err
 	}
 

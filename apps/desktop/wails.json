@@ -8,13 +8,13 @@
   "frontend:dev:watcher": "npm run dev",
   "frontend:dev:serverUrl": "auto",
   "author": {
-    "name": "Magnetares",
+    "name": "Magnetares Notes",
     "email": "vitormkrewer@gmail.com"
   },
   "info": {
     "companyName": "Magnetares",
     "productName": "Magnetares Notes",
-    "productVersion": "1.5.0",
+    "productVersion": "1.7.0",
     "copyright": "Copyright 2026 Magnetares",
     "comments": "Magnetares Notes Desktop"
   }

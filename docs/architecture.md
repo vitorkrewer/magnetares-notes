@@ -79,7 +79,7 @@ O uso normal não depende da API:
 
 ## Sincronização remota
 
-O frontend chama `POST /v1/sync` da API configurada. A API usa um cliente HTTP para o pipeline Turso. A implementação atual é um **push de notas**, não uma sincronização bidirecional. Consulte [API e sincronização](api-and-sync.md) para limites e roadmap técnico.
+O frontend chama `SyncNow` no bridge Wails. O processo Go envia a outbox local e baixa mudanças por cursor, de forma bidirecional. Por padrão, o desktop fala **diretamente** com o Turso pelo pipeline HTTP (Hrana); quando `syncApiUrl` está configurado, notas e pastas passam pela API `apps/api`. Os dados remotos são particionados por perfil (`user_id`); o perfil principal é registrado no próprio banco remoto (`sync_settings`) e adotado por todas as máquinas. Consulte [API e sincronização](api-and-sync.md) para detalhes e limites.
 
 ## Decisões de design
 

@@ -42,12 +42,14 @@ func (s *noteStore) GetSyncDiagnosticReport() (SyncDiagnosticReport, error) {
 		SyncedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	_ = s.db.QueryRow("SELECT COUNT(*) FROM sync_outbox WHERE status = 'pending'").Scan(&report.PendingLocalCount)
-	var pendingNotesCount int
-	_ = s.db.QueryRow("SELECT COUNT(*) FROM notes WHERE sync_state = 'pending'").Scan(&pendingNotesCount)
-	if pendingNotesCount > report.PendingLocalCount {
-		report.PendingLocalCount = pendingNotesCount
-	}
+	// O motor de sincronização é guiado por sync_state; a outbox é apenas um
+	// registro auditável. A contagem de pendências usa, portanto, a fonte real.
+	_ = s.db.QueryRow(`SELECT
+		(SELECT COUNT(*) FROM notes WHERE sync_state = 'pending') +
+		(SELECT COUNT(*) FROM folders WHERE sync_state = 'pending' AND id != 'folder-default') +
+		(SELECT COUNT(*) FROM tags WHERE sync_state = 'pending') +
+		(SELECT COUNT(*) FROM sticker_boards WHERE sync_state = 'pending') +
+		(SELECT COUNT(*) FROM stickers WHERE sync_state = 'pending')`).Scan(&report.PendingLocalCount)
 
 	_ = s.db.QueryRow("SELECT COUNT(*) FROM sync_outbox WHERE status = 'sent'").Scan(&report.UnconfirmedSentCount)
 	_ = s.db.QueryRow("SELECT COUNT(*) FROM note_conflicts").Scan(&report.PendingConflictsCount)
@@ -55,8 +57,9 @@ func (s *noteStore) GetSyncDiagnosticReport() (SyncDiagnosticReport, error) {
 	hash, err := s.ComputeCanonicalStateHash()
 	if err == nil {
 		report.LocalCanonicalHash = hash
-		report.RemoteCanonicalHash = hash
 	}
+	// RemoteCanonicalHash permanece vazio: o servidor ainda não calcula um hash
+	// equivalente, e repetir o hash local daria uma falsa garantia de convergência.
 
 	return report, nil
 }
@@ -144,48 +147,97 @@ type pendingSyncNote struct {
 	MutationID     string
 }
 
-func isAPIReachable(apiURL string) bool {
-	apiURL = strings.TrimRight(strings.TrimSpace(apiURL), "/")
-	if apiURL == "" {
-		return false
-	}
-	client := &http.Client{Timeout: 1500 * time.Millisecond}
-	resp, err := client.Get(apiURL + "/healthz")
-	if err != nil {
-		return false
-	}
-	_ = resp.Body.Close()
-	return resp.StatusCode >= 200 && resp.StatusCode < 400
+// syncNow sincroniza usando o perfil derivado da URL (sem perfil explícito).
+func (s *noteStore) syncNow(apiURL, tursoDatabaseURL, tursoAuthToken string) (SyncResult, error) {
+	return s.syncNowWithProfile(apiURL, tursoDatabaseURL, tursoAuthToken, "")
 }
 
-func (s *noteStore) syncNow(apiURL, tursoDatabaseURL, tursoAuthToken string) (SyncResult, error) {
+// syncNowWithProfile é o ponto único de sincronização.
+//
+// Motor: se apiURL for informada explicitamente, usa a API HTTP; caso contrário,
+// usa o pipeline direto do Turso. Não há mais detecção automática de uma API em
+// localhost, o que fazia máquinas diferentes usarem motores diferentes.
+func (s *noteStore) syncNowWithProfile(apiURL, tursoDatabaseURL, tursoAuthToken, explicitProfileID string) (SyncResult, error) {
 	tursoDatabaseURL = strings.TrimSpace(tursoDatabaseURL)
 	tursoAuthToken = strings.TrimSpace(tursoAuthToken)
 	apiURL = strings.TrimRight(strings.TrimSpace(apiURL), "/")
+	hasTurso := tursoDatabaseURL != "" && tursoAuthToken != ""
+
+	if apiURL == "" && !hasTurso {
+		return SyncResult{}, errors.New("nenhum método de sincronização configurado (informe a URL e token do Turso em Preferências)")
+	}
 
 	// Garante compliance e integridade dos dados locais antes da sincronização
 	_, _ = s.EnsureDataCompliance()
 
-	profileID, cursor, err := s.syncMetadataForTurso(tursoDatabaseURL)
+	resolution, err := s.resolveSyncProfile(tursoDatabaseURL, explicitProfileID)
 	if err != nil {
 		return SyncResult{}, fmt.Errorf("metadados locais: %w", err)
 	}
+
+	// O perfil é definido pelo banco remoto (sync_settings.primary_profile_id),
+	// não pela URL digitada nesta máquina. Partições de outros perfis no mesmo
+	// banco são incorporadas ao principal sem apagar a origem.
+	notices := []string{}
+	if hasTurso {
+		turso := NewTursoClient(tursoDatabaseURL, tursoAuthToken)
+		var remoteErr error
+		if turso == nil {
+			remoteErr = errors.New("configuração inválida do Turso")
+		} else if remoteErr = turso.InitSchema(); remoteErr == nil {
+			var primary string
+			primary, remoteErr = ensurePrimarySyncProfile(turso, deriveSyncProfileID(tursoDatabaseURL), resolution.StoredProfileID)
+			if remoteErr == nil {
+				if resolution.Source != syncProfileSourceExplicit {
+					resolution = resolution.withProfile(primary, syncProfileSourceRemote)
+				}
+				if resolution.ProfileID == primary {
+					absorbed, absorbErr := absorbStrayProfiles(turso, primary)
+					if absorbed > 0 {
+						notices = append(notices, fmt.Sprintf("Dados de %s incorporados ao perfil principal.", formatProfileCount(absorbed)))
+					}
+					if absorbErr != nil {
+						log.Printf("sync: incorporação de perfis antigos incompleta: %v", absorbErr)
+						notices = append(notices, "Parte dos dados de perfis antigos não pôde ser incorporada; será tentado novamente.")
+					}
+				}
+			}
+		}
+		if remoteErr != nil {
+			if apiURL == "" {
+				return SyncResult{}, fmt.Errorf("falha ao conectar ao Turso: %w", remoteErr)
+			}
+			// Modo API: segue com o perfil local já em uso (nunca troca sem a nuvem).
+			log.Printf("sync: perfil principal indisponível, usando perfil local: %v", remoteErr)
+		}
+	}
+
+	backupPath, err := s.applySyncProfile(resolution)
+	if err != nil {
+		return SyncResult{}, err
+	}
+	if resolution.changed() && resolution.StoredProfileID != "" {
+		notice := fmt.Sprintf("Perfil de sincronização alterado de %s para %s; as notas locais serão comparadas com a nuvem.",
+			shortProfileID(resolution.StoredProfileID), shortProfileID(resolution.ProfileID))
+		if backupPath != "" {
+			notice += " Backup local: " + backupPath
+		}
+		notices = append(notices, notice)
+	}
+	profileID, cursor := resolution.ProfileID, resolution.Cursor
 
 	result := SyncResult{
 		SyncedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 
 	var syncErr error
-	// 1. Se houver uma API em execução acessível, utiliza via API
-	if apiURL != "" && isAPIReachable(apiURL) {
-		result, syncErr = s.syncViaAPI(apiURL, profileID, cursor, tursoDatabaseURL, tursoAuthToken)
-	} else if tursoDatabaseURL != "" && tursoAuthToken != "" {
-		// 2. Caso contrário, se as credenciais do Turso estiverem configuradas, sincroniza diretamente com Turso HTTP pipeline
-		result, syncErr = s.syncDirectTurso(profileID, cursor, tursoDatabaseURL, tursoAuthToken)
-	} else if apiURL != "" {
+	if apiURL != "" {
 		result, syncErr = s.syncViaAPI(apiURL, profileID, cursor, tursoDatabaseURL, tursoAuthToken)
 	} else {
-		return result, errors.New("nenhum método de sincronização configurado (informe a URL e token do Turso em Preferências)")
+		result, syncErr = s.syncDirectTurso(profileID, cursor, tursoDatabaseURL, tursoAuthToken)
+	}
+	if len(notices) > 0 {
+		result.Message = strings.TrimSpace(result.Message + " " + strings.Join(notices, " "))
 	}
 
 	report, _ := s.GetSyncDiagnosticReport()
@@ -263,7 +315,7 @@ func (s *noteStore) syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, turso
 		_ = rows.Close()
 		// Mark successfully pushed folders as clean
 		for _, id := range pushedIDs {
-			_, _ = s.db.Exec("UPDATE folders SET sync_state = 'clean' WHERE id = ?", id)
+			_ = s.markEntityPushed("folder", id)
 		}
 	}
 
@@ -338,7 +390,7 @@ func (s *noteStore) syncFoldersDirect(turso *TursoClient, profileID string) erro
 		_ = rows.Close()
 		// Mark successfully pushed folders as clean
 		for _, id := range pushedIDs {
-			_, _ = s.db.Exec("UPDATE folders SET sync_state = 'clean' WHERE id = ?", id)
+			_ = s.markEntityPushed("folder", id)
 		}
 	}
 
@@ -420,7 +472,7 @@ func (s *noteStore) syncTagsViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAut
 		}
 		_ = rows.Close()
 		for _, id := range pushedIDs {
-			_, _ = s.db.Exec("UPDATE tags SET sync_state = 'clean' WHERE id = ?", id)
+			_ = s.markEntityPushed("tag", id)
 		}
 	}
 
@@ -493,7 +545,7 @@ func (s *noteStore) syncTagsDirect(turso *TursoClient, profileID string) error {
 		}
 		_ = rows.Close()
 		for _, id := range pushedIDs {
-			_, _ = s.db.Exec("UPDATE tags SET sync_state = 'clean' WHERE id = ?", id)
+			_ = s.markEntityPushed("tag", id)
 		}
 	}
 
@@ -542,8 +594,7 @@ func (s *noteStore) syncViaAPI(apiURL, profileID, cursor, tursoDatabaseURL, turs
 	// Sincronizar pastas, etiquetas e stickers primeiro
 	_ = s.syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAuthToken)
 	_ = s.syncTagsViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAuthToken)
-	_ = s.syncStickerBoardsDirect(NewTursoClient(tursoDatabaseURL, tursoAuthToken), profileID)
-	_ = s.syncStickersDirect(NewTursoClient(tursoDatabaseURL, tursoAuthToken), profileID)
+	stickerWarning := s.syncStickerEntities(NewTursoClient(tursoDatabaseURL, tursoAuthToken), profileID)
 
 	pending, err := s.pendingSyncNotes()
 	if err != nil {
@@ -580,7 +631,7 @@ func (s *noteStore) syncViaAPI(apiURL, profileID, cursor, tursoDatabaseURL, turs
 			break
 		}
 	}
-	result.Message = fmt.Sprintf("Sincronização concluída via API: %d enviadas, %d recebidas, %d conflitos.", result.Uploaded, result.Downloaded, result.Conflicts)
+	result.Message = fmt.Sprintf("Sincronização concluída via API: %d enviadas, %d recebidas, %d conflitos.", result.Uploaded, result.Downloaded, result.Conflicts) + stickerWarning
 	return result, nil
 }
 
@@ -601,8 +652,7 @@ func (s *noteStore) syncDirectTurso(profileID, cursor, tursoDatabaseURL, tursoAu
 	// Sincronizar pastas, etiquetas e stickers primeiro
 	_ = s.syncFoldersDirect(turso, profileID)
 	_ = s.syncTagsDirect(turso, profileID)
-	_ = s.syncStickerBoardsDirect(turso, profileID)
-	_ = s.syncStickersDirect(turso, profileID)
+	stickerWarning := s.syncStickerEntities(turso, profileID)
 
 	pending, err := s.pendingSyncNotes()
 	if err != nil {
@@ -662,7 +712,7 @@ func (s *noteStore) syncDirectTurso(profileID, cursor, tursoDatabaseURL, tursoAu
 		}
 	}
 
-	result.Message = fmt.Sprintf("Sincronização concluída com Turso: %d enviadas, %d recebidas, %d conflitos.", result.Uploaded, result.Downloaded, result.Conflicts)
+	result.Message = fmt.Sprintf("Sincronização concluída com Turso: %d enviadas, %d recebidas, %d conflitos.", result.Uploaded, result.Downloaded, result.Conflicts) + stickerWarning
 	return result, nil
 }
 
@@ -682,7 +732,24 @@ func (s *noteStore) pushPendingNoteDirect(turso *TursoClient, profileID string, 
 		return err
 	}
 
+	if note.DeletedAt != nil {
+		if !found {
+			// A nota nunca chegou a esta partição: não há nada a excluir remotamente.
+			return s.settleLocalTombstone(note.ID, note.MutationID, 0)
+		}
+		if existing.DeletedAt != nil {
+			// Excluída dos dois lados: converge sem conflito.
+			return s.settleLocalTombstone(note.ID, note.MutationID, existing.Revision)
+		}
+	}
+
 	if found && existing.Revision != note.ServerRev {
+		if accepted, err := s.acceptRemoteForRebasedNote(note.ID, note.MutationID, existing); accepted || err != nil {
+			if err == nil {
+				result.Downloaded++
+			}
+			return err
+		}
 		err := s.recordConflict(note.ID, note.MutationID, existing)
 		if err == nil {
 			result.Conflicts++
@@ -922,26 +989,31 @@ func (s *noteStore) syncMetadata() (string, string, error) {
 	return s.syncMetadataForTurso("")
 }
 
+// syncMetadataForTurso resolve e grava o perfil efetivo sem consultar a nuvem.
+// Mantido para compatibilidade; o fluxo principal usa o perfil principal remoto.
 func (s *noteStore) syncMetadataForTurso(tursoDatabaseURL string) (string, string, error) {
-	var profileID, cursor string
-	if err := s.db.QueryRow("SELECT sync_profile_id, pull_cursor FROM sync_metadata WHERE singleton = 1").Scan(&profileID, &cursor); err != nil {
-		return "", "", fmt.Errorf("read sync metadata: %w", err)
+	resolution, err := s.resolveSyncProfile(tursoDatabaseURL, "")
+	if err != nil {
+		return "", "", err
 	}
-	derivedProfileID := profileID
-	if tursoDatabaseURL != "" {
-		derivedProfileID = uuid.NewSHA1(uuid.NameSpaceURL, []byte(strings.ToLower(strings.TrimSpace(tursoDatabaseURL)))).String()
+	if _, err := s.applySyncProfile(resolution); err != nil {
+		return "", "", fmt.Errorf("create sync profile: %w", err)
 	}
-	if derivedProfileID == "" {
-		derivedProfileID = uuid.NewString()
+	return resolution.ProfileID, resolution.Cursor, nil
+}
+
+// markEntityPushed marca pasta/etiqueta como sincronizada e fecha a outbox.
+func (s *noteStore) markEntityPushed(entityType, id string) error {
+	table := map[string]string{"folder": "folders", "tag": "tags"}[entityType]
+	if table == "" {
+		return fmt.Errorf("tipo de entidade inválido: %s", entityType)
 	}
-	if profileID != derivedProfileID {
-		profileID = derivedProfileID
-		cursor = "0"
-		if _, err := s.db.Exec("UPDATE sync_metadata SET sync_profile_id = ?, pull_cursor = ? WHERE singleton = 1", profileID, cursor); err != nil {
-			return "", "", fmt.Errorf("create sync profile: %w", err)
-		}
+	if _, err := s.db.Exec("UPDATE "+table+" SET sync_state = 'clean' WHERE id = ?", id); err != nil {
+		return err
 	}
-	return profileID, cursor, nil
+	_, err := s.db.Exec(`UPDATE sync_outbox SET status = 'applied'
+		WHERE entity_type = ? AND entity_id = ? AND status IN ('pending', 'sent')`, entityType, id)
+	return err
 }
 
 func (s *noteStore) setPullCursor(cursor string) error {
@@ -1053,6 +1125,20 @@ func (s *noteStore) pushPendingNote(apiURL, profileID, tursoDatabaseURL, tursoAu
 		if err := json.Unmarshal(body, &conflict); err != nil {
 			return err
 		}
+		if note.DeletedAt != nil {
+			if conflict.Note.ID == "" {
+				return s.settleLocalTombstone(note.ID, note.MutationID, 0)
+			}
+			if conflict.Note.DeletedAt != nil {
+				return s.settleLocalTombstone(note.ID, note.MutationID, conflict.Note.Revision)
+			}
+		}
+		if accepted, err := s.acceptRemoteForRebasedNote(note.ID, note.MutationID, conflict.Note); accepted || err != nil {
+			if err == nil {
+				result.Downloaded++
+			}
+			return err
+		}
 		err := s.recordConflict(note.ID, note.MutationID, conflict.Note)
 		if err == nil {
 			result.Conflicts++
@@ -1082,9 +1168,43 @@ func (s *noteStore) markMutationClean(noteID, mutationID string, remote syncRemo
 		deleted_at = ?, created_at = ?, updated_at = ?
 		WHERE id = ? AND pending_mutation_id = ?`, remote.Revision, deletedAt, remote.CreatedAt.UnixMilli(), remote.UpdatedAt.UnixMilli(), noteID, mutationID)
 	if err == nil {
-		_, _ = s.db.Exec(`UPDATE sync_outbox SET status = 'applied' WHERE entity_id = ? AND status IN ('pending', 'sent')`, noteID)
+		_, _ = s.db.Exec(`UPDATE sync_outbox SET status = 'applied' WHERE entity_type = 'note' AND entity_id = ? AND status IN ('pending', 'sent')`, noteID)
 	}
 	return err
+}
+
+// settleLocalTombstone marca como sincronizada uma exclusão local que não
+// precisa (ou não pode) ser aplicada na nuvem.
+func (s *noteStore) settleLocalTombstone(noteID, mutationID string, serverRevision int64) error {
+	_, err := s.db.Exec(`UPDATE notes SET sync_state = 'clean', pending_mutation_id = NULL, server_revision = ?
+		WHERE id = ? AND pending_mutation_id = ? AND deleted_at IS NOT NULL`, serverRevision, noteID, mutationID)
+	if err == nil {
+		_, _ = s.db.Exec(`UPDATE sync_outbox SET status = 'applied' WHERE entity_type = 'note' AND entity_id = ? AND status IN ('pending', 'sent')`, noteID)
+	}
+	return err
+}
+
+// acceptRemoteForRebasedNote trata notas marcadas no rebase de troca de perfil
+// como cópias sem edição local (estavam limpas): a versão do perfil principal
+// vence sem abrir conflito. Se a nota foi editada depois do rebase, o mutation
+// id mudou e o fluxo normal de conflito é mantido.
+func (s *noteStore) acceptRemoteForRebasedNote(noteID, mutationID string, remote syncRemoteNote) (bool, error) {
+	if !strings.HasPrefix(mutationID, rebaseMutationPrefix) || remote.ID == "" {
+		return false, nil
+	}
+	res, err := s.db.Exec(`UPDATE notes SET sync_state = 'clean', pending_mutation_id = NULL, server_revision = 0
+		WHERE id = ? AND pending_mutation_id = ?`, noteID, mutationID)
+	if err != nil {
+		return false, err
+	}
+	if affected, _ := res.RowsAffected(); affected == 0 {
+		return false, nil
+	}
+	_, _ = s.db.Exec(`UPDATE sync_outbox SET status = 'applied' WHERE entity_type = 'note' AND entity_id = ? AND status IN ('pending', 'sent')`, noteID)
+	if _, err := s.applyRemoteNote(remote); err != nil {
+		return true, err
+	}
+	return true, nil
 }
 
 func (s *noteStore) recordConflict(noteID, mutationID string, remote syncRemoteNote) error {
@@ -1152,8 +1272,8 @@ func (s *noteStore) markEquivalentRemote(remote syncRemoteNote) error {
 
 func notesEquivalent(local Note, remote syncRemoteNote) bool {
 	if normalizeComparableText(local.Title) != normalizeComparableText(remote.Title) ||
-		local.Type != remote.NoteType ||
-		local.Language != remote.Language ||
+		normalizeNoteType(local.Type) != normalizeNoteType(remote.NoteType) ||
+		normalizeNoteLanguage(local.Language) != normalizeNoteLanguage(remote.Language) ||
 		normalizeComparableText(local.Folder) != normalizeComparableText(remote.Folder) ||
 		local.FolderID != remote.FolderID ||
 		normalizeBody(local.Body) != normalizeBody(remote.Body) ||
@@ -1167,6 +1287,25 @@ func notesEquivalent(local Note, remote syncRemoteNote) bool {
 
 func normalizeComparableText(value string) string {
 	return strings.TrimSpace(strings.ReplaceAll(value, "\r\n", "\n"))
+}
+
+// normalizeNoteType unifica os valores de tipo de nota. O SQLite local usa
+// 'rtf' como padrão, enquanto linhas remotas antigas receberam 'richtext' (ou
+// vazio) ao ganhar a coluna; todos representam a mesma nota de texto rico.
+func normalizeNoteType(value string) string {
+	value = strings.ToLower(strings.TrimSpace(value))
+	if value == "" || value == "richtext" {
+		return "rtf"
+	}
+	return value
+}
+
+func normalizeNoteLanguage(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return "plaintext"
+	}
+	return value
 }
 
 func normalizeBody(value string) string {
@@ -1250,10 +1389,9 @@ func (s *noteStore) applyRemoteNote(remote syncRemoteNote) (bool, error) {
 		if remote.Revision < local.localServerRev {
 			return false, nil
 		}
-		// If local note is clean and its localUpdatedAt is >= remoteUpdatedAtMilli, do not overwrite with older remote
-		if local.state == "clean" && local.localUpdatedAt >= remoteUpdatedAtMilli {
-			return false, nil
-		}
+		// Nota limpa + revisão remota maior = atualização legítima de outra máquina.
+		// Não comparamos updated_at aqui: relógios de máquinas diferentes divergem e
+		// essa comparação descartava edições remotas silenciosamente.
 	}
 
 	if !notFound && local.state == "pending" {
@@ -1346,7 +1484,7 @@ func (s *noteStore) applyRemoteNote(remote syncRemoteNote) (bool, error) {
 			deleted_at = excluded.deleted_at,
 			created_at = MIN(created_at, excluded.created_at),
 			updated_at = excluded.updated_at`,
-		remote.ID, remote.Title, remote.Body, remote.BodyText, remote.NoteType, remote.Language, folder, folderID, remote.Revision,
+		remote.ID, remote.Title, remote.Body, remote.BodyText, normalizeNoteType(remote.NoteType), normalizeNoteLanguage(remote.Language), folder, folderID, remote.Revision,
 		pinnedAtMilli, remote.ChecklistTotal, remote.ChecklistOpen, deletedAt, remote.CreatedAt.UnixMilli(), remoteUpdatedAtMilli)
 
 	if err == nil {
@@ -1399,168 +1537,4 @@ func requestSyncRaw(method, url, profileID, tursoDatabaseURL, tursoAuthToken str
 	defer response.Body.Close()
 	responseBody, err := io.ReadAll(response.Body)
 	return response.StatusCode, responseBody, err
-}
-
-func (s *noteStore) syncStickerBoardsDirect(turso *TursoClient, profileID string) error {
-	if turso == nil {
-		return nil
-	}
-	// 1. Push only pending local boards
-	rows, err := s.db.Query(`SELECT id, name, color, position, deleted_at, created_at, updated_at FROM sticker_boards WHERE sync_state = 'pending'`)
-	if err == nil {
-		var pushedIDs []string
-		defer rows.Close()
-		for rows.Next() {
-			var id, name, color string
-			var position float64
-			var deletedAt sql.NullInt64
-			var createdAt, updatedAt int64
-			if err := rows.Scan(&id, &name, &color, &position, &deletedAt, &createdAt, &updatedAt); err == nil {
-				var dAt any = nil
-				if deletedAt.Valid {
-					dAt = deletedAt.Int64
-				}
-				pushErr := turso.Execute(`INSERT INTO sync_sticker_boards(user_id, id, name, color, position, deleted_at, created_at, updated_at)
-					VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-					ON CONFLICT(user_id, id) DO UPDATE SET
-						name = CASE WHEN excluded.updated_at >= updated_at THEN excluded.name ELSE name END,
-						color = CASE WHEN excluded.updated_at >= updated_at THEN excluded.color ELSE color END,
-						position = CASE WHEN excluded.updated_at >= updated_at THEN excluded.position ELSE position END,
-						deleted_at = CASE WHEN excluded.updated_at >= updated_at THEN excluded.deleted_at ELSE deleted_at END,
-						updated_at = MAX(excluded.updated_at, updated_at)`,
-					profileID, id, name, color, position, dAt, createdAt, updatedAt)
-				if pushErr == nil {
-					pushedIDs = append(pushedIDs, id)
-				}
-			}
-		}
-		if err := rows.Err(); err != nil {
-			log.Printf("syncStickerBoardsDirect: error iterating rows: %v", err)
-		}
-		_ = rows.Close()
-		for _, id := range pushedIDs {
-			_, _ = s.db.Exec("UPDATE sticker_boards SET sync_state = 'clean' WHERE id = ?", id)
-		}
-	}
-
-	// 2. Pull remote boards — LWW
-	_, rRows, err := turso.Query(`SELECT id, name, color, position, deleted_at, created_at, updated_at FROM sync_sticker_boards WHERE user_id = ?`, profileID)
-	if err == nil {
-		for _, rRow := range rRows {
-			if len(rRow) < 7 {
-				continue
-			}
-			id := rRow[0].Value
-			name := rRow[1].Value
-			color := rRow[2].Value
-			position, _ := strconv.ParseFloat(rRow[3].Value, 64)
-			var dAt any = nil
-			if rRow[4].Type != "null" && rRow[4].Value != "" {
-				dAt, _ = tursoInt(rRow[4])
-			}
-			cAt, _ := tursoInt(rRow[5])
-			uAt, _ := tursoInt(rRow[6])
-			_, _ = s.db.Exec(`INSERT INTO sticker_boards(id, name, color, position, deleted_at, created_at, updated_at, sync_state)
-				VALUES (?, ?, ?, ?, ?, ?, ?, 'clean')
-				ON CONFLICT(id) DO UPDATE SET
-					name = CASE WHEN updated_at >= excluded.updated_at THEN name ELSE excluded.name END,
-					color = CASE WHEN updated_at >= excluded.updated_at THEN color ELSE excluded.color END,
-					position = CASE WHEN updated_at >= excluded.updated_at THEN position ELSE excluded.position END,
-					deleted_at = CASE WHEN updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
-					updated_at = CASE WHEN updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
-					sync_state = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN 'pending' ELSE 'clean' END`,
-				id, name, color, position, dAt, cAt, uAt)
-		}
-	}
-	return nil
-}
-
-func (s *noteStore) syncStickersDirect(turso *TursoClient, profileID string) error {
-	if turso == nil {
-		return nil
-	}
-	// 1. Push pending
-	rows, err := s.db.Query(`SELECT id, board_id, title, body, color, position, pinned_at, deleted_at, created_at, updated_at FROM stickers WHERE sync_state = 'pending'`)
-	if err == nil {
-		var pushedIDs []string
-		defer rows.Close()
-		for rows.Next() {
-			var id, boardId, title, body, color string
-			var position float64
-			var pinnedAt, deletedAt sql.NullInt64
-			var createdAt, updatedAt int64
-			if err := rows.Scan(&id, &boardId, &title, &body, &color, &position, &pinnedAt, &deletedAt, &createdAt, &updatedAt); err == nil {
-				var pAt any = nil
-				if pinnedAt.Valid {
-					pAt = pinnedAt.Int64
-				}
-				var dAt any = nil
-				if deletedAt.Valid {
-					dAt = deletedAt.Int64
-				}
-				pushErr := turso.Execute(`INSERT INTO sync_stickers(user_id, id, board_id, title, body, color, position, pinned_at, deleted_at, created_at, updated_at)
-					VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-					ON CONFLICT(user_id, id) DO UPDATE SET
-						board_id = CASE WHEN excluded.updated_at >= updated_at THEN excluded.board_id ELSE board_id END,
-						title = CASE WHEN excluded.updated_at >= updated_at THEN excluded.title ELSE title END,
-						body = CASE WHEN excluded.updated_at >= updated_at THEN excluded.body ELSE body END,
-						color = CASE WHEN excluded.updated_at >= updated_at THEN excluded.color ELSE color END,
-						position = CASE WHEN excluded.updated_at >= updated_at THEN excluded.position ELSE position END,
-						pinned_at = CASE WHEN excluded.updated_at >= updated_at THEN excluded.pinned_at ELSE pinned_at END,
-						deleted_at = CASE WHEN excluded.updated_at >= updated_at THEN excluded.deleted_at ELSE deleted_at END,
-						updated_at = MAX(excluded.updated_at, updated_at)`,
-					profileID, id, boardId, title, body, color, position, pAt, dAt, createdAt, updatedAt)
-				if pushErr == nil {
-					pushedIDs = append(pushedIDs, id)
-				}
-			}
-		}
-		if err := rows.Err(); err != nil {
-			log.Printf("syncStickersDirect: error iterating rows: %v", err)
-		}
-		_ = rows.Close()
-		for _, id := range pushedIDs {
-			_, _ = s.db.Exec("UPDATE stickers SET sync_state = 'clean' WHERE id = ?", id)
-		}
-	}
-
-	// 2. Pull remote
-	_, rRows, err := turso.Query(`SELECT id, board_id, title, body, color, position, pinned_at, deleted_at, created_at, updated_at FROM sync_stickers WHERE user_id = ?`, profileID)
-	if err == nil {
-		for _, rRow := range rRows {
-			if len(rRow) < 10 {
-				continue
-			}
-			id := rRow[0].Value
-			boardId := rRow[1].Value
-			title := rRow[2].Value
-			body := rRow[3].Value
-			color := rRow[4].Value
-			position, _ := strconv.ParseFloat(rRow[5].Value, 64)
-			var pAt any = nil
-			if rRow[6].Type != "null" && rRow[6].Value != "" {
-				pAt, _ = tursoInt(rRow[6])
-			}
-			var dAt any = nil
-			if rRow[7].Type != "null" && rRow[7].Value != "" {
-				dAt, _ = tursoInt(rRow[7])
-			}
-			cAt, _ := tursoInt(rRow[8])
-			uAt, _ := tursoInt(rRow[9])
-			_, _ = s.db.Exec(`INSERT INTO stickers(id, board_id, title, body, color, position, pinned_at, deleted_at, created_at, updated_at, sync_state)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'clean')
-				ON CONFLICT(id) DO UPDATE SET
-					board_id = CASE WHEN updated_at >= excluded.updated_at THEN board_id ELSE excluded.board_id END,
-					title = CASE WHEN updated_at >= excluded.updated_at THEN title ELSE excluded.title END,
-					body = CASE WHEN updated_at >= excluded.updated_at THEN body ELSE excluded.body END,
-					color = CASE WHEN updated_at >= excluded.updated_at THEN color ELSE excluded.color END,
-					position = CASE WHEN updated_at >= excluded.updated_at THEN position ELSE excluded.position END,
-					pinned_at = CASE WHEN updated_at >= excluded.updated_at THEN pinned_at ELSE excluded.pinned_at END,
-					deleted_at = CASE WHEN updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
-					updated_at = CASE WHEN updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
-					sync_state = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN 'pending' ELSE 'clean' END`,
-				id, boardId, title, body, color, position, pAt, dAt, cAt, uAt)
-		}
-	}
-	return nil
 }

@@ -52,18 +52,51 @@ type TursoValue struct {
 	Value string `json:"value,omitempty"`
 }
 
+// MarshalJSON segue o protocolo Hrana: integer e text usam string, mas float
+// precisa ser um número JSON (o Turso responde HTTP 400 para float em texto).
 func (v TursoValue) MarshalJSON() ([]byte, error) {
-	if v.Type == "null" {
+	switch v.Type {
+	case "null":
 		return []byte(`{"type":"null"}`), nil
+	case "float":
+		number, err := strconv.ParseFloat(v.Value, 64)
+		if err != nil {
+			return nil, fmt.Errorf("valor float inválido %q: %w", v.Value, err)
+		}
+		return json.Marshal(struct {
+			Type  string  `json:"type"`
+			Value float64 `json:"value"`
+		}{Type: "float", Value: number})
 	}
-	type Alias TursoValue
-	return json.Marshal(&struct {
-		Alias
+	return json.Marshal(struct {
+		Type  string `json:"type"`
 		Value string `json:"value"`
-	}{
-		Alias: Alias(v),
-		Value: v.Value,
-	})
+	}{Type: v.Type, Value: v.Value})
+}
+
+// UnmarshalJSON aceita value como string (integer/text) ou número (float).
+func (v *TursoValue) UnmarshalJSON(data []byte) error {
+	var raw struct {
+		Type  string          `json:"type"`
+		Value json.RawMessage `json:"value"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	v.Type = raw.Type
+	v.Value = ""
+	if len(raw.Value) == 0 || string(raw.Value) == "null" {
+		return nil
+	}
+	if raw.Value[0] == '"' {
+		return json.Unmarshal(raw.Value, &v.Value)
+	}
+	var number json.Number
+	if err := json.Unmarshal(raw.Value, &number); err != nil {
+		return err
+	}
+	v.Value = number.String()
+	return nil
 }
 
 type TursoRequest struct {
@@ -270,8 +303,8 @@ func (t *TursoClient) InitSchema() error {
 			title TEXT NOT NULL DEFAULT '',
 			body TEXT NOT NULL DEFAULT '',
 			body_text TEXT NOT NULL DEFAULT '',
-			note_type TEXT NOT NULL DEFAULT 'richtext',
-			language TEXT NOT NULL DEFAULT '',
+			note_type TEXT NOT NULL DEFAULT 'rtf',
+			language TEXT NOT NULL DEFAULT 'plaintext',
 			folder_id TEXT NOT NULL DEFAULT 'folder-default',
 			folder TEXT NOT NULL DEFAULT 'Notas',
 			pinned_at INTEGER,
@@ -351,6 +384,13 @@ func (t *TursoClient) InitSchema() error {
 			cursor INTEGER NOT NULL,
 			PRIMARY KEY (user_id, mutation_id)
 		)`,
+		// Configurações compartilhadas por todas as máquinas deste banco. A chave
+		// primary_profile_id define a partição (perfil) usada por todos.
+		`CREATE TABLE IF NOT EXISTS sync_settings (
+			key TEXT PRIMARY KEY,
+			value TEXT NOT NULL,
+			updated_at INTEGER NOT NULL
+		)`,
 	}
 	for _, statement := range statements {
 		if err := t.Execute(statement); err != nil {
@@ -365,8 +405,8 @@ func (t *TursoClient) InitSchema() error {
 		`ALTER TABLE sync_notes ADD COLUMN checklist_total INTEGER NOT NULL DEFAULT 0`,
 		`ALTER TABLE sync_notes ADD COLUMN checklist_open INTEGER NOT NULL DEFAULT 0`,
 		`ALTER TABLE sync_notes ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'`,
-		`ALTER TABLE sync_notes ADD COLUMN note_type TEXT NOT NULL DEFAULT 'richtext'`,
-		`ALTER TABLE sync_notes ADD COLUMN language TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE sync_notes ADD COLUMN note_type TEXT NOT NULL DEFAULT 'rtf'`,
+		`ALTER TABLE sync_notes ADD COLUMN language TEXT NOT NULL DEFAULT 'plaintext'`,
 		`ALTER TABLE sync_folders ADD COLUMN color TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE sync_folders ADD COLUMN icon TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE sync_tags ADD COLUMN icon TEXT NOT NULL DEFAULT 'tag'`,
@@ -382,6 +422,11 @@ func (t *TursoClient) InitSchema() error {
 		`UPDATE sync_folders SET color = '#6366f1' WHERE color IS NULL OR color = ''`,
 		`UPDATE sync_folders SET icon = 'folder' WHERE icon IS NULL OR icon = ''`,
 		`UPDATE sync_tags SET icon = 'tag' WHERE icon IS NULL OR icon = ''`,
+		// Linhas antigas receberam 'richtext'/'' ao ganhar as colunas; o padrão
+		// canônico (igual ao SQLite local) é 'rtf'/'plaintext'.
+		`UPDATE sync_notes SET note_type = 'rtf' WHERE note_type IS NULL OR note_type IN ('', 'richtext')`,
+		`UPDATE sync_notes SET language = 'plaintext' WHERE language IS NULL OR language = ''`,
+		`CREATE INDEX IF NOT EXISTS sync_folders_by_user_updated ON sync_folders(user_id, updated_at DESC)`,
 	}
 	for _, statement := range complianceStatements {
 		_ = t.Execute(statement)

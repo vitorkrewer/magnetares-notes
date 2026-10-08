@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -179,12 +178,19 @@ func (a *App) SetCustomDatabasePath(newPath string) (string, error) {
 	return newPath, nil
 }
 
+// SyncNow sincroniza com a nuvem. apiURL só é usada quando informada
+// explicitamente (ou configurada em config.json como syncApiUrl); sem ela, o
+// motor é sempre o pipeline direto do Turso, igual em todas as máquinas.
 func (a *App) SyncNow(apiURL string) (SyncResult, error) {
 	databaseURL, authToken, err := a.syncCredentials()
 	if err != nil {
 		return SyncResult{}, err
 	}
-	return a.store.syncNow(apiURL, databaseURL, authToken)
+	cfg := loadAppConfig()
+	if strings.TrimSpace(apiURL) == "" {
+		apiURL = cfg.SyncAPIURL
+	}
+	return a.store.syncNowWithProfile(apiURL, databaseURL, authToken, cfg.SyncProfileID)
 }
 
 func (a *App) RunComplianceAudit() (ComplianceReport, error) {
@@ -193,20 +199,6 @@ func (a *App) RunComplianceAudit() (ComplianceReport, error) {
 
 func (a *App) GetSyncDiagnosticReport() (SyncDiagnosticReport, error) {
 	return a.store.GetSyncDiagnosticReport()
-}
-
-func (a *App) GetSyncProfileID() (string, error) {
-	profileID, _, err := a.store.syncMetadata()
-	return profileID, err
-}
-
-func (a *App) SetSyncProfileID(profileID string) error {
-	profileID = strings.TrimSpace(profileID)
-	if _, err := uuid.Parse(profileID); err != nil {
-		return errors.New("perfil de sincronização inválido")
-	}
-	_, err := a.store.db.Exec("UPDATE sync_metadata SET sync_profile_id = ?, pull_cursor = '0' WHERE singleton = 1", profileID)
-	return err
 }
 
 func (a *App) MinimizeWindow() {

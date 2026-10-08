@@ -100,6 +100,28 @@ export type SyncConfiguration = {
   configured: boolean;
 };
 
+export type SyncProfileInfo = {
+  profileId: string;
+  source: "explicit" | "remote" | "legacy" | "derived" | "local";
+  storedProfileId: string;
+  canonicalUrl: string;
+  engine: "direct" | "api";
+  apiUrl: string;
+  pendingConfirmation: boolean;
+};
+
+export type RemoteSyncProfile = {
+  profileId: string;
+  notes: number;
+  folders: number;
+  tags: number;
+  stickerBoards: number;
+  stickers: number;
+  lastUpdatedAt?: string | null;
+  current: boolean;
+  primary: boolean;
+};
+
 export type ComplianceReport = {
   passed: boolean;
   repairedNotes: number;
@@ -148,6 +170,10 @@ export type DesktopBridge = {
   TestTursoConnection?: (databaseURL: string, authToken: string) => Promise<string>;
   GetSyncProfileID?: () => Promise<string>;
   SetSyncProfileID?: (profileID: string) => Promise<void>;
+  GetSyncProfileInfo?: () => Promise<SyncProfileInfo>;
+  ListRemoteSyncProfiles?: () => Promise<RemoteSyncProfile[]>;
+  PurgeRemoteSyncProfile?: (sourceProfileID: string) => Promise<string>;
+  SetPrimarySyncProfile?: (profileID: string) => Promise<string>;
   GetSyncConfiguration?: () => Promise<SyncConfiguration>;
   SaveSyncConfiguration?: (databaseURL: string, authToken: string) => Promise<SyncConfiguration>;
   SaveAutoSyncInterval?: (minutes: number) => Promise<SyncConfiguration>;

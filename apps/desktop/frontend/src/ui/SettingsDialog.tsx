@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { CheckCircle2, Cloud, Eye, EyeOff, HardDrive, Info, Moon, RefreshCw, Settings, ShieldCheck, Sun, X, XCircle } from "lucide-react";
+import { SyncProfilePanel } from "./SyncProfilePanel";
 
 export type ThemeOption = "light" | "dark" | "system";
 
@@ -389,6 +390,8 @@ export function SettingsDialog({
                 </select>
                 {autoSyncMessage && <small className="auto-sync-message">{autoSyncMessage}</small>}
               </div>
+
+              {syncConfigured && <SyncProfilePanel refreshKey={`${tursoDatabaseURL}|${syncConfigured}`} />}
 
               <div className="sync-actions-box">
                 <div className="sync-actions-header">

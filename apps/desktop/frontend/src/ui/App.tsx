@@ -103,7 +103,8 @@ export function App() {
   const [theme, setTheme] = useState<ThemeOption>(() => ((localStorage.getItem("magnetares_theme") || localStorage.getItem("aster_theme")) as ThemeOption) || "light");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dbPath, setDbPath] = useState("%LOCALAPPDATA%\\Magnetares Notes\\magnetares.db");
-  const [syncServiceURL] = useState(() => import.meta.env.VITE_API_BASE_URL || "http://localhost:8080");
+  // Vazio = o backend usa o pipeline direto do Turso (ou syncApiUrl do config.json).
+  const [syncServiceURL] = useState(() => import.meta.env.VITE_API_BASE_URL || "");
   const [syncConfiguration, setSyncConfiguration] = useState<SyncConfiguration>({ tursoDatabaseUrl: "", autoSyncIntervalMinutes: 0, configured: false });
   const [newTagInput, setNewTagInput] = useState("");
   const [tagInputOpen, setTagInputOpen] = useState(false);

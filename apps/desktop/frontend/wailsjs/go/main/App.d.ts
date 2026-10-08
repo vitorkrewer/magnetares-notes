@@ -30,6 +30,8 @@ export function GetSyncDiagnosticReport():Promise<main.SyncDiagnosticReport>;
 
 export function GetSyncProfileID():Promise<string>;
 
+export function GetSyncProfileInfo():Promise<main.SyncProfileInfo>;
+
 export function IsWindowMaximized():Promise<boolean>;
 
 export function ListDeletedNotes():Promise<Array<main.Note>>;
@@ -40,6 +42,8 @@ export function ListNoteConflicts():Promise<Array<main.SyncConflict>>;
 
 export function ListNotes():Promise<Array<main.Note>>;
 
+export function ListRemoteSyncProfiles():Promise<Array<main.RemoteSyncProfile>>;
+
 export function ListStickers(arg1:string):Promise<Array<main.Sticker>>;
 
 export function MinimizeWindow():Promise<void>;
@@ -49,6 +53,8 @@ export function MoveNote(arg1:string,arg2:string):Promise<void>;
 export function MoveSticker(arg1:string,arg2:string,arg3:string):Promise<main.Sticker>;
 
 export function PermanentlyDeleteNote(arg1:string):Promise<void>;
+
+export function PurgeRemoteSyncProfile(arg1:string):Promise<string>;
 
 export function QueryNotes(arg1:main.NoteQuery):Promise<Array<main.Note>>;
 
@@ -81,6 +87,8 @@ export function SetCustomDatabasePath(arg1:string):Promise<string>;
 export function SetNotePinned(arg1:string,arg2:boolean):Promise<main.Note>;
 
 export function SetNoteTags(arg1:string,arg2:Array<string>):Promise<main.Note>;
+
+export function SetPrimarySyncProfile(arg1:string):Promise<string>;
 
 export function SetStickerPinned(arg1:string,arg2:boolean):Promise<main.Sticker>;
 

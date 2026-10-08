@@ -58,6 +58,10 @@ export function GetSyncProfileID() {
   return window['go']['main']['App']['GetSyncProfileID']();
 }
 
+export function GetSyncProfileInfo() {
+  return window['go']['main']['App']['GetSyncProfileInfo']();
+}
+
 export function IsWindowMaximized() {
   return window['go']['main']['App']['IsWindowMaximized']();
 }
@@ -78,6 +82,10 @@ export function ListNotes() {
   return window['go']['main']['App']['ListNotes']();
 }
 
+export function ListRemoteSyncProfiles() {
+  return window['go']['main']['App']['ListRemoteSyncProfiles']();
+}
+
 export function ListStickers(arg1) {
   return window['go']['main']['App']['ListStickers'](arg1);
 }
@@ -96,6 +104,10 @@ export function MoveSticker(arg1, arg2, arg3) {
 
 export function PermanentlyDeleteNote(arg1) {
   return window['go']['main']['App']['PermanentlyDeleteNote'](arg1);
+}
+
+export function PurgeRemoteSyncProfile(arg1) {
+  return window['go']['main']['App']['PurgeRemoteSyncProfile'](arg1);
 }
 
 export function QueryNotes(arg1) {
@@ -160,6 +172,10 @@ export function SetNotePinned(arg1, arg2) {
 
 export function SetNoteTags(arg1, arg2) {
   return window['go']['main']['App']['SetNoteTags'](arg1, arg2);
+}
+
+export function SetPrimarySyncProfile(arg1) {
+  return window['go']['main']['App']['SetPrimarySyncProfile'](arg1);
 }
 
 export function SetStickerPinned(arg1, arg2) {

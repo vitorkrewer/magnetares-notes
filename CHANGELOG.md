@@ -5,7 +5,9 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 ## [v1.7.0] - 2026-10-08
 
 ### Added
-
+- **Painel "Perfil de sincronização"** em Preferências > Nuvem: mostra o perfil em uso, sua origem e o motor; lista as partições do banco remoto (principal, deste dispositivo, antigas), permite **tornar principal** outra partição e **remover** partições antigas após incorporá-las.
+- Bridge: `GetSyncProfileInfo`, `ListRemoteSyncProfiles`, `SetPrimarySyncProfile`, `PurgeRemoteSyncProfile`; `SetSyncProfileID` passa a fixar o perfil no `config.json` (vazio volta ao automático).
+- Testes multi-máquina com um Turso falso em memória (`sync_profile_test.go`).
 - **Live Preview & Modo Apresentação de Protótipos:** Novo visualizador pop-up interativo para Notas de Código de tecnologias web (`HTML`, `XML`/`SVG`) e documentos formatados (`Markdown`). Permite testar, interagir e apresentar protótipos de interfaces ao vivo durante reuniões de equipe.
 - **Simulador de Resoluções Responsivas (Viewport Switcher):** O modal de apresentação conta com alternância rápida entre três modos de tela:
   - 🖥️ **Desktop:** Largura integral (100%).
@@ -16,6 +18,29 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 - **Renderizador de Markdown Rico:** Notas de código em Markdown agora contam com pré-visualização completa estilizada de acordo com o design system do Magnetares (tabelas, citações, blocos de código com destaque, checklists e tipografia proporcional).
 - **Controles Rápidos no Preview:** Botão de recarregamento rápido (*hot reload*), botão para abrir em nova janela do navegador e atalho rápido no teclado (`Esc`) para fechar.
 - **Ícone Nativo para Texto Simples:** A linguagem *Texto simples* (`plaintext`) agora possui o ícone `FileText` dedicado no seletor de linguagem e na lista de sugestões.
+
+### Fixed — Unificação da sincronização entre máquinas e nuvem
+
+- **Perfil de sincronização definido pelo banco remoto:** o perfil (`user_id`) passa a ser registrado na própria nuvem (`sync_settings.primary_profile_id`). Na primeira sincronização de uma versão nova, ele é eleito preferindo a partição que **já tem dados**; todas as máquinas atualizadas adotam o mesmo valor, independentemente de como a URL foi digitada. Antes, uma máquina podia calcular outro perfil e sincronizar contra uma partição vazia sem nenhum erro.
+- **Perfil canônico como candidato:** a URL normalizada (`libsql://`, `https://`, barra final, porta `:443` e maiúsculas) gera o mesmo perfil; URLs `libsql://host` mantêm o perfil da v1.6.0.
+- **Transição com versões misturadas:** gravações de máquinas ainda na v1.6.0 em outras partições são **incorporadas** ao perfil principal a cada sincronização (vence a versão mais recente), **sem apagar a origem**. Máquinas antigas não recebem as edições das novas até serem atualizadas.
+- **Troca de perfil segura:** sem acesso à nuvem o perfil nunca muda; quando muda, o SQLite local é copiado para `recovery\` antes do rebase.
+- **Edições remotas descartadas por diferença de relógio:** uma nota local limpa ignorava uma revisão remota maior quando o relógio local estava adiantado. A revisão do servidor volta a ser a única autoridade.
+- **Exclusão de nota nunca sincronizada abortava o sync direto:** a lápide local sem contraparte remota agora é liquidada localmente; exclusões dos dois lados convergem sem conflito (nos dois motores).
+- **`note_type`/`language` divergentes:** linhas remotas antigas (`'richtext'`/vazio) e locais (`'rtf'`/`'plaintext'`) são normalizadas, evitando conflitos falsos entre conteúdos idênticos. A resolução "versão remota" passa a trazer tipo e linguagem da nota.
+- **Outbox e diagnóstico:** pushes de pastas e etiquetas fecham suas entradas na outbox; esvaziar a lixeira não apaga mais entradas de pastas/etiquetas; o diagnóstico conta pendências reais (`sync_state`) de todas as entidades e deixa de copiar o hash local como se fosse o remoto.
+- **Sincronização de stickers e quadros adesivos:**
+  - O protocolo Hrana do Turso exige que argumentos de ponto flutuante sejam números JSON reais (ex.: `{"type":"float","value":1.5}`), e não strings (que o Turso rejeita com HTTP 400). Pela coluna `position` (REAL) em `sync_sticker_boards` e `sync_stickers`, as requisições de push falhavam e nenhum quadro ou sticker chegava à nuvem.
+  - Implementada serialização/desserialização estrita de `float` em `TursoValue` no desktop e na API HTTP.
+  - Falhas no envio ou puxada de stickers deixam de ser descartadas silenciosamente: são registradas no log da aplicação e informadas no resultado da sincronização.
+  - Tratamento de colisão de nomes entre máquinas: se duas máquinas criarem quadros com o mesmo nome enquanto desconectadas, o quadro recebido ganha um sufixo numérico ("Ideias (2)") e sincroniza normalmente em vez de falhar pelo índice único do SQLite local.
+
+### Changed
+
+- **Motor de sincronização determinístico:** o desktop não sonda mais `http://localhost:8080`. O pipeline direto do Turso é o padrão; a API HTTP só é usada quando configurada explicitamente (`VITE_API_BASE_URL` ou `syncApiUrl` no `config.json`).
+- **Troca de perfil com rebase:** ao mudar de perfil, o estado local é rebaseado (revisão-base zero, tudo pendente, novos mutation ids). Conteúdo idêntico converge; notas sem edição local recebem a versão da nuvem; só edições locais reais viram conflito — nunca sobrescrita silenciosa.
+- `db/migrations/0007` alinha o esquema de referência ao criado por `InitSchema()`; defaults remotos de `note_type`/`language` iguais aos locais. `db/migrations/0008` e `InitSchema()` criam `sync_settings` (aditiva; ignorada pela v1.6.0).
+- Migração local `0012_sync_profile_source.sql`: registra a origem do perfil gravado.
 
 ## [v1.6.0] - 2026-10-08
 

@@ -16,6 +16,8 @@ Por padrão, o aplicativo usa um diretório de configuração do usuário e cria
 
 Na interface, o caminho aparece em **Preferências > Armazenamento**. O usuário pode informar um caminho customizado; o app persiste essa escolha em `config.json` no diretório da aplicação.
 
+Chaves de `config.json`: `customDatabasePath`, `tursoDatabaseUrl`, `autoSyncIntervalMinutes`, `syncProfileId` (perfil de sync fixado; ausente = automático) e `syncApiUrl` (API HTTP; ausente = conexão direta). Veja [API e sincronização](api-and-sync.md).
+
 ### Migração de nome antigo
 
 Se o novo banco ainda não existe e o banco legado de `Aster Notes` existe, a inicialização tenta copiar o arquivo legado para o caminho Magnetares. Esse mecanismo existe para a transição do nome do produto.
@@ -62,6 +64,12 @@ Nunca altere uma migração já lançada. Crie uma nova migração com prefixo c
 | `0008_managed_tags.sql` | Marca etiquetas criadas pelo usuário para preservar etiquetas vazias. |
 | `0009_sync_tags.sql` | Colunas de sincronização e soft-delete em etiquetas para nuvem. |
 | `0010_stickers.sql` | Tabelas `sticker_boards` e `stickers`, quadro padrão "Geral" e índices. |
+| `0011_code_notes.sql` | Colunas `note_type` (`rtf`) e `language` (`plaintext`) em notas. |
+| `0012_sync_profile_source.sql` | Origem do perfil de sincronização gravado (`remote`, `explicit`, `local`). |
+
+> **Prefixo `0007` duplicado:** `0007_sync_folder_updated_at_index.sql` e `0007_tag_icon.sql` já foram aplicados em bancos existentes e são registrados pelo nome completo. Não os renomeie: um nome novo seria tratado como migração pendente e falharia ao recriar a coluna `icon`. Novas migrações continuam a partir de `0013_`.
+
+As migrações em `db/migrations` descrevem o esquema remoto de referência; o esquema efetivo é criado por `InitSchema` em `apps/desktop/turso.go` e `apps/api/turso.go`, que devem ser mantidos em paridade.
 
 ## Modelo de dados local
 

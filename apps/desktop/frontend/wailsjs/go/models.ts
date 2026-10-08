@@ -224,6 +224,53 @@ export namespace main {
 	        this.id = source["id"];
 	    }
 	}
+	export class RemoteSyncProfile {
+	    profileId: string;
+	    notes: number;
+	    folders: number;
+	    tags: number;
+	    stickerBoards: number;
+	    stickers: number;
+	    // Go type: time
+	    lastUpdatedAt?: any;
+	    current: boolean;
+	    primary: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new RemoteSyncProfile(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.profileId = source["profileId"];
+	        this.notes = source["notes"];
+	        this.folders = source["folders"];
+	        this.tags = source["tags"];
+	        this.stickerBoards = source["stickerBoards"];
+	        this.stickers = source["stickers"];
+	        this.lastUpdatedAt = this.convertValues(source["lastUpdatedAt"], null);
+	        this.current = source["current"];
+	        this.primary = source["primary"];
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	
 	export class Sticker {
 	    id: string;
@@ -359,6 +406,30 @@ export namespace main {
 	        this.localCanonicalHash = source["localCanonicalHash"];
 	        this.remoteCanonicalHash = source["remoteCanonicalHash"];
 	        this.syncedAt = source["syncedAt"];
+	    }
+	}
+	export class SyncProfileInfo {
+	    profileId: string;
+	    source: string;
+	    storedProfileId: string;
+	    canonicalUrl: string;
+	    engine: string;
+	    apiUrl: string;
+	    pendingConfirmation: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new SyncProfileInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.profileId = source["profileId"];
+	        this.source = source["source"];
+	        this.storedProfileId = source["storedProfileId"];
+	        this.canonicalUrl = source["canonicalUrl"];
+	        this.engine = source["engine"];
+	        this.apiUrl = source["apiUrl"];
+	        this.pendingConfirmation = source["pendingConfirmation"];
 	    }
 	}
 	export class SyncResult {

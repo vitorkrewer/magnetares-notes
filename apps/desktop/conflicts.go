@@ -170,10 +170,11 @@ func (s *noteStore) ResolveNoteConflict(noteID, resolution string) error {
 		if remote.DeletedAt != nil {
 			deletedAt = remote.DeletedAt.UnixMilli()
 		}
-		if _, err := tx.Exec(`UPDATE notes SET title = ?, body = ?, body_text = ?, folder = ?, folder_id = ?,
+		if _, err := tx.Exec(`UPDATE notes SET title = ?, body = ?, body_text = ?, note_type = ?, language = ?, folder = ?, folder_id = ?,
 			pinned_at = ?, checklist_total = ?, checklist_open = ?, server_revision = ?, sync_state = 'clean',
 			pending_mutation_id = NULL, deleted_at = ?, created_at = ?, updated_at = ? WHERE id = ?`,
-			remote.Title, remote.Body, remote.BodyText, folder, folderID, pinnedAt, remote.ChecklistTotal,
+			remote.Title, remote.Body, remote.BodyText, normalizeNoteType(remote.NoteType), normalizeNoteLanguage(remote.Language),
+			folder, folderID, pinnedAt, remote.ChecklistTotal,
 			remote.ChecklistOpen, remote.Revision, deletedAt, remote.CreatedAt.UnixMilli(), remote.UpdatedAt.UnixMilli(), noteID); err != nil {
 			return err
 		}

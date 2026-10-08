@@ -18,7 +18,7 @@ O Magnetares é funcional como aplicativo local, mas o modo de sincronização a
 
 No modo self-managed, o usuário informa URL e token Turso uma vez. O token é enviado ao bridge Wails e armazenado no cofre do sistema operacional; ele não fica em `localStorage` ou nos assets do frontend. A API recebe o token em headers apenas para executar aquela sync.
 
-Esse modo ainda é beta: o perfil UUID é derivado da URL do banco para associar dispositivos, mas não substitui autenticação de usuário. Sem autenticação de usuários, qualquer cliente que alcance a API pode tentar chamar endpoints; CORS também está aberto (`*`).
+Esse modo ainda é beta: o perfil é registrado no próprio banco remoto (`sync_settings`) para associar dispositivos, mas não substitui autenticação de usuário — quem tem acesso ao banco consegue ler o mesmo perfil; a proteção real é o token Turso. Sem autenticação de usuários, qualquer cliente que alcance a API pode tentar chamar endpoints; CORS também está aberto (`*`).
 
 ### Antes de distribuir para usuários finais
 

@@ -32,7 +32,7 @@ Este diretório descreve o Magnetares Notes como produto, aplicativo desktop e c
 
 ### Implementado com limitações
 
-- Sincronização: existe um envio de notas para uma API Go/Turso; ainda não há download remoto, cursor, resolução de conflitos, propagação de exclusões ou sincronização de pastas/tags.
+- Sincronização: bidirecional (notas, pastas, etiquetas, stickers e lápides) e particionada por perfil; ainda é beta, sem autenticação de usuário, e Pastas Inteligentes continuam locais.
 - Releases: há workflows multiplataforma; eles precisam ser exercitados em tags reais antes de serem considerados pipeline de produção.
 
 ### Ainda não implementado
