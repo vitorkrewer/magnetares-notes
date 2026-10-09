@@ -8,11 +8,13 @@ import { SettingsDialog, type ThemeOption } from "./SettingsDialog";
 import { ConflictDialog } from "./ConflictDialog";
 import { StickerBoardDialog, STICKER_PALETTE, DelicateStickerIcon } from "./StickerBoardDialog";
 import { StickerBoardView } from "./StickerBoardView";
-import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord } from "./types";
+import { TaskListDialog, TASK_LIST_PALETTE, getTaskListIconComponent } from "./TaskListDialog";
+import { TaskListView } from "./TaskListView";
+import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord, TaskListRecord } from "./types";
 import { downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
 
 type SaveState = "saved" | "saving" | "error";
-type LibraryView = "notes" | "deleted" | "stickers";
+type LibraryView = "notes" | "deleted" | "stickers" | "tasks";
 
 const demo: Note[] = [
   { id: "welcome", title: "Bem-vindo ao Magnetares", body: "Um lugar tranquilo para pensar, planejar e guardar o que importa.", bodyText: "Um lugar tranquilo para pensar, planejar e guardar o que importa.", folder: "Notas", updatedAt: new Date().toISOString() },
@@ -85,7 +87,7 @@ const fullDateLabel = (value: string) => new Intl.DateTimeFormat("pt-BR", {
 export function App() {
   const [notes, setNotes] = useState<Note[]>(demo);
   const [deletedNotes, setDeletedNotes] = useState<Note[]>([]);
-  const [navigation, setNavigation] = useState<NavigationRecord>({ folders: [], tags: [], smartFolders: [], stickerBoards: [] });
+  const [navigation, setNavigation] = useState<NavigationRecord>({ folders: [], tags: [], smartFolders: [], stickerBoards: [], taskLists: [] });
   const [selectedQuery, setSelectedQuery] = useState<NoteQuery>({ kind: "all" });
   const [view, setView] = useState<LibraryView>("notes");
   const [activeId, setActiveId] = useState("welcome");
@@ -100,6 +102,9 @@ export function App() {
   const [stickerBoardDialogOpen, setStickerBoardDialogOpen] = useState(false);
   const [boardToEdit, setBoardToEdit] = useState<StickerBoardRecord | undefined>(undefined);
   const [deleteBoardTarget, setDeleteBoardTarget] = useState<StickerBoardRecord | null>(null);
+  const [taskListDialogOpen, setTaskListDialogOpen] = useState(false);
+  const [listToEdit, setListToEdit] = useState<TaskListRecord | undefined>(undefined);
+  const [deleteListTarget, setDeleteListTarget] = useState<TaskListRecord | null>(null);
   const [theme, setTheme] = useState<ThemeOption>(() => ((localStorage.getItem("magnetares_theme") || localStorage.getItem("aster_theme")) as ThemeOption) || "light");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dbPath, setDbPath] = useState("%LOCALAPPDATA%\\Magnetares Notes\\magnetares.db");
@@ -115,6 +120,7 @@ export function App() {
   const [syncNotification, setSyncNotification] = useState<{ type: "success" | "warning" | "error" | "info"; message: string } | null>(null);
   const [conflicts, setConflicts] = useState<SyncConflict[]>([]);
   const [conflictsOpen, setConflictsOpen] = useState(false);
+  const [taskSyncNonce, setTaskSyncNonce] = useState(0);
   const [tagsExpanded, setTagsExpanded] = useState(false);
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(new Set());
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null);
@@ -259,11 +265,13 @@ export function App() {
         ? "deleted"
         : targetQuery.kind === "stickerBoard"
         ? "stickers"
+        : targetQuery.kind === "taskList"
+        ? "tasks"
         : "notes";
     setView(nextView);
     setQuery("");
     setLoadError("");
-    if (targetQuery.kind !== "stickerBoard") {
+    if (targetQuery.kind !== "stickerBoard" && targetQuery.kind !== "taskList") {
       void loadQueryNotes(targetQuery);
     }
     setSaveState("saved");
@@ -493,6 +501,7 @@ export function App() {
         if (loadedNotes.some((n) => n.id === currentActiveId)) return currentActiveId;
         return loadedNotes[0]?.id ?? "";
       });
+      setTaskSyncNonce((n) => n + 1);
     });
     if (result?.conflictNotes?.length && bridge.ListNoteConflicts) {
       const currentConflicts = await bridge.ListNoteConflicts();
@@ -1002,6 +1011,62 @@ export function App() {
     }));
   };
 
+  const handleSaveTaskList = async (listRecord: TaskListRecord) => {
+    const bridge = window.go?.main?.App;
+    if (bridge?.SaveTaskList) {
+      try {
+        const saved = await bridge.SaveTaskList(listRecord);
+        await reloadNavigation();
+        selectQuery({ kind: "taskList", id: saved.id });
+      } catch (err: any) {
+        setLoadError(err?.message || "Não foi possível salvar a lista de tarefas.");
+      }
+    } else {
+      setNavigation((current) => ({
+        ...current,
+        taskLists: (current.taskLists || []).some((l) => l.id === listRecord.id)
+          ? (current.taskLists || []).map((l) => (l.id === listRecord.id ? listRecord : l))
+          : [...(current.taskLists || []), listRecord]
+      }));
+      selectQuery({ kind: "taskList", id: listRecord.id });
+    }
+  };
+
+  const handleDeleteTaskList = async (listRecord: TaskListRecord) => {
+    if (listRecord.id === "list-inbox") return;
+    try {
+      const bridge = window.go?.main?.App;
+      if (bridge?.DeleteTaskList) {
+        await bridge.DeleteTaskList(listRecord.id);
+        await reloadNavigation();
+        if (selectedQuery.kind === "taskList" && selectedQuery.id === listRecord.id) {
+          selectQuery({ kind: "all" });
+        }
+      } else {
+        setNavigation((current) => ({
+          ...current,
+          taskLists: (current.taskLists || []).filter((l) => l.id !== listRecord.id)
+        }));
+        if (selectedQuery.kind === "taskList" && selectedQuery.id === listRecord.id) {
+          selectQuery({ kind: "all" });
+        }
+      }
+    } catch (err: any) {
+      setLoadError(err?.message || "Não foi possível excluir a lista de tarefas.");
+    } finally {
+      setDeleteListTarget(null);
+    }
+  };
+
+  const handleTaskCountChange = (listId: string, count: number) => {
+    setNavigation((prev) => ({
+      ...prev,
+      taskLists: (prev.taskLists || []).map((l) =>
+        l.id === listId ? { ...l, taskCount: count } : l
+      ),
+    }));
+  };
+
   const toggleFolderExpanded = (folderID: string) => {
     setExpandedFolderIds((current) => {
       const next = new Set(current);
@@ -1107,6 +1172,8 @@ export function App() {
         title={
           view === "stickers"
             ? `${(navigation.stickerBoards || []).find((b) => b.id === selectedQuery.id)?.name ?? "Stickers"} — Magnetares`
+            : view === "tasks"
+            ? `${(navigation.taskLists || []).find((l) => l.id === selectedQuery.id)?.name ?? "Tarefas"} — Magnetares`
             : active?.title
             ? `${active.title} — Magnetares`
             : "Magnetares Notes"
@@ -1120,7 +1187,7 @@ export function App() {
           </button>
         </div>
       )}
-      <main className={`shell ${sidebarOpen ? "" : "sidebar-closed"} ${view === "stickers" ? "stickers-view" : ""}`}>
+      <main className={`shell ${sidebarOpen ? "" : "sidebar-closed"} ${view === "stickers" ? "stickers-view" : ""} ${view === "tasks" ? "tasks-view" : ""}`}>
       <aside className="sidebar" aria-label="Pastas">
         <div className="sidebar-heading">
           <Sparkles className="brand-mark" aria-hidden="true" />
@@ -1260,6 +1327,82 @@ export function App() {
         </>
 
         <>
+          <div className="sidebar-section-header">
+            <span className="folder-label">LISTAS</span>
+            <button
+              className="icon-button mini-add"
+              onClick={() => {
+                setListToEdit(undefined);
+                setTaskListDialogOpen(true);
+              }}
+              title="Nova lista de tarefas"
+              aria-label="Nova lista de tarefas"
+            >
+              <Plus aria-hidden="true" />
+            </button>
+          </div>
+          <div className="folder-tree">
+            {(navigation.taskLists || []).map((tl) => {
+              const isSelected = selectedQuery.kind === "taskList" && selectedQuery.id === tl.id;
+              const colorHex = TASK_LIST_PALETTE.find((c) => c.id === tl.color)?.hex ?? "#3b82f6";
+              const IconComp = getTaskListIconComponent(tl.icon);
+              return (
+                <button
+                  key={tl.id}
+                  type="button"
+                  className={`nav-item task-list-item ${isSelected ? "selected" : ""}`}
+                  onClick={() => selectQuery({ kind: "taskList", id: tl.id })}
+                  title={tl.name}
+                >
+                  <span>
+                    <IconComp
+                      size={14}
+                      className="tag-icon task-list-icon"
+                      style={{ color: colorHex }}
+                    />
+                    <span className="nav-item-title">{tl.name}</span>
+                  </span>
+                  <div className="folder-item-actions">
+                    <small className="folder-note-count">{tl.taskCount ?? 0}</small>
+                    <div className="folder-hover-btns">
+                      <span
+                        className="folder-action-btn"
+                        role="button"
+                        tabIndex={0}
+                        title="Editar lista"
+                        aria-label={`Editar lista ${tl.name}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setListToEdit(tl);
+                          setTaskListDialogOpen(true);
+                        }}
+                      >
+                        <FilePenLine size={13} aria-hidden="true" />
+                      </span>
+                      {tl.id !== "list-inbox" && (
+                        <span
+                          className="folder-action-btn danger"
+                          role="button"
+                          tabIndex={0}
+                          title="Excluir lista"
+                          aria-label={`Excluir lista ${tl.name}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setDeleteListTarget(tl);
+                          }}
+                        >
+                          <Trash2 size={13} aria-hidden="true" />
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </>
+
+        <>
           <div 
             className="sidebar-section-header" 
             style={{ cursor: "pointer", userSelect: "none" }} 
@@ -1360,6 +1503,31 @@ export function App() {
           }}
           onDeleteBoard={(board) => setDeleteBoardTarget(board)}
           onStickerCountChange={handleStickerCountChange}
+        />
+      ) : view === "tasks" ? (
+        <TaskListView
+          list={
+            (navigation.taskLists || []).find((l) => l.id === selectedQuery.id) ||
+            (navigation.taskLists || [])[0] || {
+              id: "list-inbox",
+              name: "Entrada",
+              color: "blue",
+              icon: "inbox",
+              position: 0,
+              taskCount: 0,
+              updatedAt: new Date().toISOString(),
+            }
+          }
+          allLists={navigation.taskLists || []}
+          sidebarOpen={sidebarOpen}
+          onOpenSidebar={() => setSidebarOpen(true)}
+          onEditList={(tl) => {
+            setListToEdit(tl);
+            setTaskListDialogOpen(true);
+          }}
+          onDeleteList={(tl) => setDeleteListTarget(tl)}
+          onTaskCountChange={handleTaskCountChange}
+          refreshKey={taskSyncNonce}
         />
       ) : (
         <>
@@ -1695,6 +1863,38 @@ export function App() {
             setBoardToEdit(undefined);
           }}
           onSave={handleSaveStickerBoard}
+        />
+      )}
+
+      {deleteListTarget && (
+        <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setDeleteListTarget(null)}>
+          <div className="organization-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-list-dialog-title" style={{ maxWidth: 420 }}>
+            <header>
+              <Trash2 aria-hidden="true" style={{ color: "#ef4444" }} />
+              <h2 id="delete-list-dialog-title">Excluir lista</h2>
+              <button type="button" onClick={() => setDeleteListTarget(null)} aria-label="Fechar" title="Fechar"><X aria-hidden="true" /></button>
+            </header>
+            <p style={{ marginTop: 12, marginBottom: 20, color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
+              Tem certeza que deseja excluir a lista <strong>{deleteListTarget.name}</strong>? As tarefas desta lista serão movidas para a Entrada.
+            </p>
+            <footer>
+              <button type="button" className="ghost" onClick={() => setDeleteListTarget(null)}>Cancelar</button>
+              <button type="button" style={{ background: "#dc2626", color: "#ffffff", borderColor: "#b91c1c" }} onClick={() => void handleDeleteTaskList(deleteListTarget)}>
+                Excluir lista
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {taskListDialogOpen && (
+        <TaskListDialog
+          listToEdit={listToEdit}
+          onClose={() => {
+            setTaskListDialogOpen(false);
+            setListToEdit(undefined);
+          }}
+          onSave={handleSaveTaskList}
         />
       )}
     </main>

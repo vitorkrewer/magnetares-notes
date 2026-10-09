@@ -62,15 +62,63 @@ export type StickerRecord = {
   updatedAt: string;
 };
 
+export type TaskListRecord = {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  position: number;
+  taskCount: number;
+  createdAt?: string;
+  updatedAt: string;
+};
+
+export type SubtaskRecord = {
+  id: string;
+  taskId: string;
+  title: string;
+  completed: boolean;
+  completedAt?: string | null;
+  position: number;
+  createdAt?: string;
+  updatedAt: string;
+};
+
+export type TaskNoteRecord = {
+  id: string;
+  title?: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TaskRecord = {
+  id: string;
+  listId: string;
+  title: string;
+  notes: string;
+  completed: boolean;
+  completedAt?: string | null;
+  dueDate?: string | null;
+  priority: number;
+  position: number;
+  subtasks?: SubtaskRecord[];
+  subtaskTotal?: number;
+  subtaskDone?: number;
+  createdAt?: string;
+  updatedAt: string;
+};
+
 export type NavigationRecord = {
   folders: FolderRecord[];
   tags: TagRecord[];
   smartFolders: SmartFolderRecord[];
   stickerBoards: StickerBoardRecord[];
+  taskLists?: TaskListRecord[];
 };
 
 export type NoteQuery = {
-  kind: "all" | "deleted" | "pinned" | "tag" | "folder" | "smart" | "stickerBoard";
+  kind: "all" | "deleted" | "pinned" | "tag" | "folder" | "smart" | "stickerBoard" | "taskList";
   id?: string;
 };
 
@@ -163,6 +211,17 @@ export type DesktopBridge = {
   RestoreSticker?: (id: string) => Promise<StickerRecord>;
   SetStickerPinned?: (id: string, pinned: boolean) => Promise<StickerRecord>;
   MoveSticker?: (id: string, boardId: string, beforeId: string) => Promise<StickerRecord>;
+  ListTaskLists?: () => Promise<TaskListRecord[]>;
+  SaveTaskList?: (list: TaskListRecord) => Promise<TaskListRecord>;
+  DeleteTaskList?: (id: string) => Promise<void>;
+  ListTasks?: (listId: string, includeCompleted?: boolean) => Promise<TaskRecord[]>;
+  GetTaskWithSubtasks?: (id: string) => Promise<TaskRecord>;
+  SaveTask?: (task: TaskRecord) => Promise<TaskRecord>;
+  ToggleTaskCompleted?: (id: string, completed: boolean) => Promise<void>;
+  DeleteTask?: (id: string) => Promise<void>;
+  SaveSubtask?: (subtask: SubtaskRecord) => Promise<SubtaskRecord>;
+  ToggleSubtaskCompleted?: (id: string, completed: boolean) => Promise<void>;
+  DeleteSubtask?: (id: string) => Promise<void>;
   GetDatabasePath?: () => Promise<string>;
   SetCustomDatabasePath?: (newPath: string) => Promise<string>;
   SyncNow?: (apiURL: string) => Promise<SyncResult>;

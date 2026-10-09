@@ -34,8 +34,20 @@ export function DeleteStickerBoard(arg1) {
   return window['go']['main']['App']['DeleteStickerBoard'](arg1);
 }
 
+export function DeleteSubtask(arg1) {
+  return window['go']['main']['App']['DeleteSubtask'](arg1);
+}
+
 export function DeleteTag(arg1) {
   return window['go']['main']['App']['DeleteTag'](arg1);
+}
+
+export function DeleteTask(arg1) {
+  return window['go']['main']['App']['DeleteTask'](arg1);
+}
+
+export function DeleteTaskList(arg1) {
+  return window['go']['main']['App']['DeleteTaskList'](arg1);
 }
 
 export function EmptyDeletedNotes() {
@@ -66,6 +78,10 @@ export function GetSyncProfileInfo() {
   return window['go']['main']['App']['GetSyncProfileInfo']();
 }
 
+export function GetTaskWithSubtasks(arg1) {
+  return window['go']['main']['App']['GetTaskWithSubtasks'](arg1);
+}
+
 export function IsWindowMaximized() {
   return window['go']['main']['App']['IsWindowMaximized']();
 }
@@ -92,6 +108,14 @@ export function ListRemoteSyncProfiles() {
 
 export function ListStickers(arg1) {
   return window['go']['main']['App']['ListStickers'](arg1);
+}
+
+export function ListTaskLists() {
+  return window['go']['main']['App']['ListTaskLists']();
+}
+
+export function ListTasks(arg1, arg2) {
+  return window['go']['main']['App']['ListTasks'](arg1, arg2);
 }
 
 export function MinimizeWindow() {
@@ -166,12 +190,24 @@ export function SaveStickerBoard(arg1) {
   return window['go']['main']['App']['SaveStickerBoard'](arg1);
 }
 
+export function SaveSubtask(arg1) {
+  return window['go']['main']['App']['SaveSubtask'](arg1);
+}
+
 export function SaveSyncConfiguration(arg1, arg2) {
   return window['go']['main']['App']['SaveSyncConfiguration'](arg1, arg2);
 }
 
 export function SaveTag(arg1) {
   return window['go']['main']['App']['SaveTag'](arg1);
+}
+
+export function SaveTask(arg1) {
+  return window['go']['main']['App']['SaveTask'](arg1);
+}
+
+export function SaveTaskList(arg1) {
+  return window['go']['main']['App']['SaveTaskList'](arg1);
 }
 
 export function SetCustomDatabasePath(arg1) {
@@ -208,4 +244,12 @@ export function TestTursoConnection(arg1, arg2) {
 
 export function ToggleMaximizeWindow() {
   return window['go']['main']['App']['ToggleMaximizeWindow']();
+}
+
+export function ToggleSubtaskCompleted(arg1, arg2) {
+  return window['go']['main']['App']['ToggleSubtaskCompleted'](arg1, arg2);
+}
+
+export function ToggleTaskCompleted(arg1, arg2) {
+  return window['go']['main']['App']['ToggleTaskCompleted'](arg1, arg2);
 }

@@ -154,6 +154,54 @@ func (a *App) MoveSticker(id, boardID, beforeID string) (Sticker, error) {
 	return a.store.moveSticker(id, boardID, beforeID)
 }
 
+// ===============================
+// LISTAS DE TAREFAS & SUBTAREFAS
+// ===============================
+
+func (a *App) ListTaskLists() ([]TaskList, error) {
+	return a.store.ListTaskLists()
+}
+
+func (a *App) SaveTaskList(list TaskList) (TaskList, error) {
+	return a.store.SaveTaskList(list)
+}
+
+func (a *App) DeleteTaskList(id string) error {
+	return a.store.DeleteTaskList(id)
+}
+
+func (a *App) ListTasks(listID string, includeCompleted bool) ([]Task, error) {
+	return a.store.ListTasks(listID, includeCompleted)
+}
+
+func (a *App) GetTaskWithSubtasks(id string) (Task, error) {
+	return a.store.GetTaskWithSubtasks(id)
+}
+
+func (a *App) SaveTask(task Task) (Task, error) {
+	return a.store.SaveTask(task)
+}
+
+func (a *App) ToggleTaskCompleted(id string, completed bool) error {
+	return a.store.ToggleTaskCompleted(id, completed)
+}
+
+func (a *App) DeleteTask(id string) error {
+	return a.store.DeleteTask(id)
+}
+
+func (a *App) SaveSubtask(subtask Subtask) (Subtask, error) {
+	return a.store.SaveSubtask(subtask)
+}
+
+func (a *App) ToggleSubtaskCompleted(id string, completed bool) error {
+	return a.store.ToggleSubtaskCompleted(id, completed)
+}
+
+func (a *App) DeleteSubtask(id string) error {
+	return a.store.DeleteSubtask(id)
+}
+
 func (a *App) GetDatabasePath() (string, error) {
 	return defaultDatabasePath()
 }

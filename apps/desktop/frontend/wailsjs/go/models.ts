@@ -8,6 +8,7 @@ export namespace main {
 	    checklistsCorrected: number;
 	    orphanTagsCleaned: number;
 	    orphanStickersFixed: number;
+	    orphanTasksFixed: number;
 	    details: string[];
 	    auditedAt: string;
 	
@@ -24,6 +25,7 @@ export namespace main {
 	        this.checklistsCorrected = source["checklistsCorrected"];
 	        this.orphanTagsCleaned = source["orphanTagsCleaned"];
 	        this.orphanStickersFixed = source["orphanStickersFixed"];
+	        this.orphanTasksFixed = source["orphanTasksFixed"];
 	        this.details = source["details"];
 	        this.auditedAt = source["auditedAt"];
 	    }
@@ -49,6 +51,52 @@ export namespace main {
 	        this.icon = source["icon"];
 	        this.noteCount = source["noteCount"];
 	    }
+	}
+	export class TaskList {
+	    id: string;
+	    name: string;
+	    color: string;
+	    icon: string;
+	    position: number;
+	    taskCount: number;
+	    // Go type: time
+	    createdAt: any;
+	    // Go type: time
+	    updatedAt: any;
+	
+	    static createFrom(source: any = {}) {
+	        return new TaskList(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.color = source["color"];
+	        this.icon = source["icon"];
+	        this.position = source["position"];
+	        this.taskCount = source["taskCount"];
+	        this.createdAt = this.convertValues(source["createdAt"], null);
+	        this.updatedAt = this.convertValues(source["updatedAt"], null);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 	export class StickerBoard {
 	    id: string;
@@ -115,6 +163,7 @@ export namespace main {
 	    tags: Tag[];
 	    smartFolders: SmartFolder[];
 	    stickerBoards: StickerBoard[];
+	    taskLists: TaskList[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Navigation(source);
@@ -126,6 +175,7 @@ export namespace main {
 	        this.tags = this.convertValues(source["tags"], Tag);
 	        this.smartFolders = this.convertValues(source["smartFolders"], SmartFolder);
 	        this.stickerBoards = this.convertValues(source["stickerBoards"], StickerBoard);
+	        this.taskLists = this.convertValues(source["taskLists"], TaskList);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -231,6 +281,8 @@ export namespace main {
 	    tags: number;
 	    stickerBoards: number;
 	    stickers: number;
+	    taskLists: number;
+	    tasks: number;
 	    // Go type: time
 	    lastUpdatedAt?: any;
 	    current: boolean;
@@ -248,6 +300,8 @@ export namespace main {
 	        this.tags = source["tags"];
 	        this.stickerBoards = source["stickerBoards"];
 	        this.stickers = source["stickers"];
+	        this.taskLists = source["taskLists"];
+	        this.tasks = source["tasks"];
 	        this.lastUpdatedAt = this.convertValues(source["lastUpdatedAt"], null);
 	        this.current = source["current"];
 	        this.primary = source["primary"];
@@ -322,6 +376,53 @@ export namespace main {
 		}
 	}
 	
+	export class Subtask {
+	    id: string;
+	    taskId: string;
+	    title: string;
+	    completed: boolean;
+	    // Go type: time
+	    completedAt?: any;
+	    position: number;
+	    // Go type: time
+	    createdAt: any;
+	    // Go type: time
+	    updatedAt: any;
+	
+	    static createFrom(source: any = {}) {
+	        return new Subtask(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.taskId = source["taskId"];
+	        this.title = source["title"];
+	        this.completed = source["completed"];
+	        this.completedAt = this.convertValues(source["completedAt"], null);
+	        this.position = source["position"];
+	        this.createdAt = this.convertValues(source["createdAt"], null);
+	        this.updatedAt = this.convertValues(source["updatedAt"], null);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class SyncConfiguration {
 	    tursoDatabaseUrl: string;
 	    autoSyncIntervalMinutes: number;
@@ -454,6 +555,66 @@ export namespace main {
 	        this.message = source["message"];
 	        this.syncedAt = source["syncedAt"];
 	        this.report = this.convertValues(source["report"], SyncDiagnosticReport);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
+	export class Task {
+	    id: string;
+	    listId: string;
+	    title: string;
+	    notes: string;
+	    completed: boolean;
+	    // Go type: time
+	    completedAt?: any;
+	    dueDate?: string;
+	    priority: number;
+	    position: number;
+	    subtasks: Subtask[];
+	    subtaskTotal: number;
+	    subtaskDone: number;
+	    // Go type: time
+	    createdAt: any;
+	    // Go type: time
+	    updatedAt: any;
+	
+	    static createFrom(source: any = {}) {
+	        return new Task(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.listId = source["listId"];
+	        this.title = source["title"];
+	        this.notes = source["notes"];
+	        this.completed = source["completed"];
+	        this.completedAt = this.convertValues(source["completedAt"], null);
+	        this.dueDate = source["dueDate"];
+	        this.priority = source["priority"];
+	        this.position = source["position"];
+	        this.subtasks = this.convertValues(source["subtasks"], Subtask);
+	        this.subtaskTotal = source["subtaskTotal"];
+	        this.subtaskDone = source["subtaskDone"];
+	        this.createdAt = this.convertValues(source["createdAt"], null);
+	        this.updatedAt = this.convertValues(source["updatedAt"], null);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

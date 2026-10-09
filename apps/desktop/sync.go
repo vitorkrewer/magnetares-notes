@@ -591,10 +591,12 @@ func (s *noteStore) syncViaAPI(apiURL, profileID, cursor, tursoDatabaseURL, turs
 		SyncedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	// Sincronizar pastas, etiquetas e stickers primeiro
+	// Sincronizar pastas, etiquetas, stickers e tarefas primeiro
 	_ = s.syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAuthToken)
 	_ = s.syncTagsViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAuthToken)
-	stickerWarning := s.syncStickerEntities(NewTursoClient(tursoDatabaseURL, tursoAuthToken), profileID)
+	tursoCli := NewTursoClient(tursoDatabaseURL, tursoAuthToken)
+	stickerWarning := s.syncStickerEntities(tursoCli, profileID)
+	tasksWarning := s.syncTaskEntities(tursoCli, profileID)
 
 	pending, err := s.pendingSyncNotes()
 	if err != nil {
@@ -631,7 +633,7 @@ func (s *noteStore) syncViaAPI(apiURL, profileID, cursor, tursoDatabaseURL, turs
 			break
 		}
 	}
-	result.Message = fmt.Sprintf("Sincronização concluída via API: %d enviadas, %d recebidas, %d conflitos.", result.Uploaded, result.Downloaded, result.Conflicts) + stickerWarning
+	result.Message = fmt.Sprintf("Sincronização concluída via API: %d enviadas, %d recebidas, %d conflitos.", result.Uploaded, result.Downloaded, result.Conflicts) + stickerWarning + tasksWarning
 	return result, nil
 }
 
@@ -649,10 +651,11 @@ func (s *noteStore) syncDirectTurso(profileID, cursor, tursoDatabaseURL, tursoAu
 		SyncedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	// Sincronizar pastas, etiquetas e stickers primeiro
+	// Sincronizar pastas, etiquetas, stickers e tarefas primeiro
 	_ = s.syncFoldersDirect(turso, profileID)
 	_ = s.syncTagsDirect(turso, profileID)
 	stickerWarning := s.syncStickerEntities(turso, profileID)
+	tasksWarning := s.syncTaskEntities(turso, profileID)
 
 	pending, err := s.pendingSyncNotes()
 	if err != nil {
@@ -712,7 +715,7 @@ func (s *noteStore) syncDirectTurso(profileID, cursor, tursoDatabaseURL, tursoAu
 		}
 	}
 
-	result.Message = fmt.Sprintf("Sincronização concluída com Turso: %d enviadas, %d recebidas, %d conflitos.", result.Uploaded, result.Downloaded, result.Conflicts) + stickerWarning
+	result.Message = fmt.Sprintf("Sincronização concluída com Turso: %d enviadas, %d recebidas, %d conflitos.", result.Uploaded, result.Downloaded, result.Conflicts) + stickerWarning + tasksWarning
 	return result, nil
 }
 

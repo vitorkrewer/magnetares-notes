@@ -366,6 +366,47 @@ func (t *TursoClient) InitSchema() error {
 			updated_at INTEGER NOT NULL,
 			PRIMARY KEY (user_id, id)
 		)`,
+		`CREATE TABLE IF NOT EXISTS sync_task_lists (
+			user_id TEXT NOT NULL,
+			id TEXT NOT NULL,
+			name TEXT NOT NULL DEFAULT '',
+			color TEXT NOT NULL DEFAULT 'blue',
+			icon TEXT NOT NULL DEFAULT 'inbox',
+			position REAL NOT NULL DEFAULT 0.0,
+			deleted_at INTEGER,
+			created_at INTEGER NOT NULL,
+			updated_at INTEGER NOT NULL,
+			PRIMARY KEY (user_id, id)
+		)`,
+		`CREATE TABLE IF NOT EXISTS sync_tasks (
+			user_id TEXT NOT NULL,
+			id TEXT NOT NULL,
+			list_id TEXT NOT NULL,
+			title TEXT NOT NULL DEFAULT '',
+			notes TEXT NOT NULL DEFAULT '',
+			completed INTEGER NOT NULL DEFAULT 0,
+			completed_at INTEGER,
+			due_date TEXT,
+			priority INTEGER NOT NULL DEFAULT 0,
+			position REAL NOT NULL DEFAULT 0.0,
+			deleted_at INTEGER,
+			created_at INTEGER NOT NULL,
+			updated_at INTEGER NOT NULL,
+			PRIMARY KEY (user_id, id)
+		)`,
+		`CREATE TABLE IF NOT EXISTS sync_subtasks (
+			user_id TEXT NOT NULL,
+			id TEXT NOT NULL,
+			task_id TEXT NOT NULL,
+			title TEXT NOT NULL DEFAULT '',
+			completed INTEGER NOT NULL DEFAULT 0,
+			completed_at INTEGER,
+			position REAL NOT NULL DEFAULT 0.0,
+			deleted_at INTEGER,
+			created_at INTEGER NOT NULL,
+			updated_at INTEGER NOT NULL,
+			PRIMARY KEY (user_id, id)
+		)`,
 		`CREATE TABLE IF NOT EXISTS sync_note_changes (
 			cursor INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id TEXT NOT NULL,
@@ -427,6 +468,9 @@ func (t *TursoClient) InitSchema() error {
 		`UPDATE sync_notes SET note_type = 'rtf' WHERE note_type IS NULL OR note_type IN ('', 'richtext')`,
 		`UPDATE sync_notes SET language = 'plaintext' WHERE language IS NULL OR language = ''`,
 		`CREATE INDEX IF NOT EXISTS sync_folders_by_user_updated ON sync_folders(user_id, updated_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS sync_task_lists_by_user ON sync_task_lists(user_id, updated_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS sync_tasks_by_user ON sync_tasks(user_id, updated_at DESC)`,
+		`CREATE INDEX IF NOT EXISTS sync_subtasks_by_user ON sync_subtasks(user_id, updated_at DESC)`,
 	}
 	for _, statement := range complianceStatements {
 		_ = t.Execute(statement)

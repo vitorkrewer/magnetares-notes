@@ -342,6 +342,8 @@ type RemoteSyncProfile struct {
 	Tags          int64      `json:"tags"`
 	StickerBoards int64      `json:"stickerBoards"`
 	Stickers      int64      `json:"stickers"`
+	TaskLists     int64      `json:"taskLists"`
+	Tasks         int64      `json:"tasks"`
 	LastUpdatedAt *time.Time `json:"lastUpdatedAt"`
 	Current       bool       `json:"current"`
 	Primary       bool       `json:"primary"`
@@ -358,6 +360,9 @@ var remoteProfileTables = []struct{ table, kind string }{
 	{"sync_tags", "tags"},
 	{"sync_sticker_boards", "boards"},
 	{"sync_stickers", "stickers"},
+	{"sync_task_lists", "task_lists"},
+	{"sync_tasks", "tasks"},
+	{"sync_subtasks", "subtasks"},
 }
 
 func listRemoteSyncProfiles(turso *TursoClient, currentProfileID string) ([]RemoteSyncProfile, error) {
@@ -406,6 +411,10 @@ func listRemoteSyncProfiles(turso *TursoClient, currentProfileID string) ([]Remo
 			acc.profile.StickerBoards = active
 		case "stickers":
 			acc.profile.Stickers = active
+		case "task_lists":
+			acc.profile.TaskLists = active
+		case "tasks":
+			acc.profile.Tasks = active
 		}
 		acc.profile.totalRows += total
 		acc.signatures[row[1].Value] = fmt.Sprintf("%s=%d/%s", row[1].Value, total, row[4].Value)
@@ -454,6 +463,9 @@ var lwwSyncTables = []lwwTable{
 	{"sync_tags", []string{"name", "normalized_name", "icon", "managed", "deleted_at", "created_at", "updated_at"}},
 	{"sync_sticker_boards", []string{"name", "color", "position", "deleted_at", "created_at", "updated_at"}},
 	{"sync_stickers", []string{"board_id", "title", "body", "color", "position", "pinned_at", "deleted_at", "created_at", "updated_at"}},
+	{"sync_task_lists", []string{"name", "color", "icon", "position", "deleted_at", "created_at", "updated_at"}},
+	{"sync_tasks", []string{"list_id", "title", "notes", "completed", "completed_at", "due_date", "priority", "position", "deleted_at", "created_at", "updated_at"}},
+	{"sync_subtasks", []string{"task_id", "title", "completed", "completed_at", "position", "deleted_at", "created_at", "updated_at"}},
 }
 
 var syncNoteColumns = []string{"title", "body", "body_text", "note_type", "language", "folder_id", "folder", "pinned_at",

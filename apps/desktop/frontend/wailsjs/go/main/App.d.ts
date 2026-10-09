@@ -18,7 +18,13 @@ export function DeleteSticker(arg1:string):Promise<void>;
 
 export function DeleteStickerBoard(arg1:string):Promise<void>;
 
+export function DeleteSubtask(arg1:string):Promise<void>;
+
 export function DeleteTag(arg1:string):Promise<void>;
+
+export function DeleteTask(arg1:string):Promise<void>;
+
+export function DeleteTaskList(arg1:string):Promise<void>;
 
 export function EmptyDeletedNotes():Promise<void>;
 
@@ -34,6 +40,8 @@ export function GetSyncProfileID():Promise<string>;
 
 export function GetSyncProfileInfo():Promise<main.SyncProfileInfo>;
 
+export function GetTaskWithSubtasks(arg1:string):Promise<main.Task>;
+
 export function IsWindowMaximized():Promise<boolean>;
 
 export function ListDeletedNotes():Promise<Array<main.Note>>;
@@ -47,6 +55,10 @@ export function ListNotes():Promise<Array<main.Note>>;
 export function ListRemoteSyncProfiles():Promise<Array<main.RemoteSyncProfile>>;
 
 export function ListStickers(arg1:string):Promise<Array<main.Sticker>>;
+
+export function ListTaskLists():Promise<Array<main.TaskList>>;
+
+export function ListTasks(arg1:string,arg2:boolean):Promise<Array<main.Task>>;
 
 export function MinimizeWindow():Promise<void>;
 
@@ -84,9 +96,15 @@ export function SaveSticker(arg1:main.Sticker):Promise<main.Sticker>;
 
 export function SaveStickerBoard(arg1:main.StickerBoard):Promise<main.StickerBoard>;
 
+export function SaveSubtask(arg1:main.Subtask):Promise<main.Subtask>;
+
 export function SaveSyncConfiguration(arg1:string,arg2:string):Promise<main.SyncConfiguration>;
 
 export function SaveTag(arg1:main.Tag):Promise<main.Tag>;
+
+export function SaveTask(arg1:main.Task):Promise<main.Task>;
+
+export function SaveTaskList(arg1:main.TaskList):Promise<main.TaskList>;
 
 export function SetCustomDatabasePath(arg1:string):Promise<string>;
 
@@ -105,3 +123,7 @@ export function SyncNow(arg1:string):Promise<main.SyncResult>;
 export function TestTursoConnection(arg1:string,arg2:string):Promise<string>;
 
 export function ToggleMaximizeWindow():Promise<boolean>;
+
+export function ToggleSubtaskCompleted(arg1:string,arg2:boolean):Promise<void>;
+
+export function ToggleTaskCompleted(arg1:string,arg2:boolean):Promise<void>;

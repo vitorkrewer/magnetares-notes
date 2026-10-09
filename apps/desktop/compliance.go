@@ -15,6 +15,7 @@ type ComplianceReport struct {
 	ChecklistsCorrected int      `json:"checklistsCorrected"`
 	OrphanTagsCleaned   int      `json:"orphanTagsCleaned"`
 	OrphanStickersFixed int      `json:"orphanStickersFixed"`
+	OrphanTasksFixed    int      `json:"orphanTasksFixed"`
 	Details             []string `json:"details"`
 	AuditedAt           string   `json:"auditedAt"`
 }
@@ -204,6 +205,9 @@ func (s *noteStore) EnsureDataCompliance() (ComplianceReport, error) {
 	// 12. Stickers: quadro padrão, cores inválidas, stickers órfãos e metadados de sync
 	s.ensureStickerCompliance(tx, now, &report)
 
+	// 13. Task Lists: lista padrão, tarefas órfãs, subtarefas e metadados de sync
+	s.ensureTaskListCompliance(tx, now, &report)
+
 	if err := tx.Commit(); err != nil {
 		return report, fmt.Errorf("commit compliance: %w", err)
 	}
@@ -250,6 +254,51 @@ func (s *noteStore) ensureStickerCompliance(tx *sql.Tx, now int64, report *Compl
 
 	// 12f. Corrigir timestamps e sync_state inválidos em stickers
 	_, _ = tx.Exec(`UPDATE stickers SET
+		created_at = CASE WHEN created_at <= 0 THEN ? ELSE created_at END,
+		updated_at = CASE WHEN updated_at <= 0 THEN ? ELSE updated_at END,
+		sync_state = CASE WHEN sync_state IS NULL OR sync_state NOT IN ('clean', 'pending') THEN 'pending' ELSE sync_state END
+		WHERE created_at <= 0 OR updated_at <= 0 OR sync_state IS NULL OR sync_state NOT IN ('clean', 'pending')`, now, now)
+}
+
+func (s *noteStore) ensureTaskListCompliance(tx *sql.Tx, now int64, report *ComplianceReport) {
+	// 13a. Garantir existência da lista padrão 'list-inbox' ('Entrada')
+	_, _ = tx.Exec(`INSERT INTO task_lists(id, name, color, icon, position, created_at, updated_at, sync_state)
+		VALUES ('list-inbox', 'Entrada', 'blue', 'inbox', 0, ?, ?, 'pending')
+		ON CONFLICT(id) DO UPDATE SET
+			color = CASE WHEN task_lists.color IS NULL OR task_lists.color = '' THEN 'blue' ELSE task_lists.color END,
+			icon = CASE WHEN task_lists.icon IS NULL OR task_lists.icon = '' THEN 'inbox' ELSE task_lists.icon END`, now, now)
+
+	// 13b. Corrigir tarefas ativas órfãs (list_id nulo/vazio ou lista inexistente OU lista excluída)
+	res, err := tx.Exec(`UPDATE tasks SET list_id = 'list-inbox', sync_state = 'pending', updated_at = ?
+		WHERE deleted_at IS NULL AND (list_id IS NULL OR list_id = ''
+		   OR list_id NOT IN (SELECT id FROM task_lists WHERE deleted_at IS NULL))`, now)
+	if err == nil {
+		if affected, _ := res.RowsAffected(); affected > 0 {
+			report.OrphanTasksFixed += int(affected)
+			report.Details = append(report.Details, fmt.Sprintf("Reatribuídas %d tarefas órfãs para a lista padrão (Entrada)", affected))
+		}
+	}
+
+	// 13c. Corrigir subtarefas órfãs (tarefa pai inexistente)
+	_, _ = tx.Exec(`UPDATE subtasks SET deleted_at = ?, sync_state = 'pending', updated_at = ?
+		WHERE deleted_at IS NULL AND task_id NOT IN (SELECT id FROM tasks)`, now, now)
+
+	// 13d. Corrigir timestamps e sync_state inválidos em task_lists
+	_, _ = tx.Exec(`UPDATE task_lists SET
+		created_at = CASE WHEN created_at <= 0 THEN ? ELSE created_at END,
+		updated_at = CASE WHEN updated_at <= 0 THEN ? ELSE updated_at END,
+		sync_state = CASE WHEN sync_state IS NULL OR sync_state NOT IN ('clean', 'pending') THEN 'pending' ELSE sync_state END
+		WHERE created_at <= 0 OR updated_at <= 0 OR sync_state IS NULL OR sync_state NOT IN ('clean', 'pending')`, now, now)
+
+	// 13e. Corrigir timestamps e sync_state inválidos em tasks
+	_, _ = tx.Exec(`UPDATE tasks SET
+		created_at = CASE WHEN created_at <= 0 THEN ? ELSE created_at END,
+		updated_at = CASE WHEN updated_at <= 0 THEN ? ELSE updated_at END,
+		sync_state = CASE WHEN sync_state IS NULL OR sync_state NOT IN ('clean', 'pending') THEN 'pending' ELSE sync_state END
+		WHERE created_at <= 0 OR updated_at <= 0 OR sync_state IS NULL OR sync_state NOT IN ('clean', 'pending')`, now, now)
+
+	// 13f. Corrigir timestamps e sync_state inválidos em subtasks
+	_, _ = tx.Exec(`UPDATE subtasks SET
 		created_at = CASE WHEN created_at <= 0 THEN ? ELSE created_at END,
 		updated_at = CASE WHEN updated_at <= 0 THEN ? ELSE updated_at END,
 		sync_state = CASE WHEN sync_state IS NULL OR sync_state NOT IN ('clean', 'pending') THEN 'pending' ELSE sync_state END
