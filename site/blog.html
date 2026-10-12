@@ -409,7 +409,7 @@
       const paginatedPosts = allPosts.slice(startIndex, startIndex + POSTS_PER_PAGE);
 
       paginatedPosts.forEach(post => {
-        const dateStr = new Date(post.date).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' });
+        const dateStr = new Date(post.date).toLocaleDateString('pt-BR', { timeZone: 'UTC', year: 'numeric', month: 'long', day: 'numeric' });
 
         const a = document.createElement('a');
         a.href = `post.html?id=${post.id}`;
