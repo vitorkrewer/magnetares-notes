@@ -1,5 +1,11 @@
 [
   {
+    "id": "modo-foco-identidade",
+    "title": "Aulas da faculdade, foco e o caminho para a v1.9.0",
+    "date": "2026-10-12",
+    "summary": "Um relato pessoal sobre como a necessidade de assistir a aulas e fazer anotações de estudo inspirou o desenvolvimento do Modo Foco em janela independente (Picture-in-Picture) e o que esperar da futura versão 1.9.0."
+  },
+  {
     "id": "v1-8-0",
     "title": "Magnetares Notes v1.8.0: Novo Módulo de Listas & Tarefas, Prioridades Semânticas e Modais Nativos!",
     "date": "2026-10-12",
