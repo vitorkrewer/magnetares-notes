@@ -6,6 +6,8 @@ export function ArchiveTaskList(arg1:string):Promise<main.TaskList>;
 
 export function Close():Promise<void>;
 
+export function CloseFocusWindow(arg1:string):Promise<void>;
+
 export function CloseWindow():Promise<void>;
 
 export function CreateDatabaseBackup():Promise<string>;
@@ -34,6 +36,10 @@ export function ExportNoteFile(arg1:string,arg2:string):Promise<string>;
 
 export function GetDatabasePath():Promise<string>;
 
+export function GetFocusNoteID():Promise<string>;
+
+export function GetNote(arg1:string):Promise<main.Note>;
+
 export function GetSyncConfiguration():Promise<main.SyncConfiguration>;
 
 export function GetSyncDiagnosticReport():Promise<main.SyncDiagnosticReport>;
@@ -45,6 +51,8 @@ export function GetSyncProfileInfo():Promise<main.SyncProfileInfo>;
 export function GetTaskWithSubtasks(arg1:string):Promise<main.Task>;
 
 export function IsWindowMaximized():Promise<boolean>;
+
+export function LaunchFocusWindow(arg1:string):Promise<void>;
 
 export function ListArchivedTaskLists():Promise<Array<main.TaskList>>;
 
@@ -109,6 +117,8 @@ export function SaveTag(arg1:main.Tag):Promise<main.Tag>;
 export function SaveTask(arg1:main.Task):Promise<main.Task>;
 
 export function SaveTaskList(arg1:main.TaskList):Promise<main.TaskList>;
+
+export function SetAlwaysOnTop(arg1:boolean):Promise<void>;
 
 export function SetCustomDatabasePath(arg1:string):Promise<string>;
 

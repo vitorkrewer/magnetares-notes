@@ -2,6 +2,18 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## [v1.9.0] - Em desenvolvimento
+
+### Added
+
+- **Modo Foco em Janela Independente (Multi-Window / Picture-in-Picture):**
+  - **Janela de SO Independente:** Permite destacar qualquer nota em uma segunda janela nativa e independente do sistema operacional, perfeita para posicionar lado a lado com reprodutores de vídeo, aulas online ou em múltiplos monitores.
+  - **Acesso Contínuo ao Magnetares:** A aplicação principal continua 100% aberta e navegável, permitindo ao usuário consultar listas de tarefas, checklists, stickers, pastas e outras anotações enquanto redige na janela destacada.
+  - **Sincronização em Tempo Real:** Comunicação bidirecional contínua entre a janela de foco e o aplicativo principal (via `BroadcastChannel` e SQLite WAL), sincronizando edições e salvamentos automáticos instantaneamente.
+  - **Fixar no Topo (Always-on-Top):** Botão dedicado na barra de título da janela de foco para mantê-la flutuando sobre qualquer outro programa ou reprodutor de vídeo.
+  - **Card de Estado na Janela Principal:** Espaço do editor na aplicação principal exibe aviso amigável de *Modo Foco Ativado* com botão de retorno em um clique (*Retornar edição para esta janela*).
+  - **Atalhos e Controles de Janela:** Suporte a arrasto nativo da barra de título, controles de janela (minimizar, restaurar/maximizar, fechar), atalho `Esc` para retornar ao app e `Ctrl+S` para forçar salvamento.
+
 ## [v1.8.0] - 2026-10-12
 
 ### Added

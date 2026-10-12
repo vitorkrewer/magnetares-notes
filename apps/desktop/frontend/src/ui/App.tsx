@@ -10,7 +10,6 @@ import { StickerBoardDialog, STICKER_PALETTE, DelicateStickerIcon } from "./Stic
 import { StickerBoardView } from "./StickerBoardView";
 import { TaskListDialog, TASK_LIST_PALETTE, getTaskListIconComponent } from "./TaskListDialog";
 import { TaskListView } from "./TaskListView";
-import { FocusNoteModal } from "./FocusNoteModal";
 import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord, TaskListRecord } from "./types";
 import { downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
 
@@ -112,7 +111,7 @@ export function App() {
     const saved = ((localStorage.getItem("magnetares_theme") || localStorage.getItem("aster_theme")) as ThemeOption) || "light";
     return saved === "dark" || (saved === "system" && typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches);
   });
-  const [isFocusMode, setIsFocusMode] = useState(false);
+  const [detachedFocusNoteIds, setDetachedFocusNoteIds] = useState<Set<string>>(new Set());
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dbPath, setDbPath] = useState("%LOCALAPPDATA%\\Magnetares Notes\\magnetares.db");
   // Vazio = o backend usa o pipeline direto do Turso (ou syncApiUrl do config.json).
@@ -178,6 +177,113 @@ export function App() {
       void bridge.ListNoteConflicts().then(setConflicts);
     }
   }, []);
+
+  // Sincroniza estado de Modo Foco e notas entre janelas via Eventos nativos e BroadcastChannel
+  useEffect(() => {
+    // 1. Escuta evento nativo emitido pelo Go quando a janela independente fecha (por Esc, 'X', etc.)
+    const cleanupNative = window.runtime?.EventsOn?.("focus:closed", (closedNoteId: string) => {
+      setDetachedFocusNoteIds((prev) => {
+        const next = new Set(prev);
+        next.delete(closedNoteId);
+        return next;
+      });
+
+      // Recarrega a nota do SQLite para exibir o conteúdo atualizado imediatamente
+      const bridge = window.go?.main?.App;
+      if (bridge?.GetNote) {
+        bridge.GetNote(closedNoteId).then((updated) => {
+          if (updated) {
+            setNotes((current) => current.map((n) => (n.id === updated.id ? updated : n)));
+          }
+        }).catch(() => undefined);
+      }
+    });
+
+    let channel: BroadcastChannel | null = null;
+    try {
+      channel = new BroadcastChannel("magnetares_focus_sync");
+      channel.onmessage = (event) => {
+        const data = event.data;
+        if (!data) return;
+
+        if (data.type === "FOCUS_WINDOW_OPENED" && data.noteId) {
+          setDetachedFocusNoteIds((prev) => new Set(prev).add(data.noteId));
+        } else if (data.type === "FOCUS_WINDOW_CLOSED" && data.noteId) {
+          setDetachedFocusNoteIds((prev) => {
+            const next = new Set(prev);
+            next.delete(data.noteId);
+            return next;
+          });
+          const bridge = window.go?.main?.App;
+          if (bridge?.GetNote) {
+            bridge.GetNote(data.noteId).then((updated) => {
+              if (updated) {
+                setNotes((current) => current.map((n) => (n.id === updated.id ? updated : n)));
+              }
+            }).catch(() => undefined);
+          }
+        } else if (data.type === "NOTE_UPDATED" && data.note) {
+          setNotes((current) => current.map((n) => (n.id === data.note.id ? { ...n, ...data.note } : n)));
+        }
+      };
+    } catch {
+      // Ignora se BroadcastChannel não estiver disponível
+    }
+
+    return () => {
+      if (typeof cleanupNative === "function") {
+        cleanupNative();
+      } else {
+        window.runtime?.EventsOff?.("focus:closed");
+      }
+      try {
+        channel?.close();
+      } catch {}
+    };
+  }, []);
+
+  const handleLaunchFocusMode = async (note: Note) => {
+    if (detachedFocusNoteIds.has(note.id)) {
+      return;
+    }
+    const bridge = window.go?.main?.App;
+    if (bridge?.LaunchFocusWindow) {
+      try {
+        await bridge.LaunchFocusWindow(note.id);
+        setDetachedFocusNoteIds((prev) => new Set(prev).add(note.id));
+      } catch (err) {
+        console.error("Falha ao abrir janela de foco:", err);
+      }
+    } else {
+      window.open(`?focusNote=${note.id}`, `magnetares_focus_${note.id}`, "width=620,height=780");
+      setDetachedFocusNoteIds((prev) => new Set(prev).add(note.id));
+    }
+  };
+
+  const handleCloseFocusWindow = (noteId: string) => {
+    const bridge = window.go?.main?.App;
+    if (bridge?.CloseFocusWindow) {
+      void bridge.CloseFocusWindow(noteId);
+    }
+    try {
+      const channel = new BroadcastChannel("magnetares_focus_sync");
+      channel.postMessage({ type: "REQUEST_CLOSE_FOCUS", noteId });
+      channel.close();
+    } catch {}
+    setDetachedFocusNoteIds((prev) => {
+      const next = new Set(prev);
+      next.delete(noteId);
+      return next;
+    });
+    if (bridge?.GetNote) {
+      bridge.GetNote(noteId).then((updated) => {
+        if (updated) {
+          setNotes((current) => current.map((n) => (n.id === updated.id ? updated : n)));
+        }
+      }).catch(() => undefined);
+    }
+  };
+
   const pendingNotes = useRef(new Map<string, Note>());
   const saveTimers = useRef(new Map<string, number>());
   const saveQueues = useRef(new Map<string, Promise<void>>());
@@ -1790,33 +1896,33 @@ export function App() {
                       )}
                     </div>
                     <button className={`icon-button ${active.pinnedAt ? "active-pin" : ""}`} onClick={() => void togglePinActiveNote()} title={active.pinnedAt ? "Desafixar nota" : "Fixar nota"} aria-label={active.pinnedAt ? "Desafixar nota" : "Fixar nota"}><Pin aria-hidden="true" /></button>
-                    <button className={`icon-button focus-trigger-button ${isFocusMode ? "active-pin" : ""}`} onClick={() => setIsFocusMode((prev) => !prev)} title="Destacar nota no Modo Foco (Picture-in-Picture)" aria-label="Destacar nota no Modo Foco"><PictureInPicture2 aria-hidden="true" size={17} /></button>
+                    <button className={`icon-button focus-trigger-button ${detachedFocusNoteIds.has(active.id) ? "active-pin" : ""}`} onClick={() => void handleLaunchFocusMode(active)} title={detachedFocusNoteIds.has(active.id) ? "Nota aberta em janela independente de foco" : "Destacar nota no Modo Foco (Janela independente)"} aria-label="Destacar nota no Modo Foco"><PictureInPicture2 aria-hidden="true" size={17} /></button>
                     <button className="icon-button danger-button" onClick={() => void deleteNote(active)} title="Mover para Apagadas recentemente" aria-label="Apagar nota"><Trash2 aria-hidden="true" /></button>
                     <button className="icon-button" onClick={() => createNote("rtf")} title="Nova nota (Ctrl+N)" aria-label="Nova nota"><FilePenLine aria-hidden="true" /></button>
                   </>
                 )}
               </div>
             </header>
-            {isFocusMode ? (
+            {detachedFocusNoteIds.has(active.id) ? (
               <div className="focus-mode-active-placeholder">
                 <div className="focus-mode-badge-pulse">
                   <PictureInPicture2 size={40} aria-hidden="true" />
                 </div>
                 <h2>Modo Foco Ativado</h2>
                 <p className="focus-mode-desc">
-                  A nota <strong>"{active.title || "Sem título"}"</strong> está destacada em primeiro plano para você estudar, assistir a aulas e fazer anotações lado a lado.
+                  A nota <strong>"{active.title || "Sem título"}"</strong> está aberta em uma janela independente para você estudar, assistir a aulas e fazer anotações lado a lado.
                 </p>
                 <div className="focus-mode-actions">
                   <button
                     type="button"
                     className="focus-return-cta"
-                    onClick={() => setIsFocusMode(false)}
+                    onClick={() => handleCloseFocusWindow(active.id)}
                   >
-                    <Minimize2 size={16} aria-hidden="true" /> Retornar à aplicação principal
+                    <Minimize2 size={16} aria-hidden="true" /> Retornar edição para esta janela
                   </button>
                 </div>
                 <div className="focus-mode-tips">
-                  <span>💡 <strong>Edição Ativa:</strong> As alterações feitas na janela de foco continuam sincronizadas e salvas automaticamente em tempo real.</span>
+                  <span>💡 <strong>Acesso Total:</strong> Você pode navegar e utilizar todo o Magnetares (como ler listas de tarefas, stickers, outras notas e pastas) normalmente enquanto a nota estiver destacada.</span>
                 </div>
               </div>
             ) : (
@@ -2101,17 +2207,6 @@ export function App() {
             setListToEdit(undefined);
           }}
           onSave={handleSaveTaskList}
-        />
-      )}
-
-      {active && (
-        <FocusNoteModal
-          isOpen={isFocusMode}
-          note={active}
-          saveState={saveState}
-          onClose={() => setIsFocusMode(false)}
-          onSave={(patch) => save(patch)}
-          onFlush={(id) => void flushNote(id)}
         />
       )}
     </main>

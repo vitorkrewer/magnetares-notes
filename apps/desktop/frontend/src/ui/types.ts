@@ -245,6 +245,11 @@ export type DesktopBridge = {
   ToggleMaximizeWindow?: () => Promise<boolean>;
   IsWindowMaximized?: () => Promise<boolean>;
   CloseWindow?: () => Promise<void>;
+  GetFocusNoteID?: () => Promise<string>;
+  GetNote?: (id: string) => Promise<Note>;
+  SetAlwaysOnTop?: (onTop: boolean) => Promise<void>;
+  LaunchFocusWindow?: (noteID: string) => Promise<void>;
+  CloseFocusWindow?: (noteID: string) => Promise<void>;
   ExportNoteFile?: (defaultFilename: string, content: string) => Promise<string>;
   CreateDatabaseBackup?: () => Promise<string>;
   RestoreDatabaseBackup?: () => Promise<string>;
@@ -257,6 +262,11 @@ declare global {
       main?: {
         App?: DesktopBridge;
       };
+    };
+    runtime?: {
+      EventsOn?: (eventName: string, callback: (...data: any[]) => void) => () => void;
+      EventsOff?: (eventName: string, ...additionalEventNames: string[]) => void;
+      EventsEmit?: (eventName: string, ...data: any[]) => void;
     };
   }
 }

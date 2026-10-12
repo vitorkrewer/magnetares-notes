@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -32,8 +34,11 @@ type Note struct {
 }
 
 type App struct {
-	ctx   context.Context
-	store *noteStore
+	ctx            context.Context
+	store          *noteStore
+	focusNoteID    string
+	focusProcesses map[string]*exec.Cmd
+	focusMu        sync.Mutex
 }
 
 func NewApp(databasePath string) (*App, error) {
@@ -41,7 +46,10 @@ func NewApp(databasePath string) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &App{store: store}, nil
+	return &App{
+		store:          store,
+		focusProcesses: make(map[string]*exec.Cmd),
+	}, nil
 }
 
 func (a *App) startup(ctx context.Context) { a.ctx = ctx }
@@ -319,6 +327,67 @@ func (a *App) IsWindowMaximized() bool {
 func (a *App) CloseWindow() {
 	if a.ctx != nil {
 		runtime.Quit(a.ctx)
+	}
+}
+
+func (a *App) GetFocusNoteID() string {
+	return a.focusNoteID
+}
+
+func (a *App) GetNote(id string) (Note, error) {
+	return a.store.getNote(id)
+}
+
+func (a *App) SetAlwaysOnTop(b bool) {
+	if a.ctx != nil {
+		runtime.WindowSetAlwaysOnTop(a.ctx, b)
+	}
+}
+
+func (a *App) LaunchFocusWindow(noteID string) error {
+	exe, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("obter executável: %w", err)
+	}
+
+	a.focusMu.Lock()
+	if existing, ok := a.focusProcesses[noteID]; ok && existing != nil && existing.Process != nil {
+		a.focusMu.Unlock()
+		return nil
+	}
+	cmd := exec.Command(exe, "--focus-note="+noteID)
+	if err := cmd.Start(); err != nil {
+		a.focusMu.Unlock()
+		return fmt.Errorf("iniciar janela de foco: %w", err)
+	}
+	a.focusProcesses[noteID] = cmd
+	a.focusMu.Unlock()
+
+	go func() {
+		_ = cmd.Wait()
+		a.focusMu.Lock()
+		delete(a.focusProcesses, noteID)
+		a.focusMu.Unlock()
+
+		if a.ctx != nil {
+			runtime.EventsEmit(a.ctx, "focus:closed", noteID)
+		}
+	}()
+
+	return nil
+}
+
+func (a *App) CloseFocusWindow(noteID string) {
+	a.focusMu.Lock()
+	cmd, exists := a.focusProcesses[noteID]
+	if exists && cmd != nil && cmd.Process != nil {
+		_ = cmd.Process.Kill()
+	}
+	delete(a.focusProcesses, noteID)
+	a.focusMu.Unlock()
+
+	if a.ctx != nil {
+		runtime.EventsEmit(a.ctx, "focus:closed", noteID)
 	}
 }
 

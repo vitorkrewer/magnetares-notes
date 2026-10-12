@@ -10,6 +10,10 @@ export function Close() {
   return window['go']['main']['App']['Close']();
 }
 
+export function CloseFocusWindow(arg1) {
+  return window['go']['main']['App']['CloseFocusWindow'](arg1);
+}
+
 export function CloseWindow() {
   return window['go']['main']['App']['CloseWindow']();
 }
@@ -66,6 +70,14 @@ export function GetDatabasePath() {
   return window['go']['main']['App']['GetDatabasePath']();
 }
 
+export function GetFocusNoteID() {
+  return window['go']['main']['App']['GetFocusNoteID']();
+}
+
+export function GetNote(arg1) {
+  return window['go']['main']['App']['GetNote'](arg1);
+}
+
 export function GetSyncConfiguration() {
   return window['go']['main']['App']['GetSyncConfiguration']();
 }
@@ -88,6 +100,10 @@ export function GetTaskWithSubtasks(arg1) {
 
 export function IsWindowMaximized() {
   return window['go']['main']['App']['IsWindowMaximized']();
+}
+
+export function LaunchFocusWindow(arg1) {
+  return window['go']['main']['App']['LaunchFocusWindow'](arg1);
 }
 
 export function ListArchivedTaskLists() {
@@ -216,6 +232,10 @@ export function SaveTask(arg1) {
 
 export function SaveTaskList(arg1) {
   return window['go']['main']['App']['SaveTaskList'](arg1);
+}
+
+export function SetAlwaysOnTop(arg1) {
+  return window['go']['main']['App']['SetAlwaysOnTop'](arg1);
 }
 
 export function SetCustomDatabasePath(arg1) {
