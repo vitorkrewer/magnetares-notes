@@ -107,6 +107,10 @@ export function App() {
   const [deleteListTarget, setDeleteListTarget] = useState<TaskListRecord | null>(null);
   const [archivedListsExpanded, setArchivedListsExpanded] = useState(false);
   const [theme, setTheme] = useState<ThemeOption>(() => ((localStorage.getItem("magnetares_theme") || localStorage.getItem("aster_theme")) as ThemeOption) || "light");
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    const saved = ((localStorage.getItem("magnetares_theme") || localStorage.getItem("aster_theme")) as ThemeOption) || "light";
+    return saved === "dark" || (saved === "system" && typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches);
+  });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dbPath, setDbPath] = useState("%LOCALAPPDATA%\\Magnetares Notes\\magnetares.db");
   // Vazio = o backend usa o pipeline direto do Turso (ou syncApiUrl do config.json).
@@ -138,12 +142,19 @@ export function App() {
 
   useEffect(() => {
     localStorage.setItem("magnetares_theme", theme);
-    const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    if (isDark) {
-      document.documentElement.setAttribute("data-theme", "dark");
-    } else {
-      document.documentElement.removeAttribute("data-theme");
-    }
+    const media = window.matchMedia?.("(prefers-color-scheme: dark)");
+    const updateTheme = () => {
+      const dark = theme === "dark" || (theme === "system" && (media?.matches ?? false));
+      setIsDark(dark);
+      if (dark) {
+        document.documentElement.setAttribute("data-theme", "dark");
+      } else {
+        document.documentElement.removeAttribute("data-theme");
+      }
+    };
+    updateTheme();
+    media?.addEventListener?.("change", updateTheme);
+    return () => media?.removeEventListener?.("change", updateTheme);
   }, [theme]);
 
   useEffect(() => {
@@ -1237,7 +1248,12 @@ export function App() {
       <main className={`shell ${sidebarOpen ? "" : "sidebar-closed"} ${view === "stickers" ? "stickers-view" : ""} ${view === "tasks" ? "tasks-view" : ""}`}>
       <aside className="sidebar" aria-label="Pastas">
         <div className="sidebar-heading">
-          <Sparkles className="brand-mark" aria-hidden="true" />
+          <img
+            src="/icon.png"
+            alt="Magnetares"
+            className="brand-mark brand-icon"
+            aria-hidden="true"
+          />
           <strong>Magnetares</strong>
           <button className="icon-button" onClick={() => setSidebarOpen(false)} title="Ocultar barra lateral" aria-label="Ocultar barra lateral"><ChevronLeft aria-hidden="true" /></button>
         </div>

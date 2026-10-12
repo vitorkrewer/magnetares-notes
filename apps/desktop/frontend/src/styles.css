@@ -450,9 +450,13 @@ textarea:focus-visible {
 }
 
 .brand-mark {
-  color: #b87800;
-  height: 17px;
-  width: 17px;
+  height: 22px;
+  width: 22px;
+  border-radius: 5px;
+  object-fit: contain;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .icon-button {
