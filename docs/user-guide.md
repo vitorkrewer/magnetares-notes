@@ -2,13 +2,13 @@
 
 ## Navegação básica
 
-O Magnetares usa três painéis:
+O Magnetares opera com uma barra lateral modular e três visualizações principais:
 
-1. **Barra lateral:** todas as notas, pastas, Pastas Inteligentes, etiquetas e lixeira.
-2. **Lista de notas:** busca e seleção de notas do contexto atual.
-3. **Editor:** título, etiquetas, formatação e conteúdo da nota selecionada.
+1. **Visão de Notas (Três Painéis):** Barra lateral (árvore de pastas e etiquetas), Lista central de notas e Editor rico estruturado.
+2. **Visão de Listas & Tarefas:** Painel central de tarefas com Quick-Add, filtros e busca, acompanhado do painel lateral Inspector para detalhes, subtarefas e notas anexas.
+3. **Visão de Stickers:** Mural em grade expansível (*full-width*) com post-its coloridos e ordenação fluida por arrastar e soltar.
 
-O botão de recolher a barra lateral amplia a área do editor. A rolagem da nota fica na borda direita do painel do editor e aparece de maneira discreta quando há conteúdo extenso.
+O botão de recolher a barra lateral amplia a área de trabalho. A rolagem fica na borda direita e aparece de maneira discreta quando há conteúdo extenso.
 
 ## Criar e editar
 
@@ -67,6 +67,50 @@ Use o ícone de alfinete no topo do editor. Notas fixadas aparecem primeiro nas 
 - Escreva uma etiqueta e pressione `Enter`.
 - O caractere `#` é opcional; `trabalho` e `#trabalho` representam a mesma etiqueta.
 - Clique no `×` de um chip para removê-lo.
+
+### Listas & Tarefas (v1.8.0)
+
+O Magnetares Notes possui um módulo completo de produtividade pessoal, acessível na seção **LISTAS** da barra lateral (posicionada entre Notas e Etiquetas/Stickers).
+
+#### Hierarquia de quatro níveis
+1. **Listas de Tarefas:** agrupamentos temáticos (ex.: *Entrada*, *Trabalho*, *Pessoal*, *Estudos*). A lista padrão **Entrada** (`list-inbox`) é provisionada automaticamente e é protegida contra arquivamento ou exclusão.
+2. **Tarefas:** pendências individuais com título, data de vencimento, prioridade e status de conclusão.
+3. **Subtarefas (Checklists):** itens de decomposição rápida dentro de cada tarefa com barra de progresso proporcional animada.
+4. **Múltiplas Notas por Tarefa:** bloco para anexar múltiplas anotações ricas e contextuais à mesma tarefa, com registro de data/hora e edição/exclusão individual.
+
+#### Gestão de Listas e Personalização
+- Clique em `+` na seção **LISTAS** da barra lateral para abrir o diálogo `TaskListDialog`.
+- Escolha o nome, cor temática (azul, verde, laranja, roxo, rosa, etc.) e ícones ilustrativos (Caixa de entrada, Trabalho, Pessoal, Compras, Estudo, Código, etc.).
+- Cada lista exibe na barra lateral a contagem em tempo real de tarefas pendentes (não concluídas).
+
+#### Arquivamento de Listas (Soft-Delete)
+- Para ocultar listas concluídas ou sazonais sem perder nenhum histórico, passe o cursor sobre a lista e escolha **Arquivar lista**.
+- As listas arquivadas saem da visualização ativa e são organizadas na seção recolhível **"Arquivadas (N)"** no rodapé da seção de listas.
+- Abrir uma lista arquivada a exibe em **Modo Consulta**, com banner explicativo e um botão **Desarquivar Lista** para restaurá-la imediatamente com 1 clique.
+- A lista protegida *Entrada* não pode ser arquivada.
+
+#### Exclusão Definitiva com Aviso de Nuvem
+- Excluir uma lista remove definitivamente ela, suas tarefas e subtarefas, propagando lápides (*tombstones*) locais e para a nuvem Turso conectada.
+- O diálogo de confirmação exibe um aviso em destaque e oferece o botão alternativo *"Arquivar lista"* para prevenir a perda acidental de dados.
+
+#### Barra de Entrada Rápida (Quick-Add)
+- No topo da lista ativa, digite o título da tarefa e pressione `Enter` para adicionar de imediato.
+- Selecione diretamente na barra de entrada:
+  - **Prioridades Semânticas:**
+    - 🔥 **Alta** (`Flame`, vermelho): urgência máxima.
+    - ⚠️ **Média** (`AlertTriangle`, laranja): prioridade moderada.
+    - ⬇️ **Baixa** (`ArrowDown`, azul): pendências menores.
+    - ➖ **Nenhuma** (`Minus`, neutro): tarefas sem nível atribuído.
+  - **Data de Vencimento:** calendário rápido com cálculo de prazos relativos (*Hoje*, *Amanhã*, *Atrasada*).
+
+#### Painel Inspector e Detalhes da Tarefa
+Ao clicar em qualquer tarefa da lista, o painel lateral Inspector se abre com ferramentas de edição aprofundada:
+- **Edição de Título:** campo inline atualizado automaticamente.
+- **Mudança de Lista:** dropdown para mover a tarefa entre diferentes listas.
+- **Prioridade e Vencimento:** seletores rápidos com indicação semântica.
+- **Checklist de Subtarefas:** adicione subtarefas, marque conclusão e acompanhe a barra de progresso dinâmica em tempo real.
+- **Notas Anexadas:** adicione quantos cartões de notas forem necessários; cada cartão conta com data de registro e opção de edição ou exclusão individual.
+- **Modais Nativos Centralizados:** todas as confirmações de exclusão (tarefas, notas e listas) utilizam diálogos centralizados integrados ao tema visual, sem popups técnicos do navegador.
 
 ### Stickers (Notas Autoadesivas)
 

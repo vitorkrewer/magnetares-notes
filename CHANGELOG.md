@@ -2,6 +2,76 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## [v1.8.0] - Em desenvolvimento
+
+### Added
+
+- **Nova funcionalidade Listas & Tarefas:**
+  - Módulo completo de produtividade pessoal integrado nativamente à barra lateral, logo abaixo do módulo de Notas e acima de Etiquetas.
+  - Hierarquia de quatro níveis: **Listas** ➔ **Tarefas** ➔ **Subtarefas (Checklists)** ➔ **Múltiplas Notas anexadas**.
+  - Lista padrão do sistema protegida **"Entrada"** (`list-inbox`) provisionada automaticamente para triagem de pendências.
+  - Diálogo de criação e personalização de listas (`TaskListDialog`) com nome, seleção de paleta de cores e ícones temáticos (Caixa de entrada, Trabalho, Pessoal, Compras, Estudo, Projetos, etc.).
+- **CRUD Completo de Listas de Tarefas:**
+  - Criação, edição de metadados, reordenação e contadores dinâmicos de tarefas abertas exibidos diretamente na barra lateral.
+  - **Arquivamento de Listas (Soft-Delete / Modo Consulta):**
+    - Capacidade de arquivar listas concluídas ou sazonais, retirando-as da visão ativa da barra lateral sem perder nenhuma tarefa ou histórico.
+    - Seção recolhível dedicada **"Arquivadas (N)"** na barra lateral para consulta e restauração a qualquer momento.
+    - Banner visual de modo consulta dentro de listas arquivadas com botão de restauração rápida em um clique (*Desarquivar Lista*).
+  - **Exclusão Definitiva com Confirmação e Aviso de Nuvem:**
+    - Diálogo de confirmação com advertência clara sobre a remoção permanente tanto no armazenamento local quanto na nuvem Turso conectada.
+    - Botão alternativo *"Arquivar lista"* embutido no modal de confirmação para prevenir perda acidental de dados.
+    - Exclusão em cascata (subtarefas, tarefas e listas) gerando lápides (*tombstones*) locais e remotas para evitar registros órfãos.
+- **Painel Inspector & Gestão Detalhada de Tarefas (`TaskListView`):**
+  - **Barra de Entrada Rápida (Quick-Add):** criação ágil de tarefas na lista ativa pressionando `Enter`, com seletores de prioridade distintos (🔥 Alta, ⚠️ Média, ⬇️ Baixa, ➖ Nenhuma) e data de vencimento.
+  - **Filtros e Busca Interna:** alternância instantânea entre *Todas*, *Incompletas* e *Concluídas*, além de busca textual em tempo real no título e nas notas.
+  - **Painel Lateral de Detalhes:** edição inline imediata de título (com valor preenchido da tarefa selecionada), mudança de lista de destino, prioridade e prazo com formatação de data relativa (*Hoje*, *Amanhã*, *Atrasada*).
+  - **Checklist de Subtarefas:** criação e conclusão interativa de subtarefas com barra de progresso proporcional animada.
+  - **Múltiplas Notas por Tarefa:** capacidade de anexar múltiplos cartões de anotações contextuais dentro de uma mesma tarefa, com registro de data/hora e edição/exclusão individual.
+- **Ícones Semânticos Distintos por Nível de Prioridade:**
+  - Substituição de bandeiras genéricas repetidas por ícones de silhueta e significado distintos:
+    - 🔥 **Alta:** `Flame` (chama vermelha, comunicando urgência máxima).
+    - ⚠️ **Média:** `AlertTriangle` (triângulo de atenção laranja).
+    - ⬇️ **Baixa:** `ArrowDown` (seta descendente azul).
+    - ➖ **Nenhuma:** `Minus` (traço neutro).
+  - Exibição consistente nos botões rápidos de entrada (Quick-Add), nos badges dos cartões de tarefas e no painel Inspector lateral.
+- **Diálogos Modais Nativos Centralizados (Eliminação de `window.confirm`):**
+  - Eliminação completa de todos os prompts nativos do navegador (`window.confirm()`) que expunham cabeçalhos técnicos indesejados (`wails.localhost:port diz`).
+  - Implementação de telas modais centralizadas, elegantes e perfeitamente integradas ao design system (`dialog-backdrop` e `organization-dialog`), com suporte a tema claro e escuro para:
+    - Exclusão permanente de listas de tarefas na barra lateral com opção de arquivamento alternativo.
+    - Exclusão permanente de tarefas com nome destacado e advertência de irreversibilidade.
+    - Exclusão de notas anexadas à tarefa.
+    - Restauração de emergência da nuvem nas Preferências.
+    - Troca de perfil principal e remoção de partições antigas no painel de sincronização.
+- **Sincronização em Nuvem em Tempo Real (Turso / LWW):**
+  - Criação das tabelas remotas `sync_task_lists`, `sync_tasks` e `sync_subtasks` com resolução de conflitos *Last-Write-Wins* (LWW) baseada em relógio de servidor e IDs de mutação do cliente.
+  - Sincronização imediata (`trySyncTaskEntitiesImmediately`) disparada ao criar, editar, arquivar ou excluir listas e tarefas quando conectado ao Turso.
+  - Migração de banco local `0014_task_lists_archive.sql` adicionando suporte a `archived_at` com índice de consulta.
+  - Estrutura de navegação (`Navigation`) atualizada para fornecer listas ativas e arquivadas (`ArchivedTaskLists`) em uma única consulta.
+
+### Changed
+
+- **Harmonia Visual e Conforto no Tema Claro:**
+  - Calibração da variável de destaque `--accent` no tema claro para um tom âmbar/caramelo aquecido (`#b45309`), eliminando o amarelo ofuscante anterior e atendendo às normas de contraste WCAG AA.
+  - Botão de adicionar notas reestilizado com visual neutro elegante que se integra com suavidade ao painel de inspeção.
+  - Botões de ação rápida (subtarefas e submissão de tarefas) padronizados com o design system minimalista da aplicação.
+
+### Fixed
+
+- **Assinatura do Método Bridge `ListTasks`:**
+  - Corrigido erro de parsing no Wails bridge (`expected 2 arguments, received 1`) alinhando a chamada no frontend com a assinatura do backend Go (`listID, filter`).
+- **Carregamento e Edição de Título no Painel Inspector:**
+  - Resolvido problema em que a abertura de uma tarefa exibia um campo em branco em vez de carregar o título atual da tarefa selecionada para edição.
+- **Persistência Local e Integridade de Tarefas no Sync:**
+  - Garantida a persistência imediata das tarefas no SQLite local com chave estrangeira e status pendente antes de ciclos de sincronização com a nuvem, prevenindo exclusão acidental de tarefas recém-criadas.
+- **Eliminação de Redundância na Interface de Notas:**
+  - Removido o botão duplicado de adicionar notas no estado vazio das tarefas, mantendo um único ponto de controle limpo no cabeçalho da seção com suporte a clique direto no cartão de estado vazio.
+- **Regras de Compliance e Integridade:**
+  - Proteção estrita que impede arquivamento ou exclusão da lista raiz *Entrada* (`list-inbox`), assegurando que sempre exista um destino válido para triagem.
+  - A rotina de conformidade (`ensureTaskListCompliance`) agora garante `archived_at = NULL` para a lista *Entrada* e vincula automaticamente tarefas órfãs.
+- **Isolamento de Testes Unitários de Tarefas:**
+  - Proteção no método `trySyncTaskEntitiesImmediately` para evitar chamadas de sincronização em tempo real contra o banco Turso remoto durante a execução de testes automatizados sem contexto do aplicativo.
+
+
 ## [v1.7.0] - 2026-10-08
 
 ### Added

@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
-
 	"github.com/google/uuid"
 )
 
@@ -27,14 +26,15 @@ const (
 
 // TaskList é uma lista de tarefas (ex: Entrada, Pessoal, Trabalho, Projetos).
 type TaskList struct {
-	ID        string    `json:"id"`
-	Name      string    `json:"name"`
-	Color     string    `json:"color"`
-	Icon      string    `json:"icon"`
-	Position  float64   `json:"position"`
-	TaskCount int64     `json:"taskCount"`     // Tarefas ativas (não concluídas)
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID         string     `json:"id"`
+	Name       string     `json:"name"`
+	Color      string     `json:"color"`
+	Icon       string     `json:"icon"`
+	Position   float64    `json:"position"`
+	TaskCount  int64      `json:"taskCount"`  // Tarefas ativas (não concluídas)
+	ArchivedAt *time.Time `json:"archivedAt"` // Timestamp de arquivamento (se arquivada)
+	CreatedAt  time.Time  `json:"createdAt"`
+	UpdatedAt  time.Time  `json:"updatedAt"`
 }
 
 // Subtask é um subitem de checklist dentro de uma tarefa.
@@ -57,8 +57,8 @@ type Task struct {
 	Notes        string     `json:"notes"`
 	Completed    bool       `json:"completed"`
 	CompletedAt  *time.Time `json:"completedAt"`
-	DueDate      *string    `json:"dueDate"`      // Formato YYYY-MM-DD
-	Priority     int        `json:"priority"`     // 0=Nenhuma, 1=Alta, 2=Média, 3=Baixa
+	DueDate      *string    `json:"dueDate"`  // Formato YYYY-MM-DD
+	Priority     int        `json:"priority"` // 0=Nenhuma, 1=Alta, 2=Média, 3=Baixa
 	Position     float64    `json:"position"`
 	Subtasks     []Subtask  `json:"subtasks"`
 	SubtaskTotal int64      `json:"subtaskTotal"`
@@ -73,11 +73,11 @@ type Task struct {
 
 func (s *noteStore) ListTaskLists() ([]TaskList, error) {
 	rows, err := s.db.Query(`
-		SELECT l.id, l.name, l.color, l.icon, l.position, l.created_at, l.updated_at,
+		SELECT l.id, l.name, l.color, l.icon, l.position, l.archived_at, l.created_at, l.updated_at,
 		       COUNT(t.id) FILTER (WHERE t.deleted_at IS NULL AND t.completed = 0) AS open_task_count
 		FROM task_lists l
 		LEFT JOIN tasks t ON t.list_id = l.id
-		WHERE l.deleted_at IS NULL
+		WHERE l.deleted_at IS NULL AND l.archived_at IS NULL
 		GROUP BY l.id
 		ORDER BY l.position ASC, l.created_at ASC
 	`)
@@ -90,8 +90,13 @@ func (s *noteStore) ListTaskLists() ([]TaskList, error) {
 	for rows.Next() {
 		var l TaskList
 		var createdAt, updatedAt int64
-		if err := rows.Scan(&l.ID, &l.Name, &l.Color, &l.Icon, &l.Position, &createdAt, &updatedAt, &l.TaskCount); err != nil {
+		var archivedAt sql.NullInt64
+		if err := rows.Scan(&l.ID, &l.Name, &l.Color, &l.Icon, &l.Position, &archivedAt, &createdAt, &updatedAt, &l.TaskCount); err != nil {
 			return nil, fmt.Errorf("scan task list: %w", err)
+		}
+		if archivedAt.Valid {
+			aTime := time.UnixMilli(archivedAt.Int64).UTC()
+			l.ArchivedAt = &aTime
 		}
 		l.CreatedAt = time.UnixMilli(createdAt).UTC()
 		l.UpdatedAt = time.UnixMilli(updatedAt).UTC()
@@ -101,6 +106,67 @@ func (s *noteStore) ListTaskLists() ([]TaskList, error) {
 		lists = []TaskList{}
 	}
 	return lists, nil
+}
+
+func (s *noteStore) ListArchivedTaskLists() ([]TaskList, error) {
+	rows, err := s.db.Query(`
+		SELECT l.id, l.name, l.color, l.icon, l.position, l.archived_at, l.created_at, l.updated_at,
+		       COUNT(t.id) FILTER (WHERE t.deleted_at IS NULL AND t.completed = 0) AS open_task_count
+		FROM task_lists l
+		LEFT JOIN tasks t ON t.list_id = l.id
+		WHERE l.deleted_at IS NULL AND l.archived_at IS NOT NULL
+		GROUP BY l.id
+		ORDER BY l.archived_at DESC, l.position ASC
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("listar task lists arquivadas: %w", err)
+	}
+	defer rows.Close()
+
+	var lists []TaskList
+	for rows.Next() {
+		var l TaskList
+		var createdAt, updatedAt int64
+		var archivedAt sql.NullInt64
+		if err := rows.Scan(&l.ID, &l.Name, &l.Color, &l.Icon, &l.Position, &archivedAt, &createdAt, &updatedAt, &l.TaskCount); err != nil {
+			return nil, fmt.Errorf("scan task list arquivada: %w", err)
+		}
+		if archivedAt.Valid {
+			aTime := time.UnixMilli(archivedAt.Int64).UTC()
+			l.ArchivedAt = &aTime
+		}
+		l.CreatedAt = time.UnixMilli(createdAt).UTC()
+		l.UpdatedAt = time.UnixMilli(updatedAt).UTC()
+		lists = append(lists, l)
+	}
+	if lists == nil {
+		lists = []TaskList{}
+	}
+	return lists, nil
+}
+
+func (s *noteStore) getTaskList(id string) (TaskList, error) {
+	var l TaskList
+	var createdAt, updatedAt int64
+	var archivedAt sql.NullInt64
+	err := s.db.QueryRow(`
+		SELECT l.id, l.name, l.color, l.icon, l.position, l.archived_at, l.created_at, l.updated_at,
+		       COUNT(t.id) FILTER (WHERE t.deleted_at IS NULL AND t.completed = 0) AS open_task_count
+		FROM task_lists l
+		LEFT JOIN tasks t ON t.list_id = l.id
+		WHERE l.id = ? AND l.deleted_at IS NULL
+		GROUP BY l.id
+	`, id).Scan(&l.ID, &l.Name, &l.Color, &l.Icon, &l.Position, &archivedAt, &createdAt, &updatedAt, &l.TaskCount)
+	if err != nil {
+		return TaskList{}, err
+	}
+	if archivedAt.Valid {
+		aTime := time.UnixMilli(archivedAt.Int64).UTC()
+		l.ArchivedAt = &aTime
+	}
+	l.CreatedAt = time.UnixMilli(createdAt).UTC()
+	l.UpdatedAt = time.UnixMilli(updatedAt).UTC()
+	return l, nil
 }
 
 func (s *noteStore) SaveTaskList(list TaskList) (TaskList, error) {
@@ -135,6 +201,11 @@ func (s *noteStore) SaveTaskList(list TaskList) (TaskList, error) {
 		_ = tx.QueryRow("SELECT COUNT(1) FROM task_lists WHERE id = ?", id).Scan(&count)
 	}
 
+	var archivedAt any
+	if list.ArchivedAt != nil {
+		archivedAt = list.ArchivedAt.UnixMilli()
+	}
+
 	if count == 0 {
 		if id == "" {
 			id = "list-" + uuid.NewString()
@@ -147,9 +218,9 @@ func (s *noteStore) SaveTaskList(list TaskList) (TaskList, error) {
 		}
 
 		_, err = tx.Exec(`
-			INSERT INTO task_lists(id, name, color, icon, position, sync_state, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)
-		`, id, name, color, icon, pos, now, now)
+			INSERT INTO task_lists(id, name, color, icon, position, archived_at, sync_state, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+		`, id, name, color, icon, pos, archivedAt, now, now)
 		if err != nil {
 			return TaskList{}, fmt.Errorf("inserir task list: %w", err)
 		}
@@ -158,9 +229,9 @@ func (s *noteStore) SaveTaskList(list TaskList) (TaskList, error) {
 	} else {
 		_, err = tx.Exec(`
 			UPDATE task_lists
-			SET name = ?, color = ?, icon = ?, deleted_at = NULL, updated_at = ?, sync_state = 'pending'
+			SET name = ?, color = ?, icon = ?, archived_at = ?, deleted_at = NULL, updated_at = ?, sync_state = 'pending'
 			WHERE id = ?
-		`, name, color, icon, now, id)
+		`, name, color, icon, archivedAt, now, id)
 		if err != nil {
 			return TaskList{}, fmt.Errorf("atualizar task list: %w", err)
 		}
@@ -176,6 +247,53 @@ func (s *noteStore) SaveTaskList(list TaskList) (TaskList, error) {
 	list.Icon = icon
 	list.UpdatedAt = time.UnixMilli(now).UTC()
 	return list, nil
+}
+
+func (s *noteStore) ArchiveTaskList(id string) (TaskList, error) {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return TaskList{}, errors.New("id da lista obrigatório")
+	}
+	if id == defaultTaskListID {
+		return TaskList{}, errors.New("a lista padrão 'Entrada' não pode ser arquivada")
+	}
+
+	now := time.Now().UTC().UnixMilli()
+	res, err := s.db.Exec(`
+		UPDATE task_lists
+		SET archived_at = ?, updated_at = ?, sync_state = 'pending'
+		WHERE id = ? AND deleted_at IS NULL
+	`, now, now, id)
+	if err != nil {
+		return TaskList{}, fmt.Errorf("arquivar task list: %w", err)
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		return TaskList{}, errors.New("lista não encontrada")
+	}
+	return s.getTaskList(id)
+}
+
+func (s *noteStore) UnarchiveTaskList(id string) (TaskList, error) {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return TaskList{}, errors.New("id da lista obrigatório")
+	}
+
+	now := time.Now().UTC().UnixMilli()
+	res, err := s.db.Exec(`
+		UPDATE task_lists
+		SET archived_at = NULL, updated_at = ?, sync_state = 'pending'
+		WHERE id = ? AND deleted_at IS NULL
+	`, now, id)
+	if err != nil {
+		return TaskList{}, fmt.Errorf("desarquivar task list: %w", err)
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		return TaskList{}, errors.New("lista não encontrada")
+	}
+	return s.getTaskList(id)
 }
 
 func (s *noteStore) DeleteTaskList(id string) error {
@@ -194,6 +312,26 @@ func (s *noteStore) DeleteTaskList(id string) error {
 	}
 	defer tx.Rollback()
 
+	// Soft-delete de todas as subtarefas das tarefas da lista
+	_, err = tx.Exec(`
+		UPDATE subtasks
+		SET deleted_at = ?, updated_at = ?, sync_state = 'pending'
+		WHERE task_id IN (SELECT id FROM tasks WHERE list_id = ?) AND deleted_at IS NULL
+	`, now, now, id)
+	if err != nil {
+		return fmt.Errorf("deletar subtarefas filhas da lista: %w", err)
+	}
+
+	// Soft-delete de todas as tarefas da lista
+	_, err = tx.Exec(`
+		UPDATE tasks
+		SET deleted_at = ?, updated_at = ?, sync_state = 'pending'
+		WHERE list_id = ? AND deleted_at IS NULL
+	`, now, now, id)
+	if err != nil {
+		return fmt.Errorf("deletar tarefas filhas da lista: %w", err)
+	}
+
 	// Soft-delete da lista
 	_, err = tx.Exec(`
 		UPDATE task_lists
@@ -202,16 +340,6 @@ func (s *noteStore) DeleteTaskList(id string) error {
 	`, now, now, id)
 	if err != nil {
 		return fmt.Errorf("deletar task list: %w", err)
-	}
-
-	// Mover tarefas da lista excluída para a lista Inbox ou aplicar soft-delete
-	_, err = tx.Exec(`
-		UPDATE tasks
-		SET deleted_at = ?, updated_at = ?, sync_state = 'pending'
-		WHERE list_id = ? AND deleted_at IS NULL
-	`, now, now, id)
-	if err != nil {
-		return fmt.Errorf("deletar tarefas filhas da lista: %w", err)
 	}
 
 	return tx.Commit()

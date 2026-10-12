@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
+  AlertTriangle,
+  Archive,
+  ArchiveRestore,
+  ArrowDown,
   Check,
   CheckCircle2,
   Circle,
+  Flame,
+  Minus,
   Plus,
   Search,
   X,
@@ -16,6 +22,7 @@ import {
   Clock,
   Edit2,
   Sparkles,
+  type LucideIcon,
 } from "lucide-react";
 import { TaskListRecord, TaskRecord, SubtaskRecord, TaskNoteRecord } from "./types";
 import { getTaskListIconComponent, TASK_LIST_PALETTE } from "./TaskListDialog";
@@ -27,16 +34,27 @@ export type TaskListViewProps = {
   onOpenSidebar: () => void;
   onEditList: (list: TaskListRecord) => void;
   onDeleteList: (list: TaskListRecord) => void;
+  onArchiveList?: (list: TaskListRecord) => void;
+  onUnarchiveList?: (list: TaskListRecord) => void;
   onTaskCountChange: (listId: string, count: number) => void;
   refreshKey?: string | number;
 };
 
-const PRIORITY_CONFIG = [
-  { value: 0, label: "Nenhuma", color: "var(--muted, #888)", bg: "transparent", border: "var(--border, #ccc)" },
-  { value: 1, label: "Alta", color: "#ef4444", bg: "rgba(239, 68, 68, 0.12)", border: "#ef4444" },
-  { value: 2, label: "Média", color: "#f97316", bg: "rgba(249, 115, 22, 0.12)", border: "#f97316" },
-  { value: 3, label: "Baixa", color: "#3b82f6", bg: "rgba(59, 130, 246, 0.12)", border: "#3b82f6" },
-] as const;
+export type PriorityItem = {
+  value: number;
+  label: string;
+  icon: LucideIcon;
+  color: string;
+  bg: string;
+  border: string;
+};
+
+export const PRIORITY_CONFIG: readonly PriorityItem[] = [
+  { value: 0, label: "Nenhuma", icon: Minus, color: "var(--muted, #888)", bg: "transparent", border: "var(--border, #ccc)" },
+  { value: 1, label: "Alta", icon: Flame, color: "#ef4444", bg: "rgba(239, 68, 68, 0.12)", border: "#ef4444" },
+  { value: 2, label: "Média", icon: AlertTriangle, color: "#f97316", bg: "rgba(249, 115, 22, 0.12)", border: "#f97316" },
+  { value: 3, label: "Baixa", icon: ArrowDown, color: "#3b82f6", bg: "rgba(59, 130, 246, 0.12)", border: "#3b82f6" },
+];
 
 export function parseTaskNotes(rawNotes?: string | null): TaskNoteRecord[] {
   if (!rawNotes || !rawNotes.trim()) return [];
@@ -108,6 +126,8 @@ export function TaskListView({
   onOpenSidebar,
   onEditList,
   onDeleteList,
+  onArchiveList,
+  onUnarchiveList,
   onTaskCountChange,
   refreshKey,
 }: TaskListViewProps) {
@@ -137,6 +157,13 @@ export function TaskListView({
   const [newNoteContent, setNewNoteContent] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [editingNoteContent, setEditingNoteContent] = useState("");
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    danger?: boolean;
+    onConfirm: () => void | Promise<void>;
+  } | null>(null);
 
   const quickInputRef = useRef<HTMLInputElement>(null);
 
@@ -289,24 +316,33 @@ export function TaskListView({
   };
 
   // Delete Task
-  const handleDeleteTask = async (taskId: string, e?: React.MouseEvent) => {
+  const handleDeleteTask = (taskId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (!window.confirm("Excluir esta tarefa permanentemente?")) return;
+    const taskObj = tasks.find((t) => t.id === taskId) || (selectedTask?.id === taskId ? selectedTask : null);
+    const taskTitle = taskObj?.title ? ` "${taskObj.title}"` : "";
 
-    try {
-      const bridge = window.go?.main?.App;
-      if (bridge?.DeleteTask) {
-        await bridge.DeleteTask(taskId);
-        setTasks((prev) => prev.filter((t) => t.id !== taskId));
-        if (selectedTask?.id === taskId) {
-          setSelectedTask(null);
+    setConfirmDialog({
+      title: "Excluir tarefa",
+      message: `Tem certeza que deseja excluir permanentemente a tarefa${taskTitle}? Esta ação não pode ser desfeita.`,
+      confirmLabel: "Excluir tarefa",
+      danger: true,
+      onConfirm: async () => {
+        try {
+          const bridge = window.go?.main?.App;
+          if (bridge?.DeleteTask) {
+            await bridge.DeleteTask(taskId);
+            setTasks((prev) => prev.filter((t) => t.id !== taskId));
+            if (selectedTask?.id === taskId) {
+              setSelectedTask(null);
+            }
+            const openCount = tasks.filter((t) => t.id !== taskId && !t.completed).length;
+            onTaskCountChange(list.id, openCount);
+          }
+        } catch (err) {
+          console.error("Falha ao excluir tarefa:", err);
         }
-        const openCount = tasks.filter((t) => t.id !== taskId && !t.completed).length;
-        onTaskCountChange(list.id, openCount);
-      }
-    } catch (err) {
-      console.error("Falha ao excluir tarefa:", err);
-    }
+      },
+    });
   };
 
   // Save Task Detail Changes (Title, Priority, DueDate, List, Notes)
@@ -374,16 +410,22 @@ export function TaskListView({
     await saveTaskDetails({ notes: serializeTaskNotes(nextNotes) });
   };
 
-  const handleDeleteNote = async (noteId: string) => {
+  const handleDeleteNote = (noteId: string) => {
     if (!selectedTask) return;
-    if (!window.confirm("Excluir esta anotação da tarefa?")) return;
-
-    const nextNotes = taskNotes.filter((n) => n.id !== noteId);
-    setTaskNotes(nextNotes);
-    if (editingNoteId === noteId) {
-      setEditingNoteId(null);
-    }
-    await saveTaskDetails({ notes: serializeTaskNotes(nextNotes) });
+    setConfirmDialog({
+      title: "Excluir nota",
+      message: "Tem certeza que deseja excluir esta anotação da tarefa?",
+      confirmLabel: "Excluir nota",
+      danger: true,
+      onConfirm: async () => {
+        const nextNotes = taskNotes.filter((n) => n.id !== noteId);
+        setTaskNotes(nextNotes);
+        if (editingNoteId === noteId) {
+          setEditingNoteId(null);
+        }
+        await saveTaskDetails({ notes: serializeTaskNotes(nextNotes) });
+      },
+    });
   };
 
   // Subtask Actions
@@ -543,6 +585,9 @@ export function TaskListView({
                 <IconComponent size={16} color="#fff" />
               </span>
               <h2>{list.name}</h2>
+              {Boolean(list.archivedAt) && (
+                <span className="task-archived-badge">Arquivada</span>
+              )}
               <span className="task-count-pill">{activeCount} abertas</span>
             </div>
           </div>
@@ -584,80 +629,135 @@ export function TaskListView({
               <Edit2 size={16} />
             </button>
             {list.id !== "list-inbox" && (
-              <button
-                type="button"
-                className="icon-button"
-                onClick={() => onDeleteList(list)}
-                title="Excluir lista"
-                aria-label="Excluir lista"
-              >
-                <Trash2 size={16} />
-              </button>
+              <>
+                {Boolean(list.archivedAt) ? (
+                  onUnarchiveList && (
+                    <button
+                      type="button"
+                      className="icon-button"
+                      onClick={() => onUnarchiveList(list)}
+                      title="Desarquivar lista"
+                      aria-label="Desarquivar lista"
+                    >
+                      <ArchiveRestore size={16} />
+                    </button>
+                  )
+                ) : (
+                  onArchiveList && (
+                    <button
+                      type="button"
+                      className="icon-button"
+                      onClick={() => onArchiveList(list)}
+                      title="Arquivar lista"
+                      aria-label="Arquivar lista"
+                    >
+                      <Archive size={16} />
+                    </button>
+                  )
+                )}
+                <button
+                  type="button"
+                  className="icon-button"
+                  onClick={() => onDeleteList(list)}
+                  title="Excluir lista"
+                  aria-label="Excluir lista"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </>
             )}
           </div>
         </header>
 
-        {/* Quick-Add Bar (Barra de entrada rápida) */}
-        <form className="task-quick-add-bar" onSubmit={handleQuickAdd}>
-          <div className="quick-add-input-wrap">
-            <Plus size={18} className="quick-add-icon" />
-            <input
-              ref={quickInputRef}
-              type="text"
-              value={quickTitle}
-              onChange={(e) => setQuickTitle(e.target.value)}
-              placeholder="Adicionar uma tarefa... (pressione Enter para salvar)"
-              maxLength={250}
-              disabled={isSubmitting}
-            />
+        {/* Banner de Lista Arquivada */}
+        {Boolean(list.archivedAt) && (
+          <div className="task-archived-banner">
+            <div className="task-archived-banner-text">
+              <Archive size={16} />
+              <span>Esta lista está arquivada. Suas tarefas estão preservadas apenas para consulta.</span>
+            </div>
+            {onUnarchiveList && (
+              <button
+                type="button"
+                className="task-unarchive-btn"
+                onClick={() => onUnarchiveList(list)}
+              >
+                <ArchiveRestore size={14} />
+                <span>Desarquivar Lista</span>
+              </button>
+            )}
           </div>
+        )}
 
-          <div className="quick-add-controls">
-            {/* Prioridade Rápida */}
-            <div className="quick-priority-picker" title="Definir prioridade">
-              {[1, 2, 3, 0].map((pVal) => {
-                const conf = PRIORITY_CONFIG[pVal as 0 | 1 | 2 | 3];
-                const isSelected = quickPriority === pVal;
-                return (
-                  <button
-                    key={pVal}
-                    type="button"
-                    className={`quick-priority-btn ${isSelected ? "selected" : ""}`}
-                    onClick={() => setQuickPriority(pVal)}
-                    style={{
-                      borderColor: conf.border,
-                      color: conf.color,
-                      backgroundColor: isSelected ? conf.bg : "transparent",
-                    }}
-                    title={`Prioridade ${conf.label}`}
-                  >
-                    <Flag size={13} fill={pVal > 0 && isSelected ? conf.color : "none"} />
-                  </button>
-                );
-              })}
+        {/* Quick-Add Bar (Barra de entrada rápida) */}
+        {Boolean(list.archivedAt) ? (
+          <div className="task-archived-notice">
+            <Archive size={14} />
+            <span>Lista arquivada (modo consulta). Desarquive a lista para adicionar novas tarefas.</span>
+          </div>
+        ) : (
+          <form className="task-quick-add-bar" onSubmit={handleQuickAdd}>
+            <div className="quick-add-input-wrap">
+              <Plus size={18} className="quick-add-icon" />
+              <input
+                ref={quickInputRef}
+                type="text"
+                value={quickTitle}
+                onChange={(e) => setQuickTitle(e.target.value)}
+                placeholder="Adicionar uma tarefa... (pressione Enter para salvar)"
+                maxLength={250}
+                disabled={isSubmitting}
+              />
             </div>
 
-            {/* Prazo Rápido */}
-            <label className="quick-date-picker" title="Data de vencimento">
-              <Calendar size={14} className="quick-date-icon" />
-              <input
-                type="date"
-                value={quickDueDate}
-                onChange={(e) => setQuickDueDate(e.target.value)}
-                className="quick-date-input"
-              />
-            </label>
+            <div className="quick-add-controls">
+              {/* Prioridade Rápida */}
+              <div className="quick-priority-picker" title="Definir prioridade">
+                {[1, 2, 3, 0].map((pVal) => {
+                  const conf = PRIORITY_CONFIG[pVal as 0 | 1 | 2 | 3];
+                  const isSelected = quickPriority === pVal;
+                  const PriorityIcon = conf.icon;
+                  return (
+                    <button
+                      key={pVal}
+                      type="button"
+                      className={`quick-priority-btn ${isSelected ? "selected" : ""}`}
+                      onClick={() => setQuickPriority(pVal)}
+                      style={{
+                        borderColor: isSelected ? conf.border : "var(--border)",
+                        color: conf.color,
+                        backgroundColor: isSelected ? conf.bg : "transparent",
+                      }}
+                      title={`Prioridade ${conf.label}`}
+                    >
+                      <PriorityIcon size={13} />
+                    </button>
+                  );
+                })}
+              </div>
 
-            <button
-              type="submit"
-              className="quick-add-submit-btn"
-              disabled={!quickTitle.trim() || isSubmitting}
-              title="Adicionar tarefa"
-            >
-              Adicionar
-            </button>
-          </div>
-        </form>
+              {/* Prazo Rápido */}
+              <label className="quick-date-picker" title="Data de vencimento">
+                <Calendar size={14} className="quick-date-icon" />
+                <input
+                  type="date"
+                  value={quickDueDate}
+                  onChange={(e) => setQuickDueDate(e.target.value)}
+                  className="quick-date-input"
+                />
+              </label>
+
+              <button
+                type="submit"
+                className="quick-add-submit-btn"
+                disabled={!quickTitle.trim() || isSubmitting}
+                title="Adicionar tarefa"
+              >
+                Adicionar
+              </button>
+            </div>
+          </form>
+        )}
 
         {/* Campo de Busca Rápida na Lista */}
         {tasks.length > 3 && (
@@ -785,19 +885,22 @@ export function TaskListView({
                         )}
 
                         {/* Prioridade alta/média badge */}
-                        {task.priority > 0 && (
-                          <span
-                            className="task-meta-tag"
-                            style={{
-                              color: priorityConf.color,
-                              backgroundColor: priorityConf.bg,
-                              borderColor: priorityConf.border,
-                            }}
-                          >
-                            <Flag size={10} fill={priorityConf.color} />
-                            {priorityConf.label}
-                          </span>
-                        )}
+                        {task.priority > 0 && (() => {
+                          const PriorityIcon = priorityConf.icon;
+                          return (
+                            <span
+                              className="task-meta-tag"
+                              style={{
+                                color: priorityConf.color,
+                                backgroundColor: priorityConf.bg,
+                                borderColor: priorityConf.border,
+                              }}
+                            >
+                              <PriorityIcon size={11} />
+                              {priorityConf.label}
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -929,7 +1032,12 @@ export function TaskListView({
               {/* Prioridade */}
               <div className="inspector-property-row">
                 <span className="inspector-prop-label">
-                  <Flag size={14} /> Prioridade
+                  {(() => {
+                    const currentConf = PRIORITY_CONFIG.find((p) => p.value === editPriority) || PRIORITY_CONFIG[0];
+                    const CurrentIcon = currentConf.icon;
+                    return <CurrentIcon size={14} style={{ color: currentConf.color }} />;
+                  })()}
+                  <span>Prioridade</span>
                 </span>
                 <select
                   value={editPriority}
@@ -940,10 +1048,10 @@ export function TaskListView({
                   }}
                   className="inspector-select"
                 >
-                  <option value={0}>Nenhuma</option>
-                  <option value={1}>Alta (🔴 Vermelho)</option>
-                  <option value={2}>Média (🟠 Laranja)</option>
-                  <option value={3}>Baixa (🔵 Azul)</option>
+                  <option value={0}>— Nenhuma</option>
+                  <option value={1}>🔥 Alta (Vermelho)</option>
+                  <option value={2}>⚠️ Média (Laranja)</option>
+                  <option value={3}>⬇️ Baixa (Azul)</option>
                 </select>
               </div>
 
@@ -1099,15 +1207,14 @@ export function TaskListView({
 
               {/* Lista de cards de notas */}
               {taskNotes.length === 0 && !isAddingNote ? (
-                <div className="task-notes-empty">
+                <div
+                  className="task-notes-empty"
+                  onClick={() => setIsAddingNote(true)}
+                  role="button"
+                  tabIndex={0}
+                  title="Clique para adicionar uma anotação"
+                >
                   <p>Nenhuma nota anexada a esta tarefa.</p>
-                  <button
-                    type="button"
-                    className="task-notes-empty-add-btn"
-                    onClick={() => setIsAddingNote(true)}
-                  >
-                    <Plus size={13} /> Adicionar uma nota
-                  </button>
                 </div>
               ) : (
                 <div className="task-notes-list">
@@ -1199,6 +1306,58 @@ export function TaskListView({
             </button>
           </footer>
         </aside>
+      )}
+
+      {confirmDialog && (
+        <div
+          className="dialog-backdrop"
+          role="presentation"
+          onMouseDown={(event) => event.target === event.currentTarget && setConfirmDialog(null)}
+        >
+          <div
+            className="organization-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="task-confirm-dialog-title"
+            style={{ maxWidth: 420 }}
+          >
+            <header>
+              <Trash2 aria-hidden="true" style={{ color: "#ef4444" }} />
+              <h2 id="task-confirm-dialog-title">{confirmDialog.title}</h2>
+              <button
+                type="button"
+                onClick={() => setConfirmDialog(null)}
+                aria-label="Fechar"
+                title="Fechar"
+              >
+                <X aria-hidden="true" />
+              </button>
+            </header>
+            <p style={{ marginTop: 12, marginBottom: 20, color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
+              {confirmDialog.message}
+            </p>
+            <footer>
+              <button type="button" className="ghost" onClick={() => setConfirmDialog(null)}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                style={{
+                  background: confirmDialog.danger ? "#dc2626" : "var(--accent)",
+                  color: "#ffffff",
+                  borderColor: confirmDialog.danger ? "#b91c1c" : "var(--accent)",
+                }}
+                onClick={async () => {
+                  const action = confirmDialog.onConfirm;
+                  setConfirmDialog(null);
+                  await action();
+                }}
+              >
+                {confirmDialog.confirmLabel}
+              </button>
+            </footer>
+          </div>
+        </div>
       )}
     </div>
   );

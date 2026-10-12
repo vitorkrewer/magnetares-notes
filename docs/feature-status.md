@@ -27,6 +27,13 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 | Exportar Markdown/HTML/texto | Implementado | Exportação pelo editor com diálogo nativo de salvamento (v1.3.0). |
 | Impressão/PDF | Implementado | `window.print()` e CSS de impressão. |
 | Compliance & Autocura | Implementado | Diagnóstico `EnsureDataCompliance`, reparo de checklists, limpeza de conflitos orfãos e normalização no SQLite. |
+| Listas & Tarefas (v1.8.0) | Implementado (v1.8.0) | Módulo de produtividade com 4 níveis hierárquicos, entrada rápida (Quick-Add), filtros, prazos e busca. |
+| Subtarefas & Checklists de Tarefas | Implementado (v1.8.0) | Criação, reordenação e conclusão de subtarefas por tarefa com barra de progresso visual. |
+| Múltiplas Notas por Tarefa | Implementado (v1.8.0) | Anexo de múltiplos cartões de notas contextuais dentro de cada tarefa com timestamps e edição individual. |
+| Arquivamento de Listas | Implementado (v1.8.0) | Soft-delete com modo consulta na sidebar e restauração em um clique, preservando histórico e integridade. |
+| Prioridades Semânticas | Implementado (v1.8.0) | 4 níveis com ícones semânticos distintos (🔥 Alta, ⚠️ Média, ⬇️ Baixa, ➖ Nenhuma) e WCAG AA no tema claro. |
+| Diálogos Modais Centralizados | Implementado (v1.8.0) | Eliminação total de `window.confirm` do navegador; modais centralizados nativos integrados ao design system. |
+| Sincronização de Tarefas na Nuvem | Implementado (v1.8.0) | Tabelas remotas `sync_task_lists`, `sync_tasks` e `sync_subtasks` no Turso com LWW e sync imediato. |
 | Backup Turso e Sync | Implementado | Sync bidirecional de notas/pastas, snapshots, transações, sync automático, conflitos local/remoto/merge e convergência por conteúdo. |
 | Anexos e PDFs | Planejado | Sem modelo de blob, visualizador ou armazenamento de arquivo. |
 | Desenho/anotação | Planejado | Depende de canvas e anexos. |

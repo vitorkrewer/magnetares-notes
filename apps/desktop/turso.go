@@ -373,6 +373,7 @@ func (t *TursoClient) InitSchema() error {
 			color TEXT NOT NULL DEFAULT 'blue',
 			icon TEXT NOT NULL DEFAULT 'inbox',
 			position REAL NOT NULL DEFAULT 0.0,
+			archived_at INTEGER,
 			deleted_at INTEGER,
 			created_at INTEGER NOT NULL,
 			updated_at INTEGER NOT NULL,
@@ -452,6 +453,7 @@ func (t *TursoClient) InitSchema() error {
 		`ALTER TABLE sync_folders ADD COLUMN icon TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE sync_tags ADD COLUMN icon TEXT NOT NULL DEFAULT 'tag'`,
 		`ALTER TABLE sync_tags ADD COLUMN managed INTEGER NOT NULL DEFAULT 1`,
+		`ALTER TABLE sync_task_lists ADD COLUMN archived_at INTEGER`,
 		`ALTER TABLE sync_note_changes ADD COLUMN snapshot_json TEXT NOT NULL DEFAULT ''`,
 	}
 	for _, statement := range alterStatements {

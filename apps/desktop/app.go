@@ -162,12 +162,60 @@ func (a *App) ListTaskLists() ([]TaskList, error) {
 	return a.store.ListTaskLists()
 }
 
+func (a *App) ListArchivedTaskLists() ([]TaskList, error) {
+	return a.store.ListArchivedTaskLists()
+}
+
 func (a *App) SaveTaskList(list TaskList) (TaskList, error) {
-	return a.store.SaveTaskList(list)
+	saved, err := a.store.SaveTaskList(list)
+	if err == nil {
+		a.trySyncTaskEntitiesImmediately()
+	}
+	return saved, err
+}
+
+func (a *App) ArchiveTaskList(id string) (TaskList, error) {
+	list, err := a.store.ArchiveTaskList(id)
+	if err == nil {
+		a.trySyncTaskEntitiesImmediately()
+	}
+	return list, err
+}
+
+func (a *App) UnarchiveTaskList(id string) (TaskList, error) {
+	list, err := a.store.UnarchiveTaskList(id)
+	if err == nil {
+		a.trySyncTaskEntitiesImmediately()
+	}
+	return list, err
 }
 
 func (a *App) DeleteTaskList(id string) error {
-	return a.store.DeleteTaskList(id)
+	if err := a.store.DeleteTaskList(id); err != nil {
+		return err
+	}
+	a.trySyncTaskEntitiesImmediately()
+	return nil
+}
+
+func (a *App) trySyncTaskEntitiesImmediately() {
+	if a.ctx == nil {
+		return
+	}
+	databaseURL, authToken, err := a.syncCredentials()
+	if err != nil || strings.TrimSpace(databaseURL) == "" || strings.TrimSpace(authToken) == "" {
+		return
+	}
+	turso := NewTursoClient(databaseURL, authToken)
+	if turso == nil {
+		return
+	}
+	cfg := loadAppConfig()
+	res, err := a.store.resolveSyncProfile(databaseURL, cfg.SyncProfileID)
+	if err != nil || res.ProfileID == "" {
+		return
+	}
+	_ = a.store.syncTaskEntities(turso, res.ProfileID)
 }
 
 func (a *App) ListTasks(listID string, includeCompleted bool) ([]Task, error) {

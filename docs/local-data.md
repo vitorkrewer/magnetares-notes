@@ -66,8 +66,10 @@ Nunca altere uma migração já lançada. Crie uma nova migração com prefixo c
 | `0010_stickers.sql` | Tabelas `sticker_boards` e `stickers`, quadro padrão "Geral" e índices. |
 | `0011_code_notes.sql` | Colunas `note_type` (`rtf`) e `language` (`plaintext`) em notas. |
 | `0012_sync_profile_source.sql` | Origem do perfil de sincronização gravado (`remote`, `explicit`, `local`). |
+| `0013_task_lists.sql` | Tabelas `task_lists`, `tasks` e `subtasks`, lista padrão "Entrada" (`list-inbox`) e índices de busca. |
+| `0014_task_lists_archive.sql` | Coluna `archived_at` em `task_lists` e índice composto para arquivamento e soft-delete. |
 
-> **Prefixo `0007` duplicado:** `0007_sync_folder_updated_at_index.sql` e `0007_tag_icon.sql` já foram aplicados em bancos existentes e são registrados pelo nome completo. Não os renomeie: um nome novo seria tratado como migração pendente e falharia ao recriar a coluna `icon`. Novas migrações continuam a partir de `0013_`.
+> **Prefixo `0007` duplicado:** `0007_sync_folder_updated_at_index.sql` e `0007_tag_icon.sql` já foram aplicados em bancos existentes e são registrados pelo nome completo. Não os renomeie: um nome novo seria tratado como migração pendente e falharia ao recriar a coluna `icon`. Novas migrações continuam a partir de `0015_`.
 
 As migrações em `db/migrations` descrevem o esquema remoto de referência; o esquema efetivo é criado por `InitSchema` em `apps/desktop/turso.go` e `apps/api/turso.go`, que devem ser mantidos em paridade.
 
@@ -113,6 +115,51 @@ As migrações em `db/migrations` descrevem o esquema remoto de referência; o e
 | `color` | Cor de fundo pastel do card (8 opções). |
 | `position` | Posição fracionária (`REAL`) para ordenação contínua. |
 | `pinned_at` | Data de fixação no topo, ou `NULL`. |
+| `created_at` / `updated_at` | Epoch em milissegundos. |
+| `deleted_at` | Exclusão lógica para sincronização. |
+| `sync_state` | Estado de sincronização (`clean` / `pending`). |
+
+### `task_lists` (Listas de Tarefas)
+
+| Coluna | Descrição |
+| --- | --- |
+| `id` | Identificador único da lista (ex.: `list-inbox` para Entrada). |
+| `name` | Nome da lista de tarefas. |
+| `color` | Cor temática da lista (paleta vibrante). |
+| `icon` | Identificador do ícone temático (`inbox`, `briefcase`, etc.). |
+| `position` | Posição (`REAL`) para ordenação na barra lateral. |
+| `archived_at` | Timestamp de arquivamento (modo consulta), ou `NULL` se ativa. |
+| `created_at` / `updated_at` | Epoch em milissegundos. |
+| `deleted_at` | Exclusão lógica para propagação e sincronização. |
+| `sync_state` | Estado de sincronização (`clean` / `pending`). |
+
+### `tasks` (Tarefas)
+
+| Coluna | Descrição |
+| --- | --- |
+| `id` | Identificador único da tarefa. |
+| `list_id` | Chave estrangeira referenciando `task_lists(id)`. |
+| `title` | Título da tarefa. |
+| `notes` | JSON estruturado contendo array de anotações contextuais anexadas (`TaskNoteRecord`). |
+| `completed` | Booleano (0 ou 1) indicando se a tarefa foi concluída. |
+| `completed_at` | Timestamp de conclusão, ou `NULL`. |
+| `due_date` | Data de vencimento no formato `YYYY-MM-DD`, ou `NULL`. |
+| `priority` | Nível de prioridade numérico (1 = Alta 🔥, 2 = Média ⚠️, 3 = Baixa ⬇️, 0 = Nenhuma ➖). |
+| `position` | Posição (`REAL`) para ordenação na lista. |
+| `created_at` / `updated_at` | Epoch em milissegundos. |
+| `deleted_at` | Exclusão lógica para sincronização. |
+| `sync_state` | Estado de sincronização (`clean` / `pending`). |
+
+### `subtasks` (Subtarefas / Checklists)
+
+| Coluna | Descrição |
+| --- | --- |
+| `id` | Identificador único da subtarefa. |
+| `task_id` | Chave estrangeira referenciando `tasks(id)`. |
+| `title` | Título do item de checklist. |
+| `completed` | Booleano (0 ou 1) indicando conclusão da subtarefa. |
+| `completed_at` | Timestamp de conclusão, ou `NULL`. |
+| `position` | Posição (`REAL`) para ordenação. |
 | `created_at` / `updated_at` | Epoch em milissegundos. |
 | `deleted_at` | Exclusão lógica para sincronização. |
 | `sync_state` | Estado de sincronização (`clean` / `pending`). |

@@ -60,6 +60,8 @@ export namespace main {
 	    position: number;
 	    taskCount: number;
 	    // Go type: time
+	    archivedAt?: any;
+	    // Go type: time
 	    createdAt: any;
 	    // Go type: time
 	    updatedAt: any;
@@ -76,6 +78,7 @@ export namespace main {
 	        this.icon = source["icon"];
 	        this.position = source["position"];
 	        this.taskCount = source["taskCount"];
+	        this.archivedAt = this.convertValues(source["archivedAt"], null);
 	        this.createdAt = this.convertValues(source["createdAt"], null);
 	        this.updatedAt = this.convertValues(source["updatedAt"], null);
 	    }
@@ -164,6 +167,7 @@ export namespace main {
 	    smartFolders: SmartFolder[];
 	    stickerBoards: StickerBoard[];
 	    taskLists: TaskList[];
+	    archivedTaskLists: TaskList[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Navigation(source);
@@ -176,6 +180,7 @@ export namespace main {
 	        this.smartFolders = this.convertValues(source["smartFolders"], SmartFolder);
 	        this.stickerBoards = this.convertValues(source["stickerBoards"], StickerBoard);
 	        this.taskLists = this.convertValues(source["taskLists"], TaskList);
+	        this.archivedTaskLists = this.convertValues(source["archivedTaskLists"], TaskList);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

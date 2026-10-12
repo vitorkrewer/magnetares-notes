@@ -69,6 +69,7 @@ export type TaskListRecord = {
   icon: string;
   position: number;
   taskCount: number;
+  archivedAt?: string | null;
   createdAt?: string;
   updatedAt: string;
 };
@@ -115,6 +116,7 @@ export type NavigationRecord = {
   smartFolders: SmartFolderRecord[];
   stickerBoards: StickerBoardRecord[];
   taskLists?: TaskListRecord[];
+  archivedTaskLists?: TaskListRecord[];
 };
 
 export type NoteQuery = {
@@ -212,7 +214,10 @@ export type DesktopBridge = {
   SetStickerPinned?: (id: string, pinned: boolean) => Promise<StickerRecord>;
   MoveSticker?: (id: string, boardId: string, beforeId: string) => Promise<StickerRecord>;
   ListTaskLists?: () => Promise<TaskListRecord[]>;
+  ListArchivedTaskLists?: () => Promise<TaskListRecord[]>;
   SaveTaskList?: (list: TaskListRecord) => Promise<TaskListRecord>;
+  ArchiveTaskList?: (id: string) => Promise<TaskListRecord>;
+  UnarchiveTaskList?: (id: string) => Promise<TaskListRecord>;
   DeleteTaskList?: (id: string) => Promise<void>;
   ListTasks?: (listId: string, includeCompleted?: boolean) => Promise<TaskRecord[]>;
   GetTaskWithSubtasks?: (id: string) => Promise<TaskRecord>;

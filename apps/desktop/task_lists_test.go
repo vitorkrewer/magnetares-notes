@@ -125,4 +125,86 @@ func TestTaskListsAndTasksCRUDWithClientIDs(t *testing.T) {
 	if len(tasksAfterAudit) != 1 {
 		t.Fatalf("tarefa desapareceu pós-compliance! esperava 1, encontrou %d", len(tasksAfterAudit))
 	}
+
+	// 10. Archive custom list
+	archived, err := app.ArchiveTaskList(clientListID)
+	if err != nil {
+		t.Fatalf("falha ao arquivar lista: %v", err)
+	}
+	if archived.ArchivedAt == nil {
+		t.Fatal("esperava que archivedAt estivesse preenchido")
+	}
+
+	// Verify it does not appear in active lists, but appears in archived lists
+	activeLists, err := app.ListTaskLists()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, l := range activeLists {
+		if l.ID == clientListID {
+			t.Fatal("lista arquivada ainda aparece nas listas ativas!")
+		}
+	}
+
+	archivedLists, err := app.ListArchivedTaskLists()
+	if err != nil {
+		t.Fatal(err)
+	}
+	foundArchived := false
+	for _, l := range archivedLists {
+		if l.ID == clientListID {
+			foundArchived = true
+			break
+		}
+	}
+	if !foundArchived {
+		t.Fatal("lista arquivada não encontrada em ListArchivedTaskLists")
+	}
+
+	// 11. Cannot archive default Inbox
+	if _, err := app.ArchiveTaskList(defaultTaskListID); err == nil {
+		t.Fatal("esperava que arquivar a lista padrão 'Entrada' gerasse erro")
+	}
+
+	// 12. Unarchive custom list
+	unarchived, err := app.UnarchiveTaskList(clientListID)
+	if err != nil {
+		t.Fatalf("falha ao desarquivar lista: %v", err)
+	}
+	if unarchived.ArchivedAt != nil {
+		t.Fatal("esperava que archivedAt fosse nulo após desarquivar")
+	}
+
+	// 13. Delete custom list (and ensure its child tasks are also removed)
+	_, err = app.SaveTask(Task{
+		ID:     uuid.NewString(),
+		ListID: clientListID,
+		Title:  "Tarefa filha da lista custom",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := app.DeleteTaskList(clientListID); err != nil {
+		t.Fatalf("falha ao deletar lista: %v", err)
+	}
+
+	// Cannot delete default inbox
+	if err := app.DeleteTaskList(defaultTaskListID); err == nil {
+		t.Fatal("esperava que deletar a lista padrão 'Entrada' gerasse erro")
+	}
+
+	// Ensure list is not in active or archived
+	activeListsAfterDel, _ := app.ListTaskLists()
+	for _, l := range activeListsAfterDel {
+		if l.ID == clientListID {
+			t.Fatal("lista deletada ainda está nas listas ativas!")
+		}
+	}
+	archivedListsAfterDel, _ := app.ListArchivedTaskLists()
+	for _, l := range archivedListsAfterDel {
+		if l.ID == clientListID {
+			t.Fatal("lista deletada ainda está nas listas arquivadas!")
+		}
+	}
 }

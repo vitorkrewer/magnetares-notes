@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { CheckCircle2, Cloud, Eye, EyeOff, HardDrive, Info, Moon, RefreshCw, Settings, ShieldCheck, Sun, X, XCircle } from "lucide-react";
+import { CheckCircle2, Cloud, Eye, EyeOff, HardDrive, Info, Moon, RefreshCw, Settings, ShieldCheck, Sun, Trash2, X, XCircle } from "lucide-react";
 import { SyncProfilePanel } from "./SyncProfilePanel";
 
 export type ThemeOption = "light" | "dark" | "system";
@@ -42,6 +42,7 @@ export function SettingsDialog({
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
   const [syncMessage, setSyncMessage] = useState("");
+  const [confirmRestoreOpen, setConfirmRestoreOpen] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
   const [testMessage, setTestMessage] = useState("");
@@ -105,10 +106,14 @@ export function SettingsDialog({
     }
   };
 
-  const handleRestoreFromCloud = async () => {
+  const handleRestoreFromCloud = () => {
+    setConfirmRestoreOpen(true);
+  };
+
+  const executeRestoreFromCloud = async () => {
+    setConfirmRestoreOpen(false);
     const bridge = window.go?.main?.App;
     if (!bridge?.RestoreFromCloud) return;
-    if (!confirm("Isso apagará o banco local atual e fará o download completo da nuvem. Um backup de segurança será gerado. Deseja continuar?")) return;
     try {
       setSyncing(true);
       setSyncStatus("syncing");
@@ -492,6 +497,31 @@ export function SettingsDialog({
           )}
         </div>
       </div>
+
+      {confirmRestoreOpen && (
+        <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setConfirmRestoreOpen(false)}>
+          <div className="organization-dialog" role="dialog" aria-modal="true" aria-labelledby="restore-confirm-dialog-title" style={{ maxWidth: 440 }}>
+            <header>
+              <Trash2 aria-hidden="true" style={{ color: "#ef4444" }} />
+              <h2 id="restore-confirm-dialog-title">Restaurar da Nuvem</h2>
+              <button type="button" onClick={() => setConfirmRestoreOpen(false)} aria-label="Fechar" title="Fechar"><X aria-hidden="true" /></button>
+            </header>
+            <p style={{ marginTop: 12, marginBottom: 20, color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
+              Isso apagará o banco local atual e fará o download completo da nuvem. Um backup de segurança será gerado automaticamente. Deseja continuar?
+            </p>
+            <footer>
+              <button type="button" className="ghost" onClick={() => setConfirmRestoreOpen(false)}>Cancelar</button>
+              <button
+                type="button"
+                style={{ background: "#dc2626", color: "#ffffff", borderColor: "#b91c1c" }}
+                onClick={() => void executeRestoreFromCloud()}
+              >
+                Apagar e Restaurar
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

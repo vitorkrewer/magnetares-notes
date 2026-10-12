@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Check, CheckCircle2, Copy, Crown, Fingerprint, RefreshCw, Trash2, Undo2, XCircle } from "lucide-react";
+import { Check, CheckCircle2, Copy, Crown, Fingerprint, RefreshCw, Trash2, Undo2, X, XCircle } from "lucide-react";
 import type { RemoteSyncProfile, SyncProfileInfo } from "./types";
 
 type SyncProfilePanelProps = {
@@ -31,6 +31,13 @@ export function SyncProfilePanel({ refreshKey = "" }: SyncProfilePanelProps) {
   const [busy, setBusy] = useState<string>("");
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    danger?: boolean;
+    onConfirm: () => void;
+  } | null>(null);
 
   const loadInfo = useCallback(async () => {
     const bridge = window.go?.main?.App;
@@ -81,32 +88,38 @@ export function SyncProfilePanel({ refreshKey = "" }: SyncProfilePanelProps) {
     });
 
   const handleMakePrimary = (profileId: string) => {
-    const confirmed = window.confirm(
-      `Tornar o perfil ${shortId(profileId)} o principal deste banco?\n\n` +
-        "Todas as máquinas atualizadas passam a usá-lo na próxima sincronização. O principal atual será incorporado a ele automaticamente; um backup local é feito em cada máquina antes da troca."
-    );
-    if (!confirmed) return;
-    void run(`primary-${profileId}`, async () => {
-      const bridge = window.go?.main?.App;
-      if (!bridge?.SetPrimarySyncProfile) throw new Error("Disponível apenas no aplicativo desktop.");
-      const message = await bridge.SetPrimarySyncProfile(profileId);
-      await reloadProfiles();
-      return message;
+    setConfirmAction({
+      title: "Tornar Perfil Principal",
+      message: `Deseja tornar o perfil ${shortId(profileId)} o principal deste banco na nuvem? Todas as máquinas atualizadas passarão a usá-lo na próxima sincronização. O principal atual será incorporado automaticamente e um backup local será feito antes da troca.`,
+      confirmLabel: "Tornar Principal",
+      danger: false,
+      onConfirm: () => {
+        void run(`primary-${profileId}`, async () => {
+          const bridge = window.go?.main?.App;
+          if (!bridge?.SetPrimarySyncProfile) throw new Error("Disponível apenas no aplicativo desktop.");
+          const message = await bridge.SetPrimarySyncProfile(profileId);
+          await reloadProfiles();
+          return message;
+        });
+      },
     });
   };
 
   const handlePurge = (profile: RemoteSyncProfile) => {
-    const confirmed = window.confirm(
-      `Remover da nuvem o perfil antigo ${shortId(profile.profileId)}?\n\n` +
-        "Os dados são incorporados ao perfil principal antes da remoção. Só faça isso depois de atualizar todas as máquinas: uma máquina na versão antiga que ainda use esse perfil deixará de receber as notas dele."
-    );
-    if (!confirmed) return;
-    void run(`purge-${profile.profileId}`, async () => {
-      const bridge = window.go?.main?.App;
-      if (!bridge?.PurgeRemoteSyncProfile) throw new Error("Disponível apenas no aplicativo desktop.");
-      const message = await bridge.PurgeRemoteSyncProfile(profile.profileId);
-      await reloadProfiles();
-      return message;
+    setConfirmAction({
+      title: "Remover Perfil Antigo",
+      message: `Deseja remover da nuvem o perfil antigo ${shortId(profile.profileId)}? Os dados são incorporados ao perfil principal antes da remoção. Certifique-se de que todas as máquinas foram atualizadas.`,
+      confirmLabel: "Remover Perfil",
+      danger: true,
+      onConfirm: () => {
+        void run(`purge-${profile.profileId}`, async () => {
+          const bridge = window.go?.main?.App;
+          if (!bridge?.PurgeRemoteSyncProfile) throw new Error("Disponível apenas no aplicativo desktop.");
+          const message = await bridge.PurgeRemoteSyncProfile(profile.profileId);
+          await reloadProfiles();
+          return message;
+        });
+      },
     });
   };
 
@@ -225,6 +238,39 @@ export function SyncProfilePanel({ refreshKey = "" }: SyncProfilePanelProps) {
         <div className={`status-feedback-box ${feedback.type}`} role="status">
           {feedback.type === "success" ? <CheckCircle2 aria-hidden="true" /> : <XCircle aria-hidden="true" />}
           <span>{feedback.message}</span>
+        </div>
+      )}
+
+      {confirmAction && (
+        <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setConfirmAction(null)}>
+          <div className="organization-dialog" role="dialog" aria-modal="true" aria-labelledby="sync-profile-confirm-title" style={{ maxWidth: 440 }}>
+            <header>
+              <Crown aria-hidden="true" style={{ color: confirmAction.danger ? "#ef4444" : "var(--accent)" }} />
+              <h2 id="sync-profile-confirm-title">{confirmAction.title}</h2>
+              <button type="button" onClick={() => setConfirmAction(null)} aria-label="Fechar" title="Fechar"><X aria-hidden="true" /></button>
+            </header>
+            <p style={{ marginTop: 12, marginBottom: 20, color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
+              {confirmAction.message}
+            </p>
+            <footer>
+              <button type="button" className="ghost" onClick={() => setConfirmAction(null)}>Cancelar</button>
+              <button
+                type="button"
+                style={{
+                  background: confirmAction.danger ? "#dc2626" : "var(--accent)",
+                  color: "#ffffff",
+                  borderColor: confirmAction.danger ? "#b91c1c" : "var(--accent)",
+                }}
+                onClick={() => {
+                  const action = confirmAction.onConfirm;
+                  setConfirmAction(null);
+                  action();
+                }}
+              >
+                {confirmAction.confirmLabel}
+              </button>
+            </footer>
+          </div>
         </div>
       )}
     </section>

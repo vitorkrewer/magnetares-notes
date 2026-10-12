@@ -309,7 +309,7 @@ export function StickerBoardView({
             title="Criar novo sticker"
           >
             <Plus size={16} aria-hidden="true" />
-            <span>Novo sticker</span>
+            <span>Novo Sticker</span>
           </button>
 
           <div className="sticker-board-manage-buttons">

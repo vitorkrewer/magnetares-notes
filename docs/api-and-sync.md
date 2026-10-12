@@ -125,6 +125,7 @@ Exemplo de corpo de mutação de nota:
 - **Estrutura de Pastas:** `folderId`, `folder` (nome), metadados de personalização (`color` HSL, `icon` visual) e tabela remota `sync_folders` preservando a hierarquia.
 - **Etiquetas (Tags):** associação N:N entre notas e tags sincronizada via array, mais o catálogo (nome, ícone, exclusão lógica) em `sync_tags`.
 - **Stickers:** quadros (`sync_sticker_boards`) e cards (`sync_stickers`), por última escrita.
+- **Listas & Tarefas (v1.8.0):** listas (`sync_task_lists`), tarefas (`sync_tasks`) e subtarefas (`sync_subtasks`) com sincronização bidirecional LWW baseada no relógio do servidor (`server_updated_at`), suportando arquivamento (`archived_at`), prioridades semânticas, múltiplas anotações anexadas (`notes`), checklists e exclusão lógica em cascata via lápides (`deleted_at`). Sincronização imediata é disparada em mutações locais (`trySyncTaskEntitiesImmediately`).
 - **Tipo de nota:** `note_type` (`rtf`, `code`, …) e `language` (`plaintext`, …); valores remotos legados (`richtext`, vazio) são normalizados para evitar falsos conflitos.
 - **Metadados de Organização:** nota fixada (`pinnedAt`), estado e contagem de checklists (`checklistTotal`, `checklistOpen`).
 - Exclusão e restauração por lápide (`deletedAt`).

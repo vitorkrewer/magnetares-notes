@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FileCode2, FilePenLine, FileText, Folder, Globe, List, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Trash2, Upload, X } from "lucide-react";
+import { Archive, ArchiveRestore, Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FileCode2, FilePenLine, FileText, Folder, Globe, List, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Trash2, Upload, X } from "lucide-react";
 import { StructuredEditor } from "./StructuredEditor";
 import { CodeEditor } from "./CodeEditor";
 import { TitleBar } from "./TitleBar";
@@ -105,6 +105,7 @@ export function App() {
   const [taskListDialogOpen, setTaskListDialogOpen] = useState(false);
   const [listToEdit, setListToEdit] = useState<TaskListRecord | undefined>(undefined);
   const [deleteListTarget, setDeleteListTarget] = useState<TaskListRecord | null>(null);
+  const [archivedListsExpanded, setArchivedListsExpanded] = useState(false);
   const [theme, setTheme] = useState<ThemeOption>(() => ((localStorage.getItem("magnetares_theme") || localStorage.getItem("aster_theme")) as ThemeOption) || "light");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dbPath, setDbPath] = useState("%LOCALAPPDATA%\\Magnetares Notes\\magnetares.db");
@@ -1032,6 +1033,51 @@ export function App() {
     }
   };
 
+  const handleArchiveTaskList = async (listRecord: TaskListRecord) => {
+    if (listRecord.id === "list-inbox") return;
+    try {
+      const bridge = window.go?.main?.App;
+      if (bridge?.ArchiveTaskList) {
+        await bridge.ArchiveTaskList(listRecord.id);
+        await reloadNavigation();
+      } else {
+        setNavigation((current) => ({
+          ...current,
+          taskLists: (current.taskLists || []).filter((l) => l.id !== listRecord.id),
+          archivedTaskLists: [
+            ...(current.archivedTaskLists || []).filter((l) => l.id !== listRecord.id),
+            { ...listRecord, archivedAt: new Date().toISOString() },
+          ],
+        }));
+      }
+      setTaskSyncNonce((n) => n + 1);
+    } catch (err: any) {
+      setLoadError(err?.message || "Não foi possível arquivar a lista de tarefas.");
+    }
+  };
+
+  const handleUnarchiveTaskList = async (listRecord: TaskListRecord) => {
+    try {
+      const bridge = window.go?.main?.App;
+      if (bridge?.UnarchiveTaskList) {
+        await bridge.UnarchiveTaskList(listRecord.id);
+        await reloadNavigation();
+      } else {
+        setNavigation((current) => ({
+          ...current,
+          archivedTaskLists: (current.archivedTaskLists || []).filter((l) => l.id !== listRecord.id),
+          taskLists: [
+            ...(current.taskLists || []).filter((l) => l.id !== listRecord.id),
+            { ...listRecord, archivedAt: null },
+          ],
+        }));
+      }
+      setTaskSyncNonce((n) => n + 1);
+    } catch (err: any) {
+      setLoadError(err?.message || "Não foi possível desarquivar a lista de tarefas.");
+    }
+  };
+
   const handleDeleteTaskList = async (listRecord: TaskListRecord) => {
     if (listRecord.id === "list-inbox") return;
     try {
@@ -1040,15 +1086,16 @@ export function App() {
         await bridge.DeleteTaskList(listRecord.id);
         await reloadNavigation();
         if (selectedQuery.kind === "taskList" && selectedQuery.id === listRecord.id) {
-          selectQuery({ kind: "all" });
+          selectQuery({ kind: "taskList", id: "list-inbox" });
         }
       } else {
         setNavigation((current) => ({
           ...current,
-          taskLists: (current.taskLists || []).filter((l) => l.id !== listRecord.id)
+          taskLists: (current.taskLists || []).filter((l) => l.id !== listRecord.id),
+          archivedTaskLists: (current.archivedTaskLists || []).filter((l) => l.id !== listRecord.id),
         }));
         if (selectedQuery.kind === "taskList" && selectedQuery.id === listRecord.id) {
-          selectQuery({ kind: "all" });
+          selectQuery({ kind: "taskList", id: "list-inbox" });
         }
       }
     } catch (err: any) {
@@ -1380,25 +1427,114 @@ export function App() {
                         <FilePenLine size={13} aria-hidden="true" />
                       </span>
                       {tl.id !== "list-inbox" && (
-                        <span
-                          className="folder-action-btn danger"
-                          role="button"
-                          tabIndex={0}
-                          title="Excluir lista"
-                          aria-label={`Excluir lista ${tl.name}`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setDeleteListTarget(tl);
-                          }}
-                        >
-                          <Trash2 size={13} aria-hidden="true" />
-                        </span>
+                        <>
+                          <span
+                            className="folder-action-btn"
+                            role="button"
+                            tabIndex={0}
+                            title="Arquivar lista"
+                            aria-label={`Arquivar lista ${tl.name}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void handleArchiveTaskList(tl);
+                            }}
+                          >
+                            <Archive size={13} aria-hidden="true" />
+                          </span>
+                          <span
+                            className="folder-action-btn danger"
+                            role="button"
+                            tabIndex={0}
+                            title="Excluir lista"
+                            aria-label={`Excluir lista ${tl.name}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setDeleteListTarget(tl);
+                            }}
+                          >
+                            <Trash2 size={13} aria-hidden="true" />
+                          </span>
+                        </>
                       )}
                     </div>
                   </div>
                 </button>
               );
             })}
+            {(navigation.archivedTaskLists || []).length > 0 && (
+              <div className="sidebar-archived-section">
+                <button
+                  type="button"
+                  className="sidebar-archived-toggle"
+                  onClick={() => setArchivedListsExpanded((prev) => !prev)}
+                >
+                  <ChevronRight
+                    size={13}
+                    className={`nav-chevron ${archivedListsExpanded ? "expanded" : ""}`}
+                  />
+                  <Archive size={13} />
+                  <span>Arquivadas ({navigation.archivedTaskLists!.length})</span>
+                </button>
+                {archivedListsExpanded && (
+                  <div className="sidebar-archived-list">
+                    {navigation.archivedTaskLists!.map((tl) => {
+                      const isSelected = selectedQuery.kind === "taskList" && selectedQuery.id === tl.id;
+                      const colorHex = TASK_LIST_PALETTE.find((c) => c.id === tl.color)?.hex ?? "#888";
+                      const IconComp = getTaskListIconComponent(tl.icon);
+                      return (
+                        <button
+                          key={tl.id}
+                          type="button"
+                          className={`nav-item task-list-item archived ${isSelected ? "selected" : ""}`}
+                          onClick={() => selectQuery({ kind: "taskList", id: tl.id })}
+                          title={`${tl.name} (Arquivada)`}
+                        >
+                          <span>
+                            <IconComp
+                              size={14}
+                              className="tag-icon task-list-icon"
+                              style={{ color: colorHex, opacity: 0.7 }}
+                            />
+                            <span className="nav-item-title">{tl.name}</span>
+                          </span>
+                          <div className="folder-item-actions">
+                            <small className="folder-note-count">{tl.taskCount ?? 0}</small>
+                            <div className="folder-hover-btns">
+                              <span
+                                className="folder-action-btn"
+                                role="button"
+                                tabIndex={0}
+                                title="Desarquivar lista"
+                                aria-label={`Desarquivar lista ${tl.name}`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  void handleUnarchiveTaskList(tl);
+                                }}
+                              >
+                                <ArchiveRestore size={13} aria-hidden="true" />
+                              </span>
+                              <span
+                                className="folder-action-btn danger"
+                                role="button"
+                                tabIndex={0}
+                                title="Excluir lista definitivamente"
+                                aria-label={`Excluir lista ${tl.name}`}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setDeleteListTarget(tl);
+                                }}
+                              >
+                                <Trash2 size={13} aria-hidden="true" />
+                              </span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </>
 
@@ -1508,6 +1644,7 @@ export function App() {
         <TaskListView
           list={
             (navigation.taskLists || []).find((l) => l.id === selectedQuery.id) ||
+            (navigation.archivedTaskLists || []).find((l) => l.id === selectedQuery.id) ||
             (navigation.taskLists || [])[0] || {
               id: "list-inbox",
               name: "Entrada",
@@ -1518,7 +1655,7 @@ export function App() {
               updatedAt: new Date().toISOString(),
             }
           }
-          allLists={navigation.taskLists || []}
+          allLists={[...(navigation.taskLists || []), ...(navigation.archivedTaskLists || [])]}
           sidebarOpen={sidebarOpen}
           onOpenSidebar={() => setSidebarOpen(true)}
           onEditList={(tl) => {
@@ -1526,6 +1663,8 @@ export function App() {
             setTaskListDialogOpen(true);
           }}
           onDeleteList={(tl) => setDeleteListTarget(tl)}
+          onArchiveList={handleArchiveTaskList}
+          onUnarchiveList={handleUnarchiveTaskList}
           onTaskCountChange={handleTaskCountChange}
           refreshKey={taskSyncNonce}
         />
@@ -1868,19 +2007,43 @@ export function App() {
 
       {deleteListTarget && (
         <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setDeleteListTarget(null)}>
-          <div className="organization-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-list-dialog-title" style={{ maxWidth: 420 }}>
+          <div className="organization-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-list-dialog-title" style={{ maxWidth: 440 }}>
             <header>
               <Trash2 aria-hidden="true" style={{ color: "#ef4444" }} />
-              <h2 id="delete-list-dialog-title">Excluir lista</h2>
+              <h2 id="delete-list-dialog-title">Excluir lista definitivamente</h2>
               <button type="button" onClick={() => setDeleteListTarget(null)} aria-label="Fechar" title="Fechar"><X aria-hidden="true" /></button>
             </header>
-            <p style={{ marginTop: 12, marginBottom: 20, color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
-              Tem certeza que deseja excluir a lista <strong>{deleteListTarget.name}</strong>? As tarefas desta lista serão movidas para a Entrada.
-            </p>
-            <footer>
+            <div style={{ marginTop: 12, marginBottom: 20, fontSize: 13, lineHeight: 1.5, color: "var(--muted)" }}>
+              <p style={{ margin: 0, marginBottom: 10 }}>
+                Tem certeza que deseja excluir permanentemente a lista <strong>{deleteListTarget.name}</strong>?
+              </p>
+              <p style={{ margin: 0, marginBottom: 12, color: "#dc2626", fontWeight: 600 }}>
+                A lista e todas as suas tarefas serão excluídas permanentemente no seu dispositivo e na nuvem imediatamente (se conectado).
+              </p>
+              <p style={{ margin: 0, fontSize: 12 }}>
+                Dica: Se você deseja apenas ocultar esta lista da visão principal e manter todas as tarefas preservadas para consulta, selecione <strong>Arquivar lista</strong>.
+              </p>
+            </div>
+            <footer style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
               <button type="button" className="ghost" onClick={() => setDeleteListTarget(null)}>Cancelar</button>
-              <button type="button" style={{ background: "#dc2626", color: "#ffffff", borderColor: "#b91c1c" }} onClick={() => void handleDeleteTaskList(deleteListTarget)}>
-                Excluir lista
+              <button
+                type="button"
+                className="ghost"
+                style={{ color: "#d97706", borderColor: "rgba(217, 119, 6, 0.4)" }}
+                onClick={() => {
+                  const target = deleteListTarget;
+                  setDeleteListTarget(null);
+                  void handleArchiveTaskList(target);
+                }}
+              >
+                Arquivar lista
+              </button>
+              <button
+                type="button"
+                style={{ background: "#dc2626", color: "#ffffff", borderColor: "#b91c1c" }}
+                onClick={() => void handleDeleteTaskList(deleteListTarget)}
+              >
+                Excluir permanentemente
               </button>
             </footer>
           </div>

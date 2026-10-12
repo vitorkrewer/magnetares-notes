@@ -266,7 +266,8 @@ func (s *noteStore) ensureTaskListCompliance(tx *sql.Tx, now int64, report *Comp
 		VALUES ('list-inbox', 'Entrada', 'blue', 'inbox', 0, ?, ?, 'pending')
 		ON CONFLICT(id) DO UPDATE SET
 			color = CASE WHEN task_lists.color IS NULL OR task_lists.color = '' THEN 'blue' ELSE task_lists.color END,
-			icon = CASE WHEN task_lists.icon IS NULL OR task_lists.icon = '' THEN 'inbox' ELSE task_lists.icon END`, now, now)
+			icon = CASE WHEN task_lists.icon IS NULL OR task_lists.icon = '' THEN 'inbox' ELSE task_lists.icon END,
+			archived_at = NULL`, now, now)
 
 	// 13b. Corrigir tarefas ativas órfãs (list_id nulo/vazio ou lista inexistente OU lista excluída)
 	res, err := tx.Exec(`UPDATE tasks SET list_id = 'list-inbox', sync_state = 'pending', updated_at = ?

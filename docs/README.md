@@ -25,6 +25,7 @@ Este diretório descreve o Magnetares Notes como produto, aplicativo desktop e c
 - Notas locais persistentes em SQLite com autosave, lixeira e restauração.
 - Editor rico: títulos, negrito, itálico, destaque, listas, citações, checklists, tabelas e cálculos.
 - **Stickers (v1.4.0):** mural full-width de notas autoadesivas por quadros, 8 cores pastel, fixação no topo e drag & drop.
+- **Listas & Tarefas (v1.8.0):** módulo completo de produtividade pessoal com 4 níveis hierárquicos (Listas ➔ Tarefas ➔ Subtarefas ➔ Múltiplas Notas), prioridades visuais semânticas (🔥, ⚠️, ⬇️, ➖), arquivamento de listas com modo consulta, e sincronização em nuvem Turso com LWW.
 - Pastas, subpastas, fixadas, etiquetas e Pastas Inteligentes.
 - Importação de Markdown/texto, exportação Markdown/HTML/texto com diálogo nativo e impressão.
 - Tema claro/escuro, barra de título sem moldura e configuração do local do banco.

@@ -25,6 +25,10 @@ go test -v -count=1 .
 | `TestEquivalentRemoteContentConvergesWithoutConflict` | Conteúdo igual com revisões diferentes converge sem duplicação. |
 | `TestResolveNoteConflictMergesLocalAndRemote` | Mesclagem estruturada de corpo, título remoto e tags. |
 | `TestTagCRUDAndIconProtection` | CRUD de etiquetas, ícones, contagem e proteção de Pastas Inteligentes. |
+| `TestTaskListCRUD` | Criação, edição, arquivamento, modo consulta e desarquivamento de listas de tarefas. |
+| `TestTaskAndSubtaskCRUD` | CRUD de tarefas, prioridades, prazos, subtarefas e múltiplas notas anexadas em JSON. |
+| `TestTaskListCascadingDelete` | Exclusão definitiva em cascata de lista, tarefas e subtarefas gerando lápides locais. |
+| `TestTaskListComplianceProtections` | Proteção estrita que impede arquivamento ou exclusão da lista padrão de Entrada. |
 
 ## Testes da API
 

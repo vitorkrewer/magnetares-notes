@@ -463,7 +463,7 @@ var lwwSyncTables = []lwwTable{
 	{"sync_tags", []string{"name", "normalized_name", "icon", "managed", "deleted_at", "created_at", "updated_at"}},
 	{"sync_sticker_boards", []string{"name", "color", "position", "deleted_at", "created_at", "updated_at"}},
 	{"sync_stickers", []string{"board_id", "title", "body", "color", "position", "pinned_at", "deleted_at", "created_at", "updated_at"}},
-	{"sync_task_lists", []string{"name", "color", "icon", "position", "deleted_at", "created_at", "updated_at"}},
+	{"sync_task_lists", []string{"name", "color", "icon", "position", "archived_at", "deleted_at", "created_at", "updated_at"}},
 	{"sync_tasks", []string{"list_id", "title", "notes", "completed", "completed_at", "due_date", "priority", "position", "deleted_at", "created_at", "updated_at"}},
 	{"sync_subtasks", []string{"task_id", "title", "completed", "completed_at", "position", "deleted_at", "created_at", "updated_at"}},
 }

@@ -29,6 +29,10 @@ Exemplos de métodos expostos:
 
 - `ListNotes`, `SaveNote`, `DeleteNote`, `RestoreNote`.
 - `ListNavigation`, `SaveFolder`, `MoveNote`, `SetNotePinned`, `SetNoteTags`.
+- `ListTaskLists`, `SaveTaskList`, `DeleteTaskList`, `ArchiveTaskList`, `UnarchiveTaskList`, `ListArchivedTaskLists`.
+- `ListTasks`, `SaveTask`, `DeleteTask`, `ToggleTaskCompleted`.
+- `ListSubtasks`, `SaveSubtask`, `DeleteSubtask`, `ToggleSubtaskCompleted`.
+- `SaveTaskNote`, `DeleteTaskNote`.
 - `ListStickerBoards`, `SaveStickerBoard`, `DeleteStickerBoard`.
 - `ListStickers`, `SaveSticker`, `DeleteSticker`, `MoveSticker`, `SetStickerPinned`.
 - `QueryNotes`, `SaveSmartFolder`, `DeleteSmartFolder`.
@@ -41,10 +45,13 @@ O frontend fica em `apps/desktop/frontend` e é construído por Vite/React.
 
 - `App.tsx`: estado, autosave, navegação, diálogos e integração bridge/API.
 - `StructuredEditor.tsx`: Tiptap e toolbar de formatação.
+- `TaskListView.tsx`: módulo completo de tarefas (Quick-Add, filtros, busca, prioridades semânticas, inspector, subtarefas e notas anexadas).
+- `TaskListDialog.tsx`: diálogo de criação e personalização de listas de tarefas (cores e ícones).
 - `StickerBoardView.tsx`: mural full-width de notas adesivas com reordenação drag & drop e edição inline.
 - `StickerBoardDialog.tsx`: diálogo de criação e edição de quadros de stickers com paleta de cores.
 - `CalculationNode.tsx`: nó inline de cálculo matemático.
-- `SettingsDialog.tsx`: tema, dados locais e nuvem.
+- `SettingsDialog.tsx`: tema, dados locais, perfil e nuvem.
+- `SyncProfilePanel.tsx`: gerenciador de partições e perfis remotos de sincronização.
 - `types.ts`: contrato TypeScript da bridge Wails.
 
 O código acessa Wails de forma opcional (`window.go?.main?.App`). Portanto a página aberta diretamente em navegador utiliza notas de demonstração e não persiste em SQLite.

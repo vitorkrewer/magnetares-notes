@@ -55,20 +55,21 @@ func (s *noteStore) syncTaskListsDirect(turso *TursoClient, profileID string) er
 	var problems []error
 
 	// Push: enviar listas com sync_state = 'pending'
-	rows, err := s.db.Query(`SELECT id, name, color, icon, position, deleted_at, created_at, updated_at FROM task_lists WHERE sync_state = 'pending'`)
+	rows, err := s.db.Query(`SELECT id, name, color, icon, position, archived_at, deleted_at, created_at, updated_at FROM task_lists WHERE sync_state = 'pending'`)
 	if err != nil {
 		return fmt.Errorf("ler task_lists pendentes: %w", err)
 	}
 	type pendingList struct {
 		id, name, color, icon string
 		position              float64
+		archivedAt            sql.NullInt64
 		deletedAt             sql.NullInt64
 		createdAt, updatedAt  int64
 	}
 	var pending []pendingList
 	for rows.Next() {
 		var item pendingList
-		if err := rows.Scan(&item.id, &item.name, &item.color, &item.icon, &item.position, &item.deletedAt, &item.createdAt, &item.updatedAt); err != nil {
+		if err := rows.Scan(&item.id, &item.name, &item.color, &item.icon, &item.position, &item.archivedAt, &item.deletedAt, &item.createdAt, &item.updatedAt); err != nil {
 			problems = append(problems, fmt.Errorf("ler task_list pendente: %w", err))
 			continue
 		}
@@ -80,20 +81,24 @@ func (s *noteStore) syncTaskListsDirect(turso *TursoClient, profileID string) er
 	_ = rows.Close()
 
 	for _, list := range pending {
-		var deletedAt any
+		var archivedAt, deletedAt any
+		if list.archivedAt.Valid {
+			archivedAt = list.archivedAt.Int64
+		}
 		if list.deletedAt.Valid {
 			deletedAt = list.deletedAt.Int64
 		}
-		if err := turso.Execute(`INSERT INTO sync_task_lists(user_id, id, name, color, icon, position, deleted_at, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		if err := turso.Execute(`INSERT INTO sync_task_lists(user_id, id, name, color, icon, position, archived_at, deleted_at, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 			ON CONFLICT(user_id, id) DO UPDATE SET
 				name = CASE WHEN excluded.updated_at >= updated_at THEN excluded.name ELSE name END,
 				color = CASE WHEN excluded.updated_at >= updated_at THEN excluded.color ELSE color END,
 				icon = CASE WHEN excluded.updated_at >= updated_at THEN excluded.icon ELSE icon END,
 				position = CASE WHEN excluded.updated_at >= updated_at THEN excluded.position ELSE position END,
+				archived_at = CASE WHEN excluded.updated_at >= updated_at THEN excluded.archived_at ELSE archived_at END,
 				deleted_at = CASE WHEN excluded.updated_at >= updated_at THEN excluded.deleted_at ELSE deleted_at END,
 				updated_at = MAX(excluded.updated_at, updated_at)`,
-			profileID, list.id, list.name, list.color, list.icon, list.position, deletedAt, list.createdAt, list.updatedAt); err != nil {
+			profileID, list.id, list.name, list.color, list.icon, list.position, archivedAt, deletedAt, list.createdAt, list.updatedAt); err != nil {
 			problems = append(problems, fmt.Errorf("enviar task_list %s: %w", list.id, err))
 			continue
 		}
@@ -104,7 +109,7 @@ func (s *noteStore) syncTaskListsDirect(turso *TursoClient, profileID string) er
 	}
 
 	// Pull: buscar listas remotas
-	_, remoteRows, err := turso.Query(`SELECT id, name, color, icon, position, deleted_at, created_at, updated_at
+	_, remoteRows, err := turso.Query(`SELECT id, name, color, icon, position, archived_at, deleted_at, created_at, updated_at
 		FROM sync_task_lists WHERE user_id = ? ORDER BY created_at ASC, id ASC`, profileID)
 	if err != nil {
 		problems = append(problems, fmt.Errorf("buscar task_lists remotas: %w", err))
@@ -112,7 +117,7 @@ func (s *noteStore) syncTaskListsDirect(turso *TursoClient, profileID string) er
 	}
 
 	for _, row := range remoteRows {
-		if len(row) < 8 {
+		if len(row) < 9 {
 			continue
 		}
 		if err := s.applyRemoteTaskList(row); err != nil {
@@ -132,32 +137,38 @@ func (s *noteStore) applyRemoteTaskList(row []TursoValue) error {
 	if err != nil {
 		return fmt.Errorf("posição inválida: %w", err)
 	}
-	var deletedAt any
+	var archivedAt, deletedAt any
 	if row[5].Type != "null" && row[5].Value != "" {
-		if deletedAt, err = tursoInt(row[5]); err != nil {
+		if archivedAt, err = tursoInt(row[5]); err != nil {
+			return fmt.Errorf("archived_at inválido: %w", err)
+		}
+	}
+	if row[6].Type != "null" && row[6].Value != "" {
+		if deletedAt, err = tursoInt(row[6]); err != nil {
 			return fmt.Errorf("deleted_at inválido: %w", err)
 		}
 	}
-	createdAt, err := tursoInt(row[6])
+	createdAt, err := tursoInt(row[7])
 	if err != nil {
 		return fmt.Errorf("created_at inválido: %w", err)
 	}
-	updatedAt, err := tursoInt(row[7])
+	updatedAt, err := tursoInt(row[8])
 	if err != nil {
 		return fmt.Errorf("updated_at inválido: %w", err)
 	}
 
-	_, err = s.db.Exec(`INSERT INTO task_lists(id, name, color, icon, position, deleted_at, created_at, updated_at, sync_state)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'clean')
+	_, err = s.db.Exec(`INSERT INTO task_lists(id, name, color, icon, position, archived_at, deleted_at, created_at, updated_at, sync_state)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'clean')
 		ON CONFLICT(id) DO UPDATE SET
 			name = CASE WHEN updated_at >= excluded.updated_at THEN name ELSE excluded.name END,
 			color = CASE WHEN updated_at >= excluded.updated_at THEN color ELSE excluded.color END,
 			icon = CASE WHEN updated_at >= excluded.updated_at THEN icon ELSE excluded.icon END,
 			position = CASE WHEN updated_at >= excluded.updated_at THEN position ELSE excluded.position END,
+			archived_at = CASE WHEN updated_at >= excluded.updated_at THEN archived_at ELSE excluded.archived_at END,
 			deleted_at = CASE WHEN updated_at >= excluded.updated_at THEN deleted_at ELSE excluded.deleted_at END,
 			updated_at = CASE WHEN updated_at >= excluded.updated_at THEN updated_at ELSE excluded.updated_at END,
 			sync_state = CASE WHEN sync_state = 'pending' AND updated_at >= excluded.updated_at THEN 'pending' ELSE 'clean' END`,
-		id, name, color, icon, position, deletedAt, createdAt, updatedAt)
+		id, name, color, icon, position, archivedAt, deletedAt, createdAt, updatedAt)
 	return err
 }
 
