@@ -1,5 +1,11 @@
 [
   {
+    "id": "v1-8-0",
+    "title": "Magnetares Notes v1.8.0: Novo Módulo de Listas & Tarefas, Prioridades Semânticas e Modais Nativos!",
+    "date": "2026-10-12",
+    "summary": "A versão v1.8.0 inaugura um módulo completo de produtividade pessoal: hierarquia em 4 níveis (Listas, Tarefas, Subtarefas e Múltiplas Notas), prioridades visuais semânticas, arquivamento inteligente de listas com modo consulta, modais nativos centralizados e sincronização em tempo real na nuvem Turso."
+  },
+  {
     "id": "v1-7-0",
     "title": "Magnetares Notes v1.7.0: Backup, Live Preview e Sincronização Unificada!",
     "date": "2026-10-08",

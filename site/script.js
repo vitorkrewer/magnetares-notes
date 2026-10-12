@@ -212,7 +212,7 @@ async function fetchLatestRelease() {
     const res = await fetch(RELEASE_API);
     if (!res.ok) return;
     const data = await res.json();
-    const version = data.tag_name || "v1.6.0";
+    const version = data.tag_name || "v1.8.0";
     const assets = data.assets || [];
 
     if (headerVersionBadge) {
@@ -338,4 +338,64 @@ if (scrollTopBtn) {
       behavior: "smooth"
     });
   });
+}
+
+// Menu Hambúrguer e Drawer Mobile Dinâmico
+function initMobileMenu() {
+  const toggleBtn = document.querySelector("#mobile-menu-toggle");
+  const drawer = document.querySelector("#mobile-nav-drawer");
+  const overlay = document.querySelector("#mobile-drawer-overlay");
+
+  if (!toggleBtn || !drawer) return;
+
+  function openMenu() {
+    toggleBtn.classList.add("active");
+    toggleBtn.setAttribute("aria-expanded", "true");
+    drawer.classList.add("active");
+    drawer.setAttribute("aria-hidden", "false");
+    if (overlay) overlay.classList.add("active");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeMenu() {
+    toggleBtn.classList.remove("active");
+    toggleBtn.setAttribute("aria-expanded", "false");
+    drawer.classList.remove("active");
+    drawer.setAttribute("aria-hidden", "true");
+    if (overlay) overlay.classList.remove("active");
+    document.body.style.overflow = "";
+  }
+
+  toggleBtn.addEventListener("click", () => {
+    const isOpen = drawer.classList.contains("active");
+    if (isOpen) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  });
+
+  if (overlay) {
+    overlay.addEventListener("click", closeMenu);
+  }
+
+  // Fecha o drawer ao clicar em qualquer link de navegação
+  const drawerLinks = drawer.querySelectorAll("a");
+  drawerLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+      closeMenu();
+    });
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && drawer.classList.contains("active")) {
+      closeMenu();
+    }
+  });
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initMobileMenu);
+} else {
+  initMobileMenu();
 }

@@ -46,13 +46,24 @@ flowchart LR
 | **Editor** | Títulos, cores customizáveis, alinhamento, espaçamento entre linhas, negrito, itálico, destaque, listas, citações, checklists, tabelas, cálculos inline, hyperlinks e blocos de código. |
 | **Code Snippets** | Notas de código independentes com motor Monaco Editor (o mesmo do VS Code). Syntax highlighting avançado, dropdown com diversas linguagens, Color Badges elegantes na interface, e botão de cópia com 1 clique. |
 | **Stickers** | Mural full-width de notas autoadesivas (post-its) organizado por quadros dedicados, 8 cores pastel (temas claro/escuro), fixação no topo, busca instantânea e reordenação por Drag & Drop (no mural e entre quadros na barra lateral). |
+| **Listas & Tarefas** | Módulo nativo de produtividade pessoal: hierarquia em 4 níveis (Listas ➔ Tarefas ➔ Subtarefas ➔ Múltiplas Notas contextuais), prioridades visuais semânticas (🔥 Alta, ⚠️ Média, ⬇️ Baixa, ➖ Nenhuma), barra de adição rápida (Quick-Add), arquivamento de listas com modo consulta e sincronização em tempo real (Turso LWW). |
 | **Organização** | Pastas/subpastas com cores HSL e 8 ícones personalizáveis, CRUD de etiquetas com 6 ícones, edição de pastas legadas, notas fixadas e Pastas Inteligentes. |
 | **Dados locais & Compliance** | SQLite com WAL, migrações automáticas, lixeira, auditoria de integridade (`EnsureDataCompliance`) e autorreparo em Preferências. |
 | **Portabilidade** | Importação Markdown/TXT, exportação Markdown/HTML/TXT com diálogo nativo para escolher o destino e impressão limpa. |
-| **Experiência** | Tema claro/escuro, barra de título desktop, layout responsivo de três painéis para notas e full-width para stickers, árvore de pastas alinhada, botão voltar ao topo e tratamento avançado de tags longas. |
-| **Sync Nuvem** | Lógica segura de Tombstones (evitando retorno de notas deletadas), Outbox local, transações remotas, snapshots por cursor, sync automático com indicador de nuvem animado, resolução local/remota/merge e sync de pastas e etiquetas (nomes e ícones) com Last-Write-Wins. |
+| **Experiência** | Tema claro/escuro com contraste balanceado (WCAG AA), barra de título desktop, layout responsivo de três painéis para notas e tarefas, full-width para stickers, árvore de navegação alinhada e modais nativos centralizados. |
+| **Sync Nuvem** | Lógica segura de Tombstones (evitando retorno de itens deletados), Outbox local, transações remotas, snapshots por cursor, sync automático com indicador de nuvem animado, resolução local/remota/merge e sync de tarefas e pastas com Last-Write-Wins. |
 
 > Confira a [matriz de funcionalidades](docs/feature-status.md) para status detalhado de recursos implementados, beta e planejados.
+
+### Listas & Tarefas (v1.8.0)
+
+A partir da versão **1.8.0**, o Magnetares Notes integra um módulo de gestão de tarefas e pendências:
+- **Hierarquia em 4 níveis:** organize tudo em **Listas** ➔ **Tarefas** ➔ **Subtarefas (Checklists)** ➔ **Múltiplas Notas anexadas** com carimbo de data/hora.
+- **Lista padrão de triagem (Entrada):** lista do sistema protegida contra exclusão/arquivamento (`list-inbox`) sempre pronta para captura rápida.
+- **Prioridades semânticas distintas:** identificação visual instantânea por ícones dedicados (🔥 Alta, ⚠️ Média, ⬇️ Baixa e ➖ Nenhuma).
+- **Entrada rápida (Quick-Add):** digite o título e pressione `Enter` para criar tarefas na lista ativa, com seleção direta de prioridade e prazo relativo (*Hoje*, *Amanhã*, *Atrasada*).
+- **Arquivamento inteligente (Soft-Delete):** arquive listas sazonais ou concluídas para manter a barra lateral despoluída, com seção expansível *Arquivadas* em modo consulta e desarquivamento em 1 clique.
+- **Modais nativos centralizados:** confirmações elegantes integradas ao tema, substituindo completamente caixas de alerta técnicas do navegador.
 
 ### Stickers (Notas Autoadesivas)
 

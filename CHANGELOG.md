@@ -2,7 +2,7 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
-## [v1.8.0] - Em desenvolvimento
+## [v1.8.0] - 2026-10-12
 
 ### Added
 

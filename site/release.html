@@ -1,0 +1,1351 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Histórico de versões e notas de lançamento (Changelog) do Magnetares Notes: novos recursos, melhorias e correções documentadas em detalhes." />
+  <link rel="icon" type="image/png" href="assets/magnetar-icon.png" />
+  <title>Releases & Changelog — Magnetares Notes</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans e Space Grotesk -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css?v=1.8.0" />
+  <style>
+    .mobile-drawer-overlay, .mobile-nav-drawer { display: none; }
+    @media (max-width: 980px) {
+      .menu-toggle-btn { display: inline-flex !important; }
+      .mobile-drawer-overlay.active { display: block !important; }
+      .mobile-nav-drawer.active { display: flex !important; }
+    }
+  </style>
+
+  <style>
+    /* =========================================================
+       ESTILOS EXCLUSIVOS DA PÁGINA DE RELEASES
+       ========================================================= */
+    .release-hero {
+      position: relative;
+      padding: 110px 20px 60px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-subtle);
+      overflow: hidden;
+    }
+
+    .release-hero .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--blue-400);
+      background: rgba(104, 140, 255, 0.1);
+      border: 1px solid rgba(104, 140, 255, 0.25);
+      border-radius: 999px;
+      padding: 6px 16px;
+      margin-bottom: 20px;
+    }
+
+    .release-hero h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(34px, 5vw, 56px);
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0 0 18px;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .release-hero p {
+      color: #9da3c9;
+      font-size: clamp(16px, 1.8vw, 19px);
+      max-width: 680px;
+      margin: 0 auto 36px;
+      line-height: 1.6;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .btn-github-releases {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--blue-600), var(--violet-500));
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 13px 26px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(75, 117, 255, 0.35);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-github-releases:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(75, 117, 255, 0.5);
+      color: #ffffff;
+    }
+
+    .btn-github-releases svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .btn-outline-releases {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--glass-card);
+      border: 1px solid var(--border-subtle);
+      color: #e5e8fc;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 13px 24px;
+      border-radius: 12px;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .btn-outline-releases:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+    }
+
+    /* BARRA DE NAVEGAÇÃO RÁPIDA POR VERSÕES (PILLS) */
+    .release-pills-bar {
+      max-width: 1100px;
+      margin: 32px auto 0;
+      padding: 12px 20px;
+      background: rgba(16, 22, 56, 0.6);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #7d84a7;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-right: 6px;
+    }
+
+    .version-pill {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 999px;
+      color: #9da3c9;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .version-pill:hover {
+      color: #ffffff;
+      background: rgba(104, 140, 255, 0.15);
+      border-color: rgba(104, 140, 255, 0.3);
+    }
+
+    .version-pill.preview {
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .version-pill.preview:hover {
+      background: rgba(245, 158, 11, 0.25);
+    }
+
+    .version-pill.latest {
+      color: #42dfce;
+      background: rgba(66, 223, 206, 0.12);
+      border-color: rgba(66, 223, 206, 0.3);
+    }
+
+    .version-pill.latest:hover {
+      background: rgba(66, 223, 206, 0.25);
+    }
+
+    /* CONTAINER PRINCIPAL DA TIMELINE */
+    .releases-container {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 60px 24px 120px;
+    }
+
+    /* CARD DE RELEASE */
+    .release-card {
+      position: relative;
+      background: rgba(16, 22, 56, 0.55);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 36px clamp(20px, 4vw, 44px);
+      margin-bottom: 48px;
+      backdrop-filter: blur(14px);
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .release-card:hover {
+      border-color: rgba(104, 140, 255, 0.3);
+      box-shadow: 0 12px 36px rgba(7, 9, 25, 0.5);
+    }
+
+    .release-card.preview-card {
+      border-color: rgba(245, 158, 11, 0.35);
+      background: linear-gradient(180deg, rgba(30, 25, 15, 0.55) 0%, rgba(16, 22, 56, 0.55) 100%);
+    }
+
+    .release-card.latest-card {
+      border-color: rgba(66, 223, 206, 0.35);
+      background: linear-gradient(180deg, rgba(10, 35, 45, 0.45) 0%, rgba(16, 22, 56, 0.55) 100%);
+    }
+
+    /* CABEÇALHO DO CARD */
+    .release-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      margin-bottom: 28px;
+    }
+
+    .release-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .release-version-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .release-version-tag {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(26px, 3.5vw, 36px);
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+    }
+
+    .badge-preview {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
+    .badge-latest {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(66, 223, 206, 0.15);
+      color: #42dfce;
+      border: 1px solid rgba(66, 223, 206, 0.4);
+    }
+
+    .badge-stable {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(104, 140, 255, 0.12);
+      color: var(--blue-400);
+      border: 1px solid rgba(104, 140, 255, 0.3);
+    }
+
+    .release-date {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #7d84a7;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .release-headline {
+      font-size: 18px;
+      font-weight: 600;
+      color: #e5e8fc;
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    .release-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-download-version {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-download-version:hover {
+      background: var(--blue-600);
+      border-color: var(--blue-500);
+      color: #ffffff;
+    }
+
+    /* DESTAQUES DA VERSÃO (GRID DE CARDS) */
+    .highlights-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #8c8fa7;
+      margin: 0 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .highlights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .highlight-card {
+      background: rgba(7, 9, 25, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .highlight-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(104, 140, 255, 0.25);
+    }
+
+    .highlight-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      color: #ffffff;
+    }
+
+    .highlight-card-header .icon-badge {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .highlight-card p {
+      font-size: 13px;
+      color: #9da3c9;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    /* SEÇÕES DO CHANGELOG (ADDED, CHANGED, FIXED) */
+    .changelog-section {
+      margin-bottom: 24px;
+    }
+
+    .changelog-category-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-bottom: 14px;
+    }
+
+    .cat-added {
+      background: rgba(66, 223, 206, 0.12);
+      color: #42dfce;
+      border: 1px solid rgba(66, 223, 206, 0.3);
+    }
+
+    .cat-changed {
+      background: rgba(104, 140, 255, 0.12);
+      color: var(--blue-400);
+      border: 1px solid rgba(104, 140, 255, 0.3);
+    }
+
+    .cat-fixed {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .cat-security {
+      background: rgba(168, 85, 247, 0.12);
+      color: #c084fc;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .changelog-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .changelog-list li {
+      position: relative;
+      padding-left: 22px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #c8cee7;
+    }
+
+    .changelog-list li::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 10px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--blue-400);
+    }
+
+    .changelog-list li strong {
+      color: #ffffff;
+    }
+
+    .changelog-sublist {
+      list-style: none;
+      padding-left: 18px;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .changelog-sublist li {
+      padding-left: 18px;
+      font-size: 13px;
+      color: #9da3c9;
+    }
+
+    .changelog-sublist li::before {
+      background: #7d84a7;
+      width: 4px;
+      height: 4px;
+      top: 9px;
+    }
+
+    /* CALL TO ACTION FINAL */
+    .release-cta-banner {
+      background: linear-gradient(135deg, rgba(16, 22, 56, 0.8), rgba(23, 30, 74, 0.9));
+      border: 1px solid rgba(104, 140, 255, 0.3);
+      border-radius: 20px;
+      padding: 48px clamp(20px, 5vw, 64px);
+      text-align: center;
+      margin-top: 60px;
+      box-shadow: 0 16px 40px rgba(7, 9, 25, 0.6);
+    }
+
+    .release-cta-banner h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(24px, 3.5vw, 36px);
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0 0 14px;
+    }
+
+    .release-cta-banner p {
+      color: #9da3c9;
+      font-size: 16px;
+      max-width: 600px;
+      margin: 0 auto 30px;
+      line-height: 1.6;
+    }
+
+    .cta-buttons {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- HEADER FIXO COM GLASSMORPHISM -->
+  <header class="site-header">
+    <a class="brand" href="index.html" aria-label="Magnetares Notes">
+      <img src="assets/magnetar-icon.png" alt="Logo Magnetares" />
+      <span>Magnetares</span>
+    </a>
+
+    <nav class="header-nav" aria-label="Navegação principal">
+      <a href="recursos.html">Recursos</a>
+      <a href="index.html#arquitetura">Arquitetura</a>
+      <a href="screenshots.html">Screenshots</a>
+      <a href="help.html">Ajuda & FAQ</a>
+      <a href="blog.html">Blog</a>
+      <a class="active" href="release.html">Releases</a>
+    </nav>
+
+    <div class="header-actions">
+      <a class="header-download-btn" href="index.html#downloads">
+        <span>Baixar</span>
+        <span id="header-version-badge">v1.8.0</span>
+      </a>
+      <button class="menu-toggle-btn" id="mobile-menu-toggle" type="button" aria-label="Abrir menu de navegação" aria-expanded="false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- DRAWER OVERLAY & MENU MOBILE -->
+  <div class="mobile-drawer-overlay" id="mobile-drawer-overlay" aria-hidden="true"></div>
+  <aside class="mobile-nav-drawer" id="mobile-nav-drawer" aria-label="Navegação mobile" aria-hidden="true">
+    <div class="mobile-nav-links">
+      <a href="recursos.html">Recursos</a>
+      <a href="index.html#arquitetura">Arquitetura Técnica</a>
+      <a href="screenshots.html">Galeria de Telas</a>
+      <a href="help.html">Ajuda & FAQ</a>
+      <a href="blog.html">Blog</a>
+      <a class="active" href="release.html">Notas de Release (Changelog)</a>
+    </div>
+    <div class="mobile-drawer-footer">
+      <a class="btn-drawer-download" href="index.html#downloads">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Baixar Magnetares</span>
+      </a>
+      <span class="drawer-version-tag">Versão mais recente: v1.8.0</span>
+    </div>
+  </aside>
+
+  <main id="top">
+    <!-- HERO SECTION -->
+    <section class="release-hero">
+      <div class="starfield" aria-hidden="true"></div>
+
+      <div class="release-hero-content">
+        <div class="kicker">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+          Histórico de Versões & Lançamentos
+        </div>
+
+        <h1>
+          Evolução contínua.<br />
+          <span class="gradient-text">Transparência em cada release.</span>
+        </h1>
+
+        <p>
+          Acompanhe todas as atualizações do Magnetares Notes: novos recursos, refinamentos visuais,
+          melhorias de sincronização e correções de segurança documentadas em detalhes.
+        </p>
+
+        <div class="hero-cta-group">
+          <a class="btn-github-releases" href="https://github.com/vitorkrewer/magnetares-notes/releases" target="_blank"
+            rel="noreferrer">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+            </svg>
+            <span>Ver no GitHub Releases</span>
+          </a>
+          <a class="btn-outline-releases" href="index.html#downloads">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Baixar Versão Estável</span>
+          </a>
+        </div>
+
+        <!-- PÍLULAS DE NAVEGAÇÃO RÁPIDA -->
+        <div class="release-pills-bar" aria-label="Navegação rápida de versões">
+          <span class="pill-label">Versões:</span>
+          <a class="version-pill latest" href="#v1.8.0">v1.8.0 (Estável)</a>
+          <a class="version-pill" href="#v1.7.0">v1.7.0</a>
+          <a class="version-pill" href="#v1.6.0">v1.6.0</a>
+          <a class="version-pill" href="#v1.4.0">v1.4.0</a>
+          <a class="version-pill" href="#v1.3.0">v1.3.0</a>
+          <a class="version-pill" href="#v1.2.0">v1.2.0</a>
+          <a class="version-pill" href="#v1.0.0">v1.0.0</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- LISTA PRINCIPAL DE RELEASES -->
+    <div class="releases-container">
+
+      <!-- =========================================================
+           RELEASE v1.8.0 (ÚLTIMA ESTÁVEL)
+           ========================================================= -->
+      <article class="release-card latest-card" id="v1.8.0">
+        <header class="release-header">
+          <div class="release-title-group">
+            <div class="release-version-row">
+              <span class="release-version-tag">v1.8.0</span>
+              <span class="badge-latest">⭐ Última Versão Estável</span>
+            </div>
+            <p class="release-headline">
+              Novo Módulo de Listas & Tarefas, Prioridades Semânticas, Arquivamento de Listas e
+              Modais Nativos
+            </p>
+            <div class="release-date">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>12 de Outubro de 2026 · Versão de Produção</span>
+            </div>
+          </div>
+          <div class="release-actions">
+            <a class="btn-download-version" href="https://github.com/vitorkrewer/magnetares-notes/releases/tag/v1.8.0"
+              target="_blank" rel="noreferrer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Baixar v1.8.0
+            </a>
+          </div>
+        </header>
+
+        <!-- CARDS DE DESTAQUES VISUAIS -->
+        <div class="highlights-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+            </polygon>
+          </svg>
+          Principais Inovações
+        </div>
+
+        <div class="highlights-grid">
+          <div class="highlight-card">
+            <div class="highlight-card-header">
+              <span class="icon-badge">📋</span>
+              <span>4 Níveis Hierárquicos</span>
+            </div>
+            <p>Módulo de tarefas: Listas ➔ Tarefas ➔ Subtarefas ➔ Múltiplas Notas
+              anexadas.</p>
+          </div>
+
+          <div class="highlight-card">
+            <div class="highlight-card-header">
+              <span class="icon-badge">🗄️</span>
+              <span>Arquivamento de Listas</span>
+            </div>
+            <p>Soft-delete para listas concluídas com modo consulta na sidebar e restauração imediata em 1 clique.</p>
+          </div>
+
+          <div class="highlight-card">
+            <div class="highlight-card-header">
+              <span class="icon-badge">🔥</span>
+              <span>Prioridades Semânticas</span>
+            </div>
+            <p>Ícones visuais distintos para cada nível: 🔥 Alta, ⚠️ Média, ⬇️ Baixa e ➖ Nenhuma no Quick-Add e no
+              Inspector.</p>
+          </div>
+
+          <div class="highlight-card">
+            <div class="highlight-card-header">
+              <span class="icon-badge">🪟</span>
+              <span>Modais Centralizados</span>
+            </div>
+            <p>Eliminação total de <code>window.confirm</code> do navegador; confirmações centralizadas integradas ao
+              tema visual.</p>
+          </div>
+
+          <div class="highlight-card">
+            <div class="highlight-card-header">
+              <span class="icon-badge">☁️</span>
+              <span>Sync Turso em Tempo Real</span>
+            </div>
+            <p>Sincronização imediata (LWW) para listas, tarefas e subtarefas com lápides de exclusão em cascata.</p>
+          </div>
+
+          <div class="highlight-card">
+            <div class="highlight-card-header">
+              <span class="icon-badge">👁️</span>
+              <span>Contraste Calibrado</span>
+            </div>
+            <p>Destaque âmbar/caramelo aquecido no tema claro atendendo rigorosamente às normas de acessibilidade WCAG
+              AA.</p>
+          </div>
+        </div>
+
+        <!-- LISTA DETALHADA -->
+        <div class="changelog-section">
+          <span class="changelog-category-badge cat-added">Added</span>
+          <ul class="changelog-list">
+            <li>
+              <strong>Módulo de Listas & Tarefas:</strong> integrado diretamente à barra lateral com lista protegida
+              <em>Entrada</em> (<code>list-inbox</code>), diálogo de criação de listas com ícones temáticos e cores
+              personalizadas.
+            </li>
+            <li>
+              <strong>Entrada Rápida (Quick-Add):</strong> adição instantânea de pendências pressionando
+              <code>Enter</code>, com seletores de prioridade e prazos com cálculo relativo (<em>Hoje</em>,
+              <em>Amanhã</em>, <em>Atrasada</em>).
+            </li>
+            <li>
+              <strong>Subtarefas & Progresso:</strong> checklists dinâmicos com barra proporcional animada indicando o
+              percentual de conclusão.
+            </li>
+            <li>
+              <strong>Múltiplas Notas por Tarefa:</strong> cartões de notas contextuais anexadas a cada tarefa, com
+              registro de data/hora e edição/exclusão individual.
+            </li>
+            <li>
+              <strong>Arquivamento com Modo Consulta:</strong> seção recolhível <em>"Arquivadas (N)"</em> na sidebar com
+              banner explicativo e desarquivamento em um clique.
+            </li>
+            <li>
+              <strong>Sincronização Nuvem (Turso LWW):</strong> tabelas remotas <code>sync_task_lists</code>,
+              <code>sync_tasks</code> e <code>sync_subtasks</code> com resolução por relógio do servidor e sincronização
+              imediata.
+            </li>
+          </ul>
+        </div>
+
+        <div class="changelog-section">
+          <span class="changelog-category-badge cat-changed">Changed</span>
+          <ul class="changelog-list">
+            <li>
+              <strong>Calibração de Cor no Tema Claro:</strong> substituição da variável <code>--accent</code> por um
+              tom âmbar aquecido (<code>#b45309</code>) para evitar ofuscamento e garantir conformidade WCAG AA.
+            </li>
+            <li>
+              <strong>Padronização de Botões de Ação:</strong> botões de subtarefas e criação de notas harmonizados com
+              o design minimalista da aplicação.
+            </li>
+          </ul>
+        </div>
+
+        <div class="changelog-section">
+          <span class="changelog-category-badge cat-fixed">Fixed</span>
+          <ul class="changelog-list">
+            <li>
+              <strong>Carregamento de Título no Inspector:</strong> abertura de tarefas agora carrega de imediato o
+              título preenchido para edição inline.
+            </li>
+            <li>
+              <strong>Integridade e Persistência no Sync:</strong> tarefas recém-criadas gravam em estado pendente antes
+              de ciclos de sync, prevenindo exclusão acidental.
+            </li>
+            <li>
+              <strong>Assinatura Bridge:</strong> correção de parâmetros em <code>ListTasks</code> no Wails bridge entre
+              frontend e backend Go.
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- =========================================================
+           RELEASE v1.7.0
+           ========================================================= -->
+      <article class="release-card" id="v1.7.0">
+        <header class="release-header">
+          <div class="release-title-group">
+            <div class="release-version-row">
+              <span class="release-version-tag">v1.7.0</span>
+              <span class="badge-stable">Estável</span>
+            </div>
+            <p class="release-headline">
+              Live Preview & Apresentação de Protótipos Web, Viewport Switcher Responsivo, Backup e Perfil de
+              Sincronização Unificado
+            </p>
+            <div class="release-date">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>08 de Outubro de 2026 · Versão de Produção</span>
+            </div>
+          </div>
+          <div class="release-actions">
+            <a class="btn-download-version" href="https://github.com/vitorkrewer/magnetares-notes/releases/tag/v1.7.0"
+              target="_blank" rel="noreferrer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Baixar v1.7.0
+            </a>
+          </div>
+        </header>
+
+        <div class="highlights-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+            </polygon>
+          </svg>
+          Principais Recursos
+        </div>
+
+        <div class="highlights-grid">
+          <div class="highlight-card">
+            <div class="highlight-card-header">
+              <span class="icon-badge">🖥️</span>
+              <span>Live Preview Interativo</span>
+            </div>
+            <p>Visualizador pop-up para notas de código HTML, SVG e Markdown com hot reload e sandbox seguro para
+              scripts.</p>
+          </div>
+
+          <div class="highlight-card">
+            <div class="highlight-card-header">
+              <span class="icon-badge">📱</span>
+              <span>Simulador de Resoluções</span>
+            </div>
+            <p>Alternância instantânea entre Desktop (100%), Tablet (768px com moldura) e Mobile (375px) para testes
+              responsivos.</p>
+          </div>
+
+          <div class="highlight-card">
+            <div class="highlight-card-header">
+              <span class="icon-badge">💾</span>
+              <span>Backup e Restauração</span>
+            </div>
+            <p>Criação de snapshots locais de segurança e recuperação de desastres na nuvem em caso de corrupção.</p>
+          </div>
+
+          <div class="highlight-card">
+            <div class="highlight-card-header">
+              <span class="icon-badge">👥</span>
+              <span>Perfil Unificado Turso</span>
+            </div>
+            <p>Eleição canônica de perfil no banco remoto, incorporação automática de máquinas antigas e gestão de
+              partições.</p>
+          </div>
+        </div>
+
+        <div class="changelog-section">
+          <span class="changelog-category-badge cat-added">Added</span>
+          <ul class="changelog-list">
+            <li>
+              <strong>Live Preview & Modo Apresentação:</strong> Novo visualizador interativo em janela flutuante para
+              Notas de Código em HTML/SVG e Markdown formatado.
+            </li>
+            <li>
+              <strong>Modo Tela Cheia Imersivo:</strong> Expansão para 100vw x 100vh sem barras ou menus, ideal para
+              demonstrações e reuniões.
+            </li>
+            <li>
+              <strong>Painel Perfil de Sincronização:</strong> Interface em Preferências > Nuvem para listar partições,
+              alternar o perfil principal e remover partições migradas.
+            </li>
+            <li>
+              <strong>Backup de Banco de Dados:</strong> Métodos nativos de criação e restauração de snapshots em
+              arquivo único.
+            </li>
+          </ul>
+        </div>
+
+        <div class="changelog-section">
+          <span class="changelog-category-badge cat-fixed">Fixed</span>
+          <ul class="changelog-list">
+            <li>
+              <strong>Sincronização de Stickers com Turso:</strong> Correção do protocolo Hrana para enviar posições
+              decimais como números reais (float), eliminando erro HTTP 400.
+            </li>
+            <li>
+              <strong>Eliminação de Conflitos Falsos:</strong> Normalização de tipos de notas legadas
+              (<code>richtext</code> e <code>rtf</code>) e resolução de exclusões locais órfãs.
+            </li>
+            <li>
+              <strong>Tratamento de Colisão de Nomes:</strong> Quadros de stickers criados simultaneamente recebem
+              sufixos numéricos sem travar o índice SQLite.
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- =========================================================
+           RELEASE v1.6.0
+           ========================================================= -->
+      <article class="release-card" id="v1.6.0">
+        <header class="release-header">
+          <div class="release-title-group">
+            <div class="release-version-row">
+              <span class="release-version-tag">v1.6.0</span>
+              <span class="badge-stable">Estável</span>
+            </div>
+            <p class="release-headline">
+              Formatação Avançada de Texto, Persistência de Lápides de Exclusão (Tombstones) e Resolução Aprimorada
+            </p>
+            <div class="release-date">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>30 de Setembro de 2026</span>
+            </div>
+          </div>
+          <div class="release-actions">
+            <a class="btn-download-version" href="https://github.com/vitorkrewer/magnetares-notes/releases/tag/v1.6.0"
+              target="_blank" rel="noreferrer">
+              Ver Release no GitHub
+            </a>
+          </div>
+        </header>
+
+        <div class="changelog-section">
+          <span class="changelog-category-badge cat-added">Added</span>
+          <ul class="changelog-list">
+            <li>
+              <strong>Formatação Avançada de Texto:</strong> Controles de alinhamento de parágrafo (esquerda, centro,
+              direita, justificado), popover com paleta de cores para texto e ajuste fino de entrelinhas.
+            </li>
+            <li>
+              <strong>Persistência de Lápides (Tombstones):</strong> Registro persistido de notas apagadas para garantir
+              que exclusões na lixeira sincronizem com exatidão sem ressurgir em outros dispositivos.
+            </li>
+          </ul>
+        </div>
+
+        <div class="changelog-section">
+          <span class="changelog-category-badge cat-changed">Changed</span>
+          <ul class="changelog-list">
+            <li>
+              <strong>Barra de Ferramentas do Editor:</strong> Reorganização dos agrupamentos de formatação para acesso
+              mais rápido a listas, citações e tabelas.
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- =========================================================
+           RELEASE v1.4.0
+           ========================================================= -->
+      <article class="release-card" id="v1.4.0">
+        <header class="release-header">
+          <div class="release-title-group">
+            <div class="release-version-row">
+              <span class="release-version-tag">v1.4.0</span>
+              <span class="badge-stable">Estável</span>
+            </div>
+            <p class="release-headline">
+              Mural de Post-its Autoadesivos (Stickers) em Tela Cheia, Quadros Independentes e Drag-and-Drop
+            </p>
+            <div class="release-date">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>20 de Setembro de 2026</span>
+            </div>
+          </div>
+          <div class="release-actions">
+            <a class="btn-download-version" href="https://github.com/vitorkrewer/magnetares-notes/releases/tag/v1.4.0"
+              target="_blank" rel="noreferrer">
+              Ver Release no GitHub
+            </a>
+          </div>
+        </header>
+
+        <div class="changelog-section">
+          <span class="changelog-category-badge cat-added">Added</span>
+          <ul class="changelog-list">
+            <li>
+              <strong>Mural de Stickers (Post-its):</strong> Espaço visual dedicado para captura ultrarrápida de
+              pensamentos e ideias soltas em formato de notas adesivas.
+            </li>
+            <li>
+              <strong>Quadros Temáticos:</strong> Capacidade de criar múltiplos murais organizados por assuntos (Ideias,
+              Estudos, Pendências).
+            </li>
+            <li>
+              <strong>Paleta Pastel em 8 Tons:</strong> Personalização instantânea de cor para cada sticker com harmonia
+              visual em temas claro e escuro.
+            </li>
+            <li>
+              <strong>Reordenação Fluida:</strong> Arraste e solte para reposicionar cartões livremente ou movê-los
+              entre quadros na barra lateral.
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- =========================================================
+           RELEASE v1.3.0
+           ========================================================= -->
+      <article class="release-card" id="v1.3.0">
+        <header class="release-header">
+          <div class="release-title-group">
+            <div class="release-version-row">
+              <span class="release-version-tag">v1.3.0</span>
+              <span class="badge-stable">Estável</span>
+            </div>
+            <p class="release-headline">
+              Empacotamento Nativo para Linux (.deb e .AppImage) e Diálogo Nativo de Exportação
+            </p>
+            <div class="release-date">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>12 de Setembro de 2026</span>
+            </div>
+          </div>
+          <div class="release-actions">
+            <a class="btn-download-version" href="https://github.com/vitorkrewer/magnetares-notes/releases/tag/v1.3.0"
+              target="_blank" rel="noreferrer">
+              Ver Release no GitHub
+            </a>
+          </div>
+        </header>
+
+        <div class="changelog-section">
+          <span class="changelog-category-badge cat-added">Added</span>
+          <ul class="changelog-list">
+            <li>
+              <strong>Distribuição Linux:</strong> Pipelines de build automático no GitHub Actions gerando pacotes
+              Debian/Ubuntu (<code>.deb</code>) e executáveis universais (<code>.AppImage</code>).
+            </li>
+            <li>
+              <strong>Diálogo Nativo de Exportação:</strong> Exportação de anotações em Markdown e HTML completo com
+              seletor nativo do sistema operacional.
+            </li>
+            <li>
+              <strong>Sincronização de Etiquetas e Pastas:</strong> Propagação de nomes e ícones no protocolo LWW com
+              flush antes do envio.
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- =========================================================
+           RELEASE v1.2.0
+           ========================================================= -->
+      <article class="release-card" id="v1.2.0">
+        <header class="release-header">
+          <div class="release-title-group">
+            <div class="release-version-row">
+              <span class="release-version-tag">v1.2.0</span>
+              <span class="badge-stable">Estável</span>
+            </div>
+            <p class="release-headline">
+              Sincronização Distribuída Resiliente com Turso (libSQL) e Detecção Avançada de Conflitos
+            </p>
+            <div class="release-date">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>04 de Setembro de 2026</span>
+            </div>
+          </div>
+          <div class="release-actions">
+            <a class="btn-download-version" href="https://github.com/vitorkrewer/magnetares-notes/releases/tag/v1.2.0"
+              target="_blank" rel="noreferrer">
+              Ver Release no GitHub
+            </a>
+          </div>
+        </header>
+
+        <div class="changelog-section">
+          <span class="changelog-category-badge cat-added">Added</span>
+          <ul class="changelog-list">
+            <li>
+              <strong>Motor Turso LibSQL:</strong> Conexão direta e via API HTTP com transações atômicas de pipeline
+              Hrana e resolução por <code>mutationId</code> idempotente.
+            </li>
+            <li>
+              <strong>Detecção e Resolução de Conflitos:</strong> Detecção de <code>409 Conflict</code> com
+              possibilidade de escolha de versão local, remota ou mesclagem inteligente.
+            </li>
+            <li>
+              <strong>Snapshots Históricos:</strong> Armazenamento de revisões em <code>sync_note_changes</code> para
+              garantir consistência de cursores atrasados.
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- =========================================================
+           RELEASE v1.0.0
+           ========================================================= -->
+      <article class="release-card" id="v1.0.0">
+        <header class="release-header">
+          <div class="release-title-group">
+            <div class="release-version-row">
+              <span class="release-version-tag">v1.0.0</span>
+              <span class="badge-stable">Lançamento</span>
+            </div>
+            <p class="release-headline">
+              Lançamento Oficial: O Caderno Inteligente 100% Local-First e Privado
+            </p>
+            <div class="release-date">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>25 de Agosto de 2026</span>
+            </div>
+          </div>
+          <div class="release-actions">
+            <a class="btn-download-version" href="https://github.com/vitorkrewer/magnetares-notes/releases/tag/v1.0.0"
+              target="_blank" rel="noreferrer">
+              Ver Release no GitHub
+            </a>
+          </div>
+        </header>
+
+        <div class="changelog-section">
+          <span class="changelog-category-badge cat-added">Added</span>
+          <ul class="changelog-list">
+            <li>
+              <strong>Arquitetura 100% Local-First:</strong> Banco de dados SQLite nativo operando em modo WAL com
+              autosave instantâneo e total privacidade offline.
+            </li>
+            <li>
+              <strong>Editor Estruturado Tiptap:</strong> Títulos, formatações ricas, checklists dinâmicos, tabelas
+              interativas, blocos de código com syntax highlighting e cálculos matemáticos inline.
+            </li>
+            <li>
+              <strong>Organização Completa:</strong> Pastas aninhadas com cores e ícones, etiquetas inteligentes, notas
+              fixadas e busca em tempo real.
+            </li>
+            <li>
+              <strong>Interface Espacial Moderna:</strong> Frameless com suporte nativo a temas claro e escuro, atalhos
+              de teclado e performance fluida em Go + Wails + React.
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- CTA FINAL -->
+      <div class="release-cta-banner">
+        <h2>Pronto para elevar suas anotações?</h2>
+        <p>
+          Baixe o executável para Windows ou Linux e comece a usar agora mesmo com seus dados salvos com total
+          privacidade no seu próprio dispositivo.
+        </p>
+        <div class="cta-buttons">
+          <a class="btn-github-releases" href="index.html#downloads">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Baixar Magnetares Notes</span>
+          </a>
+          <a class="btn-outline-releases" href="https://github.com/vitorkrewer/magnetares-notes" target="_blank"
+            rel="noreferrer">
+            <span>Visitar Repositório GitHub</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- RODAPÉ INSTITUCIONAL PROFISSIONAL -->
+  <footer class="site-footer">
+    <div class="footer-top">
+      <div class="footer-brand-col">
+        <a class="brand" href="index.html" aria-label="Voltar para a página inicial">
+          <img src="assets/magnetar-icon.png" alt="" />
+          <span>Magnetares</span>
+        </a>
+        <p class="footer-tagline">
+          Onde pensamentos ganham gravidade própria. Um caderno local-first, rápido e privado para quem leva anotações a
+          sério.
+        </p>
+        <div class="footer-badge-list">
+          <span class="footer-badge">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+            </svg>
+            100% Local-First
+          </span>
+          <span class="footer-badge">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14h2v2h-2zm0-10h2v8h-2z" />
+            </svg>
+            Zero Rastreamento
+          </span>
+          <span class="footer-badge">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+            </svg>
+            Uso Pessoal (Não-Comercial)
+          </span>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h5>Navegação</h5>
+        <ul>
+          <li><a href="recursos.html">Recursos do Editor</a></li>
+          <li><a href="index.html#arquitetura">Arquitetura Técnica</a></li>
+          <li><a href="screenshots.html">Galeria de Telas</a></li>
+          <li><a href="help.html">Ajuda & FAQ</a></li>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="release.html">Notas de Release (Changelog)</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Tecnologias</h5>
+        <ul>
+          <li><a href="https://wails.io" target="_blank" rel="noreferrer">Wails Framework <svg class="external-icon"
+                viewBox="0 0 24 24">
+                <path
+                  d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+              </svg></a></li>
+          <li><a href="https://golang.org" target="_blank" rel="noreferrer">Go Language <svg class="external-icon"
+                viewBox="0 0 24 24">
+                <path
+                  d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+              </svg></a></li>
+          <li><a href="https://turso.tech" target="_blank" rel="noreferrer">Turso LibSQL <svg class="external-icon"
+                viewBox="0 0 24 24">
+                <path
+                  d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+              </svg></a></li>
+          <li><a href="https://tiptap.dev" target="_blank" rel="noreferrer">Tiptap Editor <svg class="external-icon"
+                viewBox="0 0 24 24">
+                <path
+                  d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+              </svg></a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Conectar & Código</h5>
+        <p style="font-size: 13px; line-height: 1.5; margin: 0 0 12px; color: #7d84a7;">Acompanhe o desenvolvimento ou
+          contribua com o projeto no GitHub.</p>
+        <div class="social-icon-links">
+          <a class="social-icon-btn" href="https://github.com/vitorkrewer/magnetares-notes" target="_blank"
+            rel="noreferrer" aria-label="Repositório no GitHub" title="Repositório GitHub">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+            </svg>
+          </a>
+          <a class="social-icon-btn" href="https://www.linkedin.com/in/vitorkrewer/" target="_blank" rel="noreferrer"
+            aria-label="LinkedIn de Vitor Krewer" title="LinkedIn Vitor Krewer">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76c-.95 0-1.72-.77-1.72-1.72s.77-1.72 1.72-1.72 1.72.77 1.72 1.72-.77 1.72-1.72 1.72m1.39 9.74v-8.37H5.07v8.37h2.78z" />
+            </svg>
+          </a>
+          <a class="social-icon-btn" href="https://github.com/vitorkrewer" target="_blank" rel="noreferrer"
+            aria-label="GitHub de Vitor Krewer" title="Perfil GitHub">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z" />
+            </svg>
+          </a>
+          <a class="social-icon-btn" href="https://github.com/vitorkrewer/magnetares-notes/releases" target="_blank"
+            rel="noreferrer" aria-label="Todas as Releases" title="Todas as Releases">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-creator">
+        Desenvolvido por <a href="https://www.linkedin.com/in/vitorkrewer/" target="_blank" rel="noreferrer">Vitor
+          Krewer</a>
+      </div>
+      <div>
+        © <span id="year"></span> Magnetares Notes · Todos os direitos reservados.
+      </div>
+    </div>
+  </footer>
+
+  <!-- BOTÃO FLUTUANTE VOLTAR AO TOPO -->
+  <button class="scroll-top-btn" id="scroll-top-btn" type="button" aria-label="Voltar ao topo" title="Voltar ao topo">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z" />
+    </svg>
+  </button>
+
+  <script src="script.js?v=1.8.0"></script>
+</body>
+
+</html>

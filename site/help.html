@@ -14,7 +14,15 @@
     href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=Space+Grotesk:wght@500;700&display=swap"
     rel="stylesheet" />
 
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=1.8.0" />
+  <style>
+    .mobile-drawer-overlay, .mobile-nav-drawer { display: none; }
+    @media (max-width: 980px) {
+      .menu-toggle-btn { display: inline-flex !important; }
+      .mobile-drawer-overlay.active { display: block !important; }
+      .mobile-nav-drawer.active { display: flex !important; }
+    }
+  </style>
   <style>
     .help-hero {
       position: relative;
@@ -99,6 +107,7 @@
       .help-grid {
         grid-template-columns: 1fr;
       }
+
       .help-container {
         padding: 24px 16px 80px;
       }
@@ -432,122 +441,190 @@
       <a href="screenshots.html">Screenshots</a>
       <a class="active" href="#top">Ajuda & FAQ</a>
       <a href="blog.html">Blog</a>
-      <a href="index.html#downloads">Downloads</a>
     </nav>
 
     <div class="header-actions">
       <a class="header-download-btn" href="index.html#downloads">
         <span>Baixar</span>
-        <span id="header-version-badge">v1.7.0</span>
+        <span id="header-version-badge">v1.8.0</span>
       </a>
+      <button class="menu-toggle-btn" id="mobile-menu-toggle" type="button" aria-label="Abrir menu de navegação" aria-expanded="false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" />
+        </svg>
+      </button>
     </div>
   </header>
+
+  <!-- DRAWER OVERLAY & MENU MOBILE -->
+  <div class="mobile-drawer-overlay" id="mobile-drawer-overlay" aria-hidden="true"></div>
+  <aside class="mobile-nav-drawer" id="mobile-nav-drawer" aria-label="Navegação mobile" aria-hidden="true">
+    <div class="mobile-nav-links">
+      <a href="recursos.html">Recursos</a>
+      <a href="index.html#arquitetura">Arquitetura Técnica</a>
+      <a href="screenshots.html">Galeria de Telas</a>
+      <a class="active" href="help.html">Ajuda & FAQ</a>
+      <a href="blog.html">Blog</a>
+      <a href="release.html">Notas de Release (Changelog)</a>
+    </div>
+    <div class="mobile-drawer-footer">
+      <a class="btn-drawer-download" href="index.html#downloads">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Baixar Magnetares</span>
+      </a>
+      <span class="drawer-version-tag">Versão mais recente: v1.8.0</span>
+    </div>
+  </aside>
 
   <main id="top">
     <section class="help-hero">
       <div class="starfield" aria-hidden="true"></div>
       <p class="kicker">Central de Conhecimento</p>
       <h1>Ajuda e Tutoriais</h1>
-      <p>Entenda como as engrenagens do Magnetares Notes funcionam. Dicas rápidas, configuração de nuvem e respostas às perguntas mais frequentes.</p>
+      <p>Entenda como as engrenagens do Magnetares Notes funcionam. Dicas rápidas, configuração de nuvem e respostas às
+        perguntas mais frequentes.</p>
     </section>
 
     <div class="help-container">
-      
+
       <div class="help-search-box">
-        <input type="text" id="help-search-input" placeholder="Buscar nas perguntas frequentes..." aria-label="Buscar na ajuda">
-        <svg viewBox="0 0 24 24" class="search-icon"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input type="text" id="help-search-input" placeholder="Buscar nas perguntas frequentes..."
+          aria-label="Buscar na ajuda">
+        <svg viewBox="0 0 24 24" class="search-icon">
+          <path fill="currentColor"
+            d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+        </svg>
       </div>
-      
+
       <div class="help-grid" id="help-grid">
-        
+
         <!-- Card 1: Onde meus dados são salvos? -->
-        <div class="help-card" data-category="Nuvem" data-icon="☁️" data-text="Onde meus dados são salvos turso sqlite local-first nuvem banco computador privacidade offline dados seguros">
+        <div class="help-card" data-category="Nuvem" data-icon="☁️"
+          data-text="Onde meus dados são salvos turso sqlite local-first nuvem banco computador privacidade offline dados seguros">
           <div>
             <div class="help-card-header">
               <div class="help-card-icon">☁️</div>
               <span class="help-card-badge">Nuvem</span>
             </div>
             <h3 class="help-card-title">Onde meus dados são salvos?</h3>
-            <p class="help-card-snippet">O Magnetares Notes opera sob arquitetura Local-First. Suas notas são gravadas diretamente no SQLite em seu computador. A nuvem é 100% opcional.</p>
+            <p class="help-card-snippet">O Magnetares Notes opera sob arquitetura Local-First. Suas notas são gravadas
+              diretamente no SQLite em seu computador. A nuvem é 100% opcional.</p>
           </div>
           <div class="help-card-btn">
             <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
           <template class="help-card-full">
-            <p>O Magnetares Notes opera sob o paradigma <strong>Local-First</strong>: a fonte absoluta da verdade é o banco de dados SQLite (<code>notes.db</code>) gravado diretamente no disco rígido do seu computador.</p>
+            <p>O Magnetares Notes opera sob o paradigma <strong>Local-First</strong>: a fonte absoluta da verdade é o
+              banco de dados SQLite (<code>notes.db</code>) gravado diretamente no disco rígido do seu computador.</p>
             <div class="help-callout">
-              <strong>Privacidade por padrão:</strong> Se você nunca configurar uma conta de nuvem, suas anotações, etiquetas e códigos nunca sairão do seu dispositivo. O aplicativo continuará funcionando perfeitamente, com velocidade máxima e 100% offline.
+              <strong>Privacidade por padrão:</strong> Se você nunca configurar uma conta de nuvem, suas anotações,
+              etiquetas e códigos nunca sairão do seu dispositivo. O aplicativo continuará funcionando perfeitamente,
+              com velocidade máxima e 100% offline.
             </div>
             <p>Quando você decide conectar a nuvem (utilizando o Turso LibSQL):</p>
             <ul>
-              <li>O banco remoto atua como uma réplica criptografada de sincronização para manter seus diferentes computadores atualizados.</li>
-              <li>Todas as gravações e leituras continuam acontecendo primeiro no seu disco local, garantindo latência zero (0ms) ao digitar.</li>
+              <li>O banco remoto atua como uma réplica criptografada de sincronização para manter seus diferentes
+                computadores atualizados.</li>
+              <li>Todas as gravações e leituras continuam acontecendo primeiro no seu disco local, garantindo latência
+                zero (0ms) ao digitar.</li>
               <li>A sincronização roda em segundo plano, enviando e recebendo apenas as alterações incrementais.</li>
             </ul>
           </template>
         </div>
 
         <!-- Card 2: Como configuro a sincronização com o Turso? (Visão Geral) -->
-        <div class="help-card" data-category="Nuvem" data-icon="🔑" data-text="Como configuro a sincronização com o Turso token url chave banco libsql sincronizar multi-dispositivo credenciais">
+        <div class="help-card" data-category="Nuvem" data-icon="🔑"
+          data-text="Como configuro a sincronização com o Turso token url chave banco libsql sincronizar multi-dispositivo credenciais">
           <div>
             <div class="help-card-header">
               <div class="help-card-icon">🔑</div>
               <span class="help-card-badge">Nuvem</span>
             </div>
             <h3 class="help-card-title">Como configuro a sincronização com o Turso?</h3>
-            <p class="help-card-snippet">Para ativar a sincronização entre computadores, utilize sua conta Turso, informe a URL libsql:// e o Token de Acesso em Configurações > Nuvem.</p>
+            <p class="help-card-snippet">Para ativar a sincronização entre computadores, utilize sua conta Turso,
+              informe a URL libsql:// e o Token de Acesso em Configurações > Nuvem.</p>
           </div>
           <div class="help-card-btn">
             <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
           <template class="help-card-full">
-            <p>Para sincronizar suas notas entre computadores pessoais ou profissionais sem intermediários comerciais, o Magnetares conecta-se à sua própria instância do <a href="https://turso.tech" target="_blank" rel="noreferrer">Turso</a>.</p>
+            <p>Para sincronizar suas notas entre computadores pessoais ou profissionais sem intermediários comerciais, o
+              Magnetares conecta-se à sua própria instância do <a href="https://turso.tech" target="_blank"
+                rel="noreferrer">Turso</a>.</p>
             <p><strong>Configuração rápida em 4 passos:</strong></p>
             <ul>
-              <li><strong>URL do banco:</strong> É o endereço com prefixo <code>libsql://</code> fornecido pelo painel do Turso para o seu banco.</li>
-              <li><strong>Token de autenticação:</strong> É a chave secreta de longa duração gerada na aba de Tokens do seu banco Turso.</li>
-              <li><strong>Configurações do Magnetares:</strong> Abra o aplicativo, clique no ícone de engrenagem na barra superior e acesse a aba <strong>Nuvem</strong>.</li>
-              <li><strong>Testar e Conectar:</strong> Cole a URL e o Token, clique em <strong>Testar Conexão</strong> e depois em <strong>Conectar Nuvem</strong>.</li>
+              <li><strong>URL do banco:</strong> É o endereço com prefixo <code>libsql://</code> fornecido pelo painel
+                do Turso para o seu banco.</li>
+              <li><strong>Token de autenticação:</strong> É a chave secreta de longa duração gerada na aba de Tokens do
+                seu banco Turso.</li>
+              <li><strong>Configurações do Magnetares:</strong> Abra o aplicativo, clique no ícone de engrenagem na
+                barra superior e acesse a aba <strong>Nuvem</strong>.</li>
+              <li><strong>Testar e Conectar:</strong> Cole a URL e o Token, clique em <strong>Testar Conexão</strong> e
+                depois em <strong>Conectar Nuvem</strong>.</li>
             </ul>
             <div class="help-callout">
-              <strong>Proteção nativa:</strong> O seu token de acesso não fica salvo em arquivos de texto plano; ele é armazenado de forma criptografada no cofre de credenciais nativo do seu sistema operacional (Windows Credential Manager / macOS Keychain / Linux Secret Service).
+              <strong>Proteção nativa:</strong> O seu token de acesso não fica salvo em arquivos de texto plano; ele é
+              armazenado de forma criptografada no cofre de credenciais nativo do seu sistema operacional (Windows
+              Credential Manager / macOS Keychain / Linux Secret Service).
             </div>
-            <p><em>Para um passo a passo completo ilustrado para iniciantes, veja o card "Guia Prático Turso para Iniciantes".</em></p>
+            <p><em>Para um passo a passo completo ilustrado para iniciantes, veja o card "Guia Prático Turso para
+                Iniciantes".</em></p>
           </template>
         </div>
 
         <!-- Card 3: Guia Prático Turso para Iniciantes: Do Zero à Nuvem -->
-        <div class="help-card" data-category="Tutorial Nuvem" data-icon="🚀" data-text="Guia Prático Turso para Iniciantes Do Zero à Nuvem criar banco passo a passo dashboard token leigo sem programar brasil gru signup gratuito">
+        <div class="help-card" data-category="Tutorial Nuvem" data-icon="🚀"
+          data-text="Guia Prático Turso para Iniciantes Do Zero à Nuvem criar banco passo a passo dashboard token leigo sem programar brasil gru signup gratuito">
           <div>
             <div class="help-card-header">
               <div class="help-card-icon">🚀</div>
               <span class="help-card-badge">Tutorial Nuvem</span>
             </div>
             <h3 class="help-card-title">Guia Prático Turso para Iniciantes: Do Zero à Nuvem</h3>
-            <p class="help-card-snippet">Passo a passo descomplicado para criar sua conta gratuita no Turso, criar o banco no painel web e conectar suas notas sem precisar de terminal ou código.</p>
+            <p class="help-card-snippet">Passo a passo descomplicado para criar sua conta gratuita no Turso, criar o
+              banco no painel web e conectar suas notas sem precisar de terminal ou código.</p>
           </div>
           <div class="help-card-btn">
             <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
           <template class="help-card-full">
-            <p>Se você nunca configurou um banco de dados na nuvem, não se preocupe! Você não precisa instalar terminal ou digitar comandos. Siga este tutorial visual pelo próprio navegador:</p>
-            
+            <p>Se você nunca configurou um banco de dados na nuvem, não se preocupe! Você não precisa instalar terminal
+              ou digitar comandos. Siga este tutorial visual pelo próprio navegador:</p>
+
             <h4>1. Criar sua conta gratuita no Turso</h4>
             <ul>
-              <li>Acesse <a href="https://app.turso.tech/signup" target="_blank" rel="noreferrer">app.turso.tech/signup</a>.</li>
-              <li>O plano gratuito (<em>Starter/Hobby</em>) oferece espaço de sobra para centenas de milhares de notas.</li>
-              <li>Você pode fazer login com 1 clique usando sua conta do <strong>GitHub</strong> ou se cadastrar com seu <strong>e-mail</strong>.</li>
+              <li>Acesse <a href="https://app.turso.tech/signup" target="_blank"
+                  rel="noreferrer">app.turso.tech/signup</a>.</li>
+              <li>O plano gratuito (<em>Starter/Hobby</em>) oferece espaço de sobra para centenas de milhares de notas.
+              </li>
+              <li>Você pode fazer login com 1 clique usando sua conta do <strong>GitHub</strong> ou se cadastrar com seu
+                <strong>e-mail</strong>.
+              </li>
             </ul>
 
             <h4>2. Criar seu Banco de Dados no Painel</h4>
             <ul>
-              <li>Após entrar no painel (<em>Dashboard</em>), clique no botão <strong>"+ Create Database"</strong> no canto superior direito.</li>
+              <li>Após entrar no painel (<em>Dashboard</em>), clique no botão <strong>"+ Create Database"</strong> no
+                canto superior direito.</li>
               <li><strong>Nome do banco:</strong> Digite um nome simples, como <code>meu-magnetares-db</code>.</li>
-              <li><strong>Escolha a região:</strong> O Turso possui servidores distribuídos globalmente. Se você está na América do Sul, escolha <strong>Brazil / São Paulo (<code>gru</code>)</strong> para ter resposta ultrarrápida. Se estiver em outro local, escolha a região mais próxima de você.</li>
-              <li>Clique no botão azul <strong>"Create Database"</strong>. Em segundos seu banco estará pronto no ar!</li>
+              <li><strong>Escolha a região:</strong> O Turso possui servidores distribuídos globalmente. Se você está na
+                América do Sul, escolha <strong>Brazil / São Paulo (<code>gru</code>)</strong> para ter resposta
+                ultrarrápida. Se estiver em outro local, escolha a região mais próxima de você.</li>
+              <li>Clique no botão azul <strong>"Create Database"</strong>. Em segundos seu banco estará pronto no ar!
+              </li>
             </ul>
 
             <h4>3. Copiar a URL de Conexão</h4>
@@ -559,7 +636,9 @@
 
             <h4>4. Gerar o Token de Acesso (Chave Secreta)</h4>
             <ul>
-              <li>Na mesma página do banco, clique no botão ou aba <strong>"Generate Token"</strong> (ou <em>Tokens</em>).</li>
+              <li>Na mesma página do banco, clique no botão ou aba <strong>"Generate Token"</strong> (ou
+                <em>Tokens</em>).
+              </li>
               <li>Deixe as permissões padrão de leitura e gravação e confirme.</li>
               <li>Copie o código longo exibido na tela (guarde-o em segurança).</li>
             </ul>
@@ -567,76 +646,99 @@
             <h4>5. Conectar no Magnetares Notes</h4>
             <ul>
               <li>Abra o <strong>Magnetares Notes</strong> no seu computador.</li>
-              <li>Clique no ícone de <strong>Configurações</strong> (engrenagem no topo da barra lateral) e escolha a aba <strong>Nuvem</strong>.</li>
+              <li>Clique no ícone de <strong>Configurações</strong> (engrenagem no topo da barra lateral) e escolha a
+                aba <strong>Nuvem</strong>.</li>
               <li>Cole a URL no primeiro campo e o Token no segundo campo.</li>
               <li>Clique em <strong>Testar Conexão</strong>. Uma mensagem verde indicará sucesso!</li>
               <li>Clique em <strong>Conectar Nuvem</strong>. O Magnetares cuidará de todo o resto automaticamente!</li>
             </ul>
 
             <div class="help-callout">
-              <strong>Dica Multi-Máquinas:</strong> Para conectar seu notebook ou outro computador pessoal, basta instalar o Magnetares nele, abrir <em>Configurações &gt; Nuvem</em> e colar <strong>a mesma URL e o mesmo Token</strong>. Todas as suas notas, pastas e stickers serão sincronizadas instantaneamente!
+              <strong>Dica Multi-Máquinas:</strong> Para conectar seu notebook ou outro computador pessoal, basta
+              instalar o Magnetares nele, abrir <em>Configurações &gt; Nuvem</em> e colar <strong>a mesma URL e o mesmo
+                Token</strong>. Todas as suas notas, pastas e stickers serão sincronizadas instantaneamente!
             </div>
           </template>
         </div>
 
         <!-- Card 4: Como Fazer Backup e Restaurar o Banco Localmente -->
-        <div class="help-card" data-category="Armazenamento" data-icon="💾" data-text="Como Fazer Backup e Restaurar o Banco Localmente snapshot sqlite vacuum into copia seguranca pendrive restaurar v1.7.0 arquivo db">
+        <div class="help-card" data-category="Armazenamento" data-icon="💾"
+          data-text="Como Fazer Backup e Restaurar o Banco Localmente snapshot sqlite vacuum into copia seguranca pendrive restaurar v1.7.0 arquivo db">
           <div>
             <div class="help-card-header">
               <div class="help-card-icon">💾</div>
               <span class="help-card-badge">Armazenamento</span>
             </div>
             <h3 class="help-card-title">Como Fazer Backup e Restaurar o Banco Localmente (v1.7.0)</h3>
-            <p class="help-card-snippet">Crie snapshots completos (.db) do seu banco com 1 clique usando SQLite VACUUM INTO, ou restaure backups anteriores com segurança e integridade transacional.</p>
+            <p class="help-card-snippet">Crie snapshots completos (.db) do seu banco com 1 clique usando SQLite VACUUM
+              INTO, ou restaure backups anteriores com segurança e integridade transacional.</p>
           </div>
           <div class="help-card-btn">
             <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
           <template class="help-card-full">
-            <p>A partir da <strong>versão 1.7.0</strong>, o Magnetares Notes traz ferramentas nativas de Backup e Restauração desenhadas para quem valoriza a custódia total dos seus próprios dados.</p>
-            
+            <p>A partir da <strong>versão 1.7.0</strong>, o Magnetares Notes traz ferramentas nativas de Backup e
+              Restauração desenhadas para quem valoriza a custódia total dos seus próprios dados.</p>
+
             <h4>O que é o Snapshot Atômico (VACUUM INTO)</h4>
-            <p>O Magnetares não realiza uma cópia crua de arquivos enquanto o banco está aberto (o que em outros programas pode corromper dados). Ele utiliza a avançada instrução SQLite <code>VACUUM INTO</code>, que gera um arquivo <code>.db</code> perfeitamente íntegro, limpo e desfragmentado em milissegundos.</p>
+            <p>O Magnetares não realiza uma cópia crua de arquivos enquanto o banco está aberto (o que em outros
+              programas pode corromper dados). Ele utiliza a avançada instrução SQLite <code>VACUUM INTO</code>, que
+              gera um arquivo <code>.db</code> perfeitamente íntegro, limpo e desfragmentado em milissegundos.</p>
 
             <h4>Como Criar uma Cópia de Segurança (Backup):</h4>
             <ul>
               <li>Abra o menu de <strong>Configurações</strong> e clique na aba <strong>Armazenamento</strong>.</li>
-              <li>Na seção <em>Backup &amp; Restauração</em>, clique no botão <strong>"Fazer Backup Local"</strong>.</li>
-              <li>A caixa de diálogo do seu sistema operacional abrirá com uma sugestão de nome: <code>magnetares-backup-AAAAMMDD.db</code>.</li>
+              <li>Na seção <em>Backup &amp; Restauração</em>, clique no botão <strong>"Fazer Backup Local"</strong>.
+              </li>
+              <li>A caixa de diálogo do seu sistema operacional abrirá com uma sugestão de nome:
+                <code>magnetares-backup-AAAAMMDD.db</code>.
+              </li>
               <li>Escolha onde salvar (em um pendrive, HD externo ou pasta de sua preferência) e confirme. Pronto!</li>
             </ul>
 
             <h4>Como Restaurar um Backup Antigo:</h4>
             <ul>
-              <li>Em <strong>Configurações &gt; Armazenamento</strong>, clique em <strong>"Restaurar de Backup"</strong>.</li>
+              <li>Em <strong>Configurações &gt; Armazenamento</strong>, clique em <strong>"Restaurar de
+                  Backup"</strong>.</li>
               <li>Selecione o arquivo <code>.db</code> desejado na caixa de arquivos.</li>
-              <li>O sistema fecha as conexões ativas com o banco atual com segurança, substitui a base de dados pela versão do backup e recarrega o aplicativo automaticamente.</li>
+              <li>O sistema fecha as conexões ativas com o banco atual com segurança, substitui a base de dados pela
+                versão do backup e recarrega o aplicativo automaticamente.</li>
             </ul>
 
             <div class="help-callout">
-              <strong>Essencial para a versão Portátil (Pendrive):</strong> Se você roda o aplicativo direto de um pendrive, é uma excelente prática fazer um backup local periódico antes de ejetar o dispositivo ou antes de atualizar executáveis.
+              <strong>Essencial para a versão Portátil (Pendrive):</strong> Se você roda o aplicativo direto de um
+              pendrive, é uma excelente prática fazer um backup local periódico antes de ejetar o dispositivo ou antes
+              de atualizar executáveis.
             </div>
           </template>
         </div>
 
         <!-- Card 5: Recuperação de Desastres: Restaurar da Nuvem -->
-        <div class="help-card" data-category="Recuperação" data-icon="🛡️" data-text="Recuperação de Desastres Restaurar da Nuvem apagar banco local puxar emergência corrupção snapshot recovery v1.7.0 formatacao recriar">
+        <div class="help-card" data-category="Recuperação" data-icon="🛡️"
+          data-text="Recuperação de Desastres Restaurar da Nuvem apagar banco local puxar emergência corrupção snapshot recovery v1.7.0 formatacao recriar">
           <div>
             <div class="help-card-header">
               <div class="help-card-icon">🛡️</div>
               <span class="help-card-badge">Recuperação</span>
             </div>
             <h3 class="help-card-title">Recuperação de Desastres: Restaurar da Nuvem (v1.7.0)</h3>
-            <p class="help-card-snippet">Em caso de pane no computador ou inconsistências locais, force o download completo do seu repositório mestre direto da nuvem Turso com snapshot de emergência.</p>
+            <p class="help-card-snippet">Em caso de pane no computador ou inconsistências locais, force o download
+              completo do seu repositório mestre direto da nuvem Turso com snapshot de emergência.</p>
           </div>
           <div class="help-card-btn">
             <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
           <template class="help-card-full">
-            <p>Se o seu computador desligou de forma abrupta por falta de energia, se você sofreu corrupção de sistema de arquivos ou se o banco local apresentar inconsistências insolúveis, a <strong>v1.7.0</strong> oferece a ferramenta de <strong>Recuperação de Desastres</strong>.</p>
-            
+            <p>Se o seu computador desligou de forma abrupta por falta de energia, se você sofreu corrupção de sistema
+              de arquivos ou se o banco local apresentar inconsistências insolúveis, a <strong>v1.7.0</strong> oferece a
+              ferramenta de <strong>Recuperação de Desastres</strong>.</p>
+
             <h4>Como Funciona a Restauração da Nuvem:</h4>
             <ul>
               <li>Abra <strong>Configurações &gt; Nuvem</strong> (com suas credenciais do Turso ativas).</li>
@@ -647,310 +749,433 @@
             <h4>Rede de Segurança Automática (Pre-Restore Snapshot):</h4>
             <p>Para sua proteção absoluta, o Magnetares <strong>nunca apaga dados às cegas</strong>:</p>
             <ul>
-              <li>Antes de excluir qualquer arquivo, o sistema executa um snapshot automático e salva na pasta interna <code>recovery/</code> com o nome <code>magnetares-pre-restore-DATA-HORA.db</code>.</li>
-              <li>Em seguida, o banco local danificado é removido (incluindo arquivos temporários <code>-wal</code> e <code>-shm</code>).</li>
+              <li>Antes de excluir qualquer arquivo, o sistema executa um snapshot automático e salva na pasta interna
+                <code>recovery/</code> com o nome <code>magnetares-pre-restore-DATA-HORA.db</code>.
+              </li>
+              <li>Em seguida, o banco local danificado é removido (incluindo arquivos temporários <code>-wal</code> e
+                <code>-shm</code>).
+              </li>
               <li>Um novo banco zerado com as tabelas estruturadas é criado.</li>
-              <li>O motor de sincronização conecta-se diretamente ao Turso e baixa integralmente todas as suas notas, pastas, stickers e etiquetas salvas no perfil principal.</li>
+              <li>O motor de sincronização conecta-se diretamente ao Turso e baixa integralmente todas as suas notas,
+                pastas, stickers e etiquetas salvas no perfil principal.</li>
               <li>Ao final, o aplicativo recarrega e restaura seu ambiente de trabalho 100% atualizado.</li>
             </ul>
 
             <div class="help-callout">
-              <strong>Nota de tranquilidade:</strong> Mesmo em caso de falha de conexão no meio do processo, o snapshot em <code>recovery/</code> garante que seus dados prévios continuem intactos para análise manual.
+              <strong>Nota de tranquilidade:</strong> Mesmo em caso de falha de conexão no meio do processo, o snapshot
+              em <code>recovery/</code> garante que seus dados prévios continuem intactos para análise manual.
             </div>
           </template>
         </div>
 
         <!-- Card 6: Notas apagadas e Tombstones (Lápides Digitais) -->
-        <div class="help-card" data-category="Segurança" data-icon="🗑️" data-text="Notas apagadas e Tombstones lixeira exclusão segura zumbis nuvem sincronização soft delete integridade">
+        <div class="help-card" data-category="Segurança" data-icon="🗑️"
+          data-text="Notas apagadas e Tombstones lixeira exclusão segura zumbis nuvem sincronização soft delete integridade">
           <div>
             <div class="help-card-header">
               <div class="help-card-icon">🗑️</div>
               <span class="help-card-badge">Segurança</span>
             </div>
             <h3 class="help-card-title">Notas apagadas e Tombstones</h3>
-            <p class="help-card-snippet">O Magnetares utiliza Tombstones (lápides digitais) para que exclusões sejam propagadas com integridade absoluta entre todos os seus dispositivos sem reviver notas.</p>
+            <p class="help-card-snippet">O Magnetares utiliza Tombstones (lápides digitais) para que exclusões sejam
+              propagadas com integridade absoluta entre todos os seus dispositivos sem reviver notas.</p>
           </div>
           <div class="help-card-btn">
             <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
           <template class="help-card-full">
-            <p>O Magnetares Notes implementa o conceito de <strong>Tombstones (Lápides Digitais)</strong> para garantir a integridade absoluta das exclusões em ambientes multi-máquinas.</p>
-            <p>Quando você move uma nota para a Lixeira ou a exclui em definitivo, o sistema não apaga o registro local bruscamente se houver sincronização remota ativa:</p>
+            <p>O Magnetares Notes implementa o conceito de <strong>Tombstones (Lápides Digitais)</strong> para garantir
+              a integridade absoluta das exclusões em ambientes multi-máquinas.</p>
+            <p>Quando você move uma nota para a Lixeira ou a exclui em definitivo, o sistema não apaga o registro local
+              bruscamente se houver sincronização remota ativa:</p>
             <ul>
               <li>Ele marca a entidade com uma lápide contendo a data e hora da exclusão (soft-delete).</li>
               <li>Essa lápide é enviada para o banco remoto na nuvem durante a próxima sincronização.</li>
-              <li>Quando seus outros computadores sincronizam, eles leem a lápide e purgam a nota localmente, eliminando de vez o clássico problema de "notas zumbis" que renasciam indevidamente em outros PCs.</li>
-              <li>Somente após a confirmação da nuvem o registro é eliminado definitivamente do disco. Se você estiver usando o app sem nuvem, a exclusão local é imediata e direta.</li>
+              <li>Quando seus outros computadores sincronizam, eles leem a lápide e purgam a nota localmente, eliminando
+                de vez o clássico problema de "notas zumbis" que renasciam indevidamente em outros PCs.</li>
+              <li>Somente após a confirmação da nuvem o registro é eliminado definitivamente do disco. Se você estiver
+                usando o app sem nuvem, a exclusão local é imediata e direta.</li>
             </ul>
           </template>
         </div>
 
         <!-- Card 7: Live Preview & Modo Apresentação de Protótipos -->
-        <div class="help-card" data-category="Novidade v1.7.0" data-icon="🖥️" data-text="Live Preview Modo Apresentação de Protótipos HTML SVG Markdown viewport desktop tablet mobile sandbox tela cheia v1.7.0 prototipo">
+        <div class="help-card" data-category="Novidade v1.7.0" data-icon="🖥️"
+          data-text="Live Preview Modo Apresentação de Protótipos HTML SVG Markdown viewport desktop tablet mobile sandbox tela cheia v1.7.0 prototipo">
           <div>
             <div class="help-card-header">
               <div class="help-card-icon">🖥️</div>
               <span class="help-card-badge">Novidade v1.7.0</span>
             </div>
             <h3 class="help-card-title">Live Preview & Modo Apresentação (v1.7.0)</h3>
-            <p class="help-card-snippet">Visualize, interaja e apresente protótipos de interfaces web (HTML/SVG) e documentos Markdown com simulador de telas responsivas e modo tela cheia.</p>
+            <p class="help-card-snippet">Visualize, interaja e apresente protótipos de interfaces web (HTML/SVG) e
+              documentos Markdown com simulador de telas responsivas e modo tela cheia.</p>
           </div>
           <div class="help-card-btn">
             <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
           <template class="help-card-full">
-            <p>Na <strong>versão 1.7.0</strong>, o Magnetares Notes ganhou um poderoso <strong>Live Preview &amp; Modo Apresentação de Protótipos</strong> para Notas de Código em tecnologias web (<code>HTML</code>, <code>XML/SVG</code>) e documentos formatados (<code>Markdown</code>).</p>
-            
+            <p>Na <strong>versão 1.7.0</strong>, o Magnetares Notes ganhou um poderoso <strong>Live Preview &amp; Modo
+                Apresentação de Protótipos</strong> para Notas de Código em tecnologias web (<code>HTML</code>,
+              <code>XML/SVG</code>) e documentos formatados (<code>Markdown</code>).
+            </p>
+
             <h4>Recursos Principais do Preview:</h4>
             <ul>
-              <li><strong>Execução Interativa ao Vivo:</strong> Veja o resultado visual dos seus scripts, botões e formulários em tempo real enquanto escreve o código.</li>
-              <li><strong>Simulador de Telas (Viewport Switcher):</strong> Alterne com 1 clique entre três resoluções para testar design responsivo:
+              <li><strong>Execução Interativa ao Vivo:</strong> Veja o resultado visual dos seus scripts, botões e
+                formulários em tempo real enquanto escreve o código.</li>
+              <li><strong>Simulador de Telas (Viewport Switcher):</strong> Alterne com 1 clique entre três resoluções
+                para testar design responsivo:
                 <ul>
                   <li>🖥️ <strong>Desktop:</strong> Largura integral (100%).</li>
                   <li>📱 <strong>Tablet:</strong> Largura simulada de 768px com moldura elegante.</li>
-                  <li>📱 <strong>Mobile:</strong> Largura de 375px para validar menus, formulários e layouts móveis.</li>
+                  <li>📱 <strong>Mobile:</strong> Largura de 375px para validar menus, formulários e layouts móveis.
+                  </li>
                 </ul>
               </li>
-              <li><strong>Modo Apresentação (100vw x 100vh):</strong> Expanda o protótipo para tela cheia total sem menus ou barras do editor. Excelente para reuniões de alinhamento com clientes ou compartilhamento de tela no Teams/Meet/Zoom.</li>
-              <li><strong>Sandbox Seguro:</strong> O código roda isolado em um <code>iframe</code> com regras estritas de segurança, permitindo interações visuais sem nenhum risco ao seu computador.</li>
-              <li><strong>Atalhos Ágeis:</strong> Tecla <code>Esc</code> para sair imediatamente, botão de Hot Reload e botão para abrir a página no seu navegador padrão.</li>
+              <li><strong>Modo Apresentação (100vw x 100vh):</strong> Expanda o protótipo para tela cheia total sem
+                menus ou barras do editor. Excelente para reuniões de alinhamento com clientes ou compartilhamento de
+                tela no Teams/Meet/Zoom.</li>
+              <li><strong>Sandbox Seguro:</strong> O código roda isolado em um <code>iframe</code> com regras estritas
+                de segurança, permitindo interações visuais sem nenhum risco ao seu computador.</li>
+              <li><strong>Atalhos Ágeis:</strong> Tecla <code>Esc</code> para sair imediatamente, botão de Hot Reload e
+                botão para abrir a página no seu navegador padrão.</li>
             </ul>
           </template>
         </div>
 
         <!-- Card 8: Notas de Texto vs Notas de Código -->
-        <div class="help-card" data-category="Editor" data-icon="&lt;/&gt;" data-text="Notas de Texto vs Notas de Código monaco editor vscode tiptap rich text snippets programador linguagens syntax highlighting">
+        <div class="help-card" data-category="Editor" data-icon="&lt;/&gt;"
+          data-text="Notas de Texto vs Notas de Código monaco editor vscode tiptap rich text snippets programador linguagens syntax highlighting">
           <div>
             <div class="help-card-header">
               <div class="help-card-icon">&lt;/&gt;</div>
               <span class="help-card-badge">Editor</span>
             </div>
             <h3 class="help-card-title">Notas de Texto vs Notas de Código</h3>
-            <p class="help-card-snippet">Escreva textos ricos no Tiptap ou crie Snippets com o Monaco Editor (o mesmo do VS Code) com syntax highlighting para dezenas de linguagens.</p>
+            <p class="help-card-snippet">Escreva textos ricos no Tiptap ou crie Snippets com o Monaco Editor (o mesmo do
+              VS Code) com syntax highlighting para dezenas de linguagens.</p>
           </div>
           <div class="help-card-btn">
             <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
           <template class="help-card-full">
-            <p>No Magnetares Notes, você pode organizar documentações textuais e scripts técnicos lado a lado na mesma árvore de pastas:</p>
+            <p>No Magnetares Notes, você pode organizar documentações textuais e scripts técnicos lado a lado na mesma
+              árvore de pastas:</p>
             <ul>
-              <li><strong>Notas de Texto (Rich Text):</strong> Criadas pelo botão <strong>+</strong>, utilizam o motor Tiptap com suporte a títulos, checklists interativas com progresso dinâmico, tabelas dinâmicas, avaliador matemático e formatação livre.</li>
-              <li><strong>Notas de Código (Snippets):</strong> Criadas pelo ícone <strong>&lt;/&gt;</strong>, rodam o <strong>Monaco Editor</strong> (a engine oficial do Visual Studio Code), com numeração de linhas, syntax highlighting, code folding, botão rápido de cópia e badges coloridos para linguagens como Go, Python, JavaScript, TypeScript, HTML, CSS, SQL, Bash, Rust e muito mais.</li>
-              <li><strong>Exportação Inteligente:</strong> Ao exportar um snippet, o aplicativo salva o arquivo com a extensão técnica correta (ex: <code>.py</code>, <code>.go</code>, <code>.html</code>).</li>
+              <li><strong>Notas de Texto (Rich Text):</strong> Criadas pelo botão <strong>+</strong>, utilizam o motor
+                Tiptap com suporte a títulos, checklists interativas com progresso dinâmico, tabelas dinâmicas,
+                avaliador matemático e formatação livre.</li>
+              <li><strong>Notas de Código (Snippets):</strong> Criadas pelo ícone <strong>&lt;/&gt;</strong>, rodam o
+                <strong>Monaco Editor</strong> (a engine oficial do Visual Studio Code), com numeração de linhas, syntax
+                highlighting, code folding, botão rápido de cópia e badges coloridos para linguagens como Go, Python,
+                JavaScript, TypeScript, HTML, CSS, SQL, Bash, Rust e muito mais.
+              </li>
+              <li><strong>Exportação Inteligente:</strong> Ao exportar um snippet, o aplicativo salva o arquivo com a
+                extensão técnica correta (ex: <code>.py</code>, <code>.go</code>, <code>.html</code>).</li>
             </ul>
           </template>
         </div>
 
         <!-- Card 9: Formatação Avançada de Texto e Cores -->
-        <div class="help-card" data-category="Editor" data-icon="🎨" data-text="Formatação Avançada de Texto e Cores tiptap alinhamento espaçamento entre linhas paleta cores texto toolbar v1.6.0 tipografia">
+        <div class="help-card" data-category="Editor" data-icon="🎨"
+          data-text="Formatação Avançada de Texto e Cores tiptap alinhamento espaçamento entre linhas paleta cores texto toolbar v1.6.0 tipografia">
           <div>
             <div class="help-card-header">
               <div class="help-card-icon">🎨</div>
               <span class="help-card-badge">Editor</span>
             </div>
             <h3 class="help-card-title">Formatação Avançada de Texto e Cores (v1.6.0)</h3>
-            <p class="help-card-snippet">Selecione textos no editor para acessar o menu flutuante com alinhamento, espaçamento entre linhas ajustável e uma paleta com 20 cores customizadas.</p>
+            <p class="help-card-snippet">Selecione textos no editor para acessar o menu flutuante com alinhamento,
+              espaçamento entre linhas ajustável e uma paleta com 20 cores customizadas.</p>
           </div>
           <div class="help-card-btn">
             <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
           <template class="help-card-full">
-            <p>O editor Rich Text do Magnetares Notes conta com recursos refinados de tipografia e diagramação introduzidos na <strong>versão 1.6.0</strong>:</p>
+            <p>O editor Rich Text do Magnetares Notes conta com recursos refinados de tipografia e diagramação
+              introduzidos na <strong>versão 1.6.0</strong>:</p>
             <ul>
-              <li><strong>Menu Flutuante Contextual:</strong> Selecione qualquer palavra ou parágrafo para abrir as opções de estilo imediatamente sobre a seleção.</li>
-              <li><strong>Alinhamento Completo de Parágrafo:</strong> Alinhe seu texto à esquerda, ao centro, à direita ou justificado.</li>
-              <li><strong>Espaçamento entre Linhas Dinâmico:</strong> Ajuste o ritmo de leitura escolhendo entre Simples (1.0), 1.15, 1.5 ou Duplo (2.0).</li>
-              <li><strong>Paleta de 20 Cores de Alta Harmonia:</strong> Tons selecionados com contraste perfeito para temas claro e escuro, além de botão dedicado para restaurar a cor padrão do sistema.</li>
-              <li><strong>Barra de Ferramentas Otimizada:</strong> Botões de Desfazer e Refazer reposicionados na extremidade esquerda para acesso rápido e natural.</li>
+              <li><strong>Menu Flutuante Contextual:</strong> Selecione qualquer palavra ou parágrafo para abrir as
+                opções de estilo imediatamente sobre a seleção.</li>
+              <li><strong>Alinhamento Completo de Parágrafo:</strong> Alinhe seu texto à esquerda, ao centro, à direita
+                ou justificado.</li>
+              <li><strong>Espaçamento entre Linhas Dinâmico:</strong> Ajuste o ritmo de leitura escolhendo entre Simples
+                (1.0), 1.15, 1.5 ou Duplo (2.0).</li>
+              <li><strong>Paleta de 20 Cores de Alta Harmonia:</strong> Tons selecionados com contraste perfeito para
+                temas claro e escuro, além de botão dedicado para restaurar a cor padrão do sistema.</li>
+              <li><strong>Barra de Ferramentas Otimizada:</strong> Botões de Desfazer e Refazer reposicionados na
+                extremidade esquerda para acesso rápido e natural.</li>
             </ul>
           </template>
         </div>
 
         <!-- Card 10: Mural de Stickers (Post-its) e Drag & Drop -->
-        <div class="help-card" data-category="Produtividade" data-icon="📌" data-text="Mural de Post-its Stickers adesivas cores quadros boards drag drop fixar pin tarefas lembretes hrana turso float v1.7.0">
+        <div class="help-card" data-category="Produtividade" data-icon="📌"
+          data-text="Mural de Post-its Stickers adesivas cores quadros boards drag drop fixar pin tarefas lembretes hrana turso float v1.7.0">
           <div>
             <div class="help-card-header">
               <div class="help-card-icon">📌</div>
               <span class="help-card-badge">Produtividade</span>
             </div>
             <h3 class="help-card-title">Mural de Stickers (Post-its) e Drag & Drop</h3>
-            <p class="help-card-snippet">Um mural dinâmico em tela cheia com post-its coloridos, múltiplos quadros (Boards), reordenação livre por arrastar e soltar e sincronização em nuvem.</p>
+            <p class="help-card-snippet">Um mural dinâmico em tela cheia com post-its coloridos, múltiplos quadros
+              (Boards), reordenação livre por arrastar e soltar e sincronização em nuvem.</p>
           </div>
           <div class="help-card-btn">
             <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
           <template class="help-card-full">
-            <p>O <strong>Mural de Stickers</strong> oferece uma área de trabalho visual para notas autoadesivas, ideias rápidas e lembretes visuais:</p>
+            <p>O <strong>Mural de Stickers</strong> oferece uma área de trabalho visual para notas autoadesivas, ideias
+              rápidas e lembretes visuais:</p>
             <ul>
-              <li><strong>Múltiplos Quadros (Boards):</strong> Crie murais separados para trabalho, projetos pessoais ou ideias livres. O quadro inicial "Geral" fica sempre protegido contra exclusão acidental.</li>
-              <li><strong>Layout Full-Width Fluido:</strong> Aproveita toda a largura da tela em uma grade responsiva que acomoda dezenas de cartões sem aperto.</li>
-              <li><strong>Paleta de 8 Cores Pastel:</strong> Amarelo, Laranja, Rosa, Roxo, Azul, Turquesa, Verde e Neutro com contraste calibrado.</li>
-              <li><strong>Drag &amp; Drop Poderoso:</strong> Reorganize os stickers arrastando-os pelo mural, solte no espaço vazio para mover para o fim da fila, ou arraste o card diretamente sobre outro quadro na barra lateral para movê-lo de categoria instantaneamente.</li>
-              <li><strong>Fixação no Topo:</strong> Destaque lembretes cruciais fixando-os com uma moldura dourada elegante.</li>
-              <li><strong>Sincronização na Nuvem (v1.7.0):</strong> Compatibilidade estrita com números reais (float) no protocolo Hrana do Turso e tratamento inteligente de colisões de nomes entre múltiplos computadores.</li>
+              <li><strong>Múltiplos Quadros (Boards):</strong> Crie murais separados para trabalho, projetos pessoais ou
+                ideias livres. O quadro inicial "Geral" fica sempre protegido contra exclusão acidental.</li>
+              <li><strong>Layout Full-Width Fluido:</strong> Aproveita toda a largura da tela em uma grade responsiva
+                que acomoda dezenas de cartões sem aperto.</li>
+              <li><strong>Paleta de 8 Cores Pastel:</strong> Amarelo, Laranja, Rosa, Roxo, Azul, Turquesa, Verde e
+                Neutro com contraste calibrado.</li>
+              <li><strong>Drag &amp; Drop Poderoso:</strong> Reorganize os stickers arrastando-os pelo mural, solte no
+                espaço vazio para mover para o fim da fila, ou arraste o card diretamente sobre outro quadro na barra
+                lateral para movê-lo de categoria instantaneamente.</li>
+              <li><strong>Fixação no Topo:</strong> Destaque lembretes cruciais fixando-os com uma moldura dourada
+                elegante.</li>
+              <li><strong>Sincronização na Nuvem (v1.7.0):</strong> Compatibilidade estrita com números reais (float) no
+                protocolo Hrana do Turso e tratamento inteligente de colisões de nomes entre múltiplos computadores.
+              </li>
             </ul>
           </template>
         </div>
 
         <!-- Card 11: Sugestões de Etiquetas Inteligentes (Tags) -->
-        <div class="help-card" data-category="Organização" data-icon="🏷️" data-text="Sugestões de Etiquetas Tags label dropdown inteligente organizar categorizar autocompletar cores colapsavel v1.6.0">
+        <div class="help-card" data-category="Organização" data-icon="🏷️"
+          data-text="Sugestões de Etiquetas Tags label dropdown inteligente organizar categorizar autocompletar cores colapsavel v1.6.0">
           <div>
             <div class="help-card-header">
               <div class="help-card-icon">🏷️</div>
               <span class="help-card-badge">Organização</span>
             </div>
             <h3 class="help-card-title">Sugestões de Etiquetas Inteligentes (v1.6.0)</h3>
-            <p class="help-card-snippet">Menu suspenso inteligente que sugere tags cadastradas enquanto você digita, filtra duplicatas e permite criar novas etiquetas com a tecla Enter.</p>
+            <p class="help-card-snippet">Menu suspenso inteligente que sugere tags cadastradas enquanto você digita,
+              filtra duplicatas e permite criar novas etiquetas com a tecla Enter.</p>
           </div>
           <div class="help-card-btn">
             <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
           <template class="help-card-full">
-            <p>O sistema de etiquetas (Tags) organiza conteúdos horizontalmente entre diferentes pastas. Na <strong>versão 1.6.0</strong>, a experiência foi totalmente aprimorada:</p>
+            <p>O sistema de etiquetas (Tags) organiza conteúdos horizontalmente entre diferentes pastas. Na
+              <strong>versão 1.6.0</strong>, a experiência foi totalmente aprimorada:
+            </p>
             <ul>
-              <li><strong>Menu Suspenso com Autocomplete:</strong> Ao digitar no campo de etiqueta abaixo do título da nota, sugestões inteligentes surgem imediatamente baseadas nas tags já existentes na sua biblioteca.</li>
-              <li><strong>Ícones e Cores Visuais:</strong> O menu exibe os ícones coloridos de cada etiqueta para identificação visual instantânea.</li>
-              <li><strong>Filtro Anti-Duplicata:</strong> Etiquetas que a nota já possui não aparecem nas sugestões, evitando repetições acidentais.</li>
-              <li><strong>Criação Instantânea:</strong> Se a etiqueta digitada for nova, basta pressionar <strong>Enter</strong> para cadastrá-la no mesmo instante.</li>
-              <li><strong>Seção Colapsável na Barra Lateral:</strong> A lista de etiquetas na barra de navegação pode ser expandida ou recolhida para economizar espaço de tela.</li>
+              <li><strong>Menu Suspenso com Autocomplete:</strong> Ao digitar no campo de etiqueta abaixo do título da
+                nota, sugestões inteligentes surgem imediatamente baseadas nas tags já existentes na sua biblioteca.
+              </li>
+              <li><strong>Ícones e Cores Visuais:</strong> O menu exibe os ícones coloridos de cada etiqueta para
+                identificação visual instantânea.</li>
+              <li><strong>Filtro Anti-Duplicata:</strong> Etiquetas que a nota já possui não aparecem nas sugestões,
+                evitando repetições acidentais.</li>
+              <li><strong>Criação Instantânea:</strong> Se a etiqueta digitada for nova, basta pressionar
+                <strong>Enter</strong> para cadastrá-la no mesmo instante.
+              </li>
+              <li><strong>Seção Colapsável na Barra Lateral:</strong> A lista de etiquetas na barra de navegação pode
+                ser expandida ou recolhida para economizar espaço de tela.</li>
             </ul>
           </template>
         </div>
 
         <!-- Card 12: Perfil de Sincronização & Múltiplas Máquinas -->
-        <div class="help-card" data-category="Sincronização" data-icon="🔄" data-text="Perfil de Sincronização Múltiplas Máquinas partição turso conflitos primary profile unificação rebase v1.7.0 multi computador">
+        <div class="help-card" data-category="Sincronização" data-icon="🔄"
+          data-text="Perfil de Sincronização Múltiplas Máquinas partição turso conflitos primary profile unificação rebase v1.7.0 multi computador">
           <div>
             <div class="help-card-header">
               <div class="help-card-icon">🔄</div>
               <span class="help-card-badge">Sincronização</span>
             </div>
             <h3 class="help-card-title">Perfil de Sincronização & Multi-Máquinas (v1.7.0)</h3>
-            <p class="help-card-snippet">A v1.7.0 unifica automaticamente todos os seus computadores no mesmo perfil mestre na nuvem Turso, eliminando partições divergentes e conflitos.</p>
+            <p class="help-card-snippet">A v1.7.0 unifica automaticamente todos os seus computadores no mesmo perfil
+              mestre na nuvem Turso, eliminando partições divergentes e conflitos.</p>
           </div>
           <div class="help-card-btn">
             <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
           <template class="help-card-full">
-            <p>A sincronização na <strong>versão 1.7.0</strong> foi reformulada para garantir convergência matemática e transparência quando você usa o aplicativo em mais de um computador:</p>
-            
+            <p>A sincronização na <strong>versão 1.7.0</strong> foi reformulada para garantir convergência matemática e
+              transparência quando você usa o aplicativo em mais de um computador:</p>
+
             <h4>Unificação Automática de Partições</h4>
-            <p>O próprio banco de dados remoto no Turso passa a registrar o <strong>Perfil Principal (Primary Profile ID)</strong>. Todas as suas máquinas atualizadas adotam o mesmo perfil automaticamente, eliminando qualquer risco de um computador salvar em partição separada por pequenas variações na digitação da URL.</p>
+            <p>O próprio banco de dados remoto no Turso passa a registrar o <strong>Perfil Principal (Primary Profile
+                ID)</strong>. Todas as suas máquinas atualizadas adotam o mesmo perfil automaticamente, eliminando
+              qualquer risco de um computador salvar em partição separada por pequenas variações na digitação da URL.
+            </p>
 
             <h4>Painel "Perfil de Sincronização" nas Preferências</h4>
             <ul>
-              <li>Acesse <strong>Configurações &gt; Nuvem</strong> para ver em tempo real o perfil ativo e o histórico de partições remotas.</li>
-              <li>Permite inspecionar partições antigas criadas por versões legadas, torná-las principais ou expurgá-las após a consolidação dos dados.</li>
+              <li>Acesse <strong>Configurações &gt; Nuvem</strong> para ver em tempo real o perfil ativo e o histórico
+                de partições remotas.</li>
+              <li>Permite inspecionar partições antigas criadas por versões legadas, torná-las principais ou expurgá-las
+                após a consolidação dos dados.</li>
             </ul>
 
             <h4>Resolução Transparente de Conflitos</h4>
-            <p>Se você editar a mesma nota offline em dois computadores ao mesmo tempo, nenhuma versão é sobrescrita silenciosamente. Ao conectar à internet, o Magnetares abre uma janela de resolução com 3 opções claras:</p>
+            <p>Se você editar a mesma nota offline em dois computadores ao mesmo tempo, nenhuma versão é sobrescrita
+              silenciosamente. Ao conectar à internet, o Magnetares abre uma janela de resolução com 3 opções claras:
+            </p>
             <ul>
               <li><strong>Manter minha versão:</strong> Rebaseia sua edição local sobre os dados da nuvem.</li>
               <li><strong>Usar versão da nuvem:</strong> Substitui a nota local pela versão remota.</li>
-              <li><strong>Mesclar conteúdo:</strong> Une os dois textos na mesma nota com marcadores visuais para você comparar com calma.</li>
+              <li><strong>Mesclar conteúdo:</strong> Une os dois textos na mesma nota com marcadores visuais para você
+                comparar com calma.</li>
             </ul>
           </template>
         </div>
 
         <!-- Card 13: Auditoria de Integridade Local e Compliance -->
-        <div class="help-card" data-category="Manutenção" data-icon="🛠️" data-text="Auditoria de Integridade Local e Compliance autorreparo sqlite manutencao reatribuir orfas checklists outbox reparo v1.6.0 v1.7.0">
+        <div class="help-card" data-category="Manutenção" data-icon="🛠️"
+          data-text="Auditoria de Integridade Local e Compliance autorreparo sqlite manutencao reatribuir orfas checklists outbox reparo v1.6.0 v1.7.0">
           <div>
             <div class="help-card-header">
               <div class="help-card-icon">🛠️</div>
               <span class="help-card-badge">Manutenção</span>
             </div>
             <h3 class="help-card-title">Auditoria de Integridade e Compliance</h3>
-            <p class="help-card-snippet">Execute uma varredura transacional que reatribui notas órfãs, recalcula totais de checklists e normaliza o estado de sincronização com 1 clique.</p>
+            <p class="help-card-snippet">Execute uma varredura transacional que reatribui notas órfãs, recalcula totais
+              de checklists e normaliza o estado de sincronização com 1 clique.</p>
           </div>
           <div class="help-card-btn">
             <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
           <template class="help-card-full">
-            <p>O Magnetares Notes inclui um mecanismo inteligente de autorreparo chamado <strong>Auditoria de Compliance de Dados</strong>. Ele garante que mesmo bancos de dados com muitos anos de uso continuem rápidos e 100% íntegros.</p>
-            
+            <p>O Magnetares Notes inclui um mecanismo inteligente de autorreparo chamado <strong>Auditoria de Compliance
+                de Dados</strong>. Ele garante que mesmo bancos de dados com muitos anos de uso continuem rápidos e 100%
+              íntegros.</p>
+
             <h4>Como Executar a Auditoria:</h4>
             <ul>
               <li>Abra o menu de <strong>Configurações</strong> e clique na aba <strong>Armazenamento</strong>.</li>
-              <li>Na seção <em>Integridade &amp; Compliance de Dados</em>, clique no botão <strong>"Executar Auditoria de Compliance"</strong>.</li>
+              <li>Na seção <em>Integridade &amp; Compliance de Dados</em>, clique no botão <strong>"Executar Auditoria
+                  de Compliance"</strong>.</li>
             </ul>
 
             <h4>O que o Sistema Inspeciona e Corrige Automaticamente:</h4>
             <ul>
-              <li><strong>Reparação de Notas Órfãs:</strong> Se alguma nota perdeu o vínculo de pasta por migrações antigas, ela é automaticamente movida para a pasta padrão ("Notas").</li>
-              <li><strong>Auditoria de Checklists:</strong> Recalcula a contagem exata de itens concluídos e pendentes, corrigindo discrepâncias nos indicadores de progresso.</li>
-              <li><strong>Normalização de Dados:</strong> Padroniza timestamps, tipos de notas (rich text vs code snippets) e linguagens.</li>
-              <li><strong>Saneamento de Fila de Envio (Outbox):</strong> Limpa pendências órfãs e revalida os estados de sincronização para garantir que tudo o que você alterou suba corretamente para o Turso.</li>
+              <li><strong>Reparação de Notas Órfãs:</strong> Se alguma nota perdeu o vínculo de pasta por migrações
+                antigas, ela é automaticamente movida para a pasta padrão ("Notas").</li>
+              <li><strong>Auditoria de Checklists:</strong> Recalcula a contagem exata de itens concluídos e pendentes,
+                corrigindo discrepâncias nos indicadores de progresso.</li>
+              <li><strong>Normalização de Dados:</strong> Padroniza timestamps, tipos de notas (rich text vs code
+                snippets) e linguagens.</li>
+              <li><strong>Saneamento de Fila de Envio (Outbox):</strong> Limpa pendências órfãs e revalida os estados de
+                sincronização para garantir que tudo o que você alterou suba corretamente para o Turso.</li>
             </ul>
           </template>
         </div>
 
         <!-- Card 14: Versão Portátil (Pendrive & Modo Isolado) -->
-        <div class="help-card" data-category="Armazenamento" data-icon="🧳" data-text="Versão Portátil Pendrive usb sem instalar data isolado sqlite portatil zip sem rastros v1.6.0 v1.7.0">
+        <div class="help-card" data-category="Armazenamento" data-icon="🧳"
+          data-text="Versão Portátil Pendrive usb sem instalar data isolado sqlite portatil zip sem rastros v1.6.0 v1.7.0">
           <div>
             <div class="help-card-header">
               <div class="help-card-icon">🧳</div>
               <span class="help-card-badge">Armazenamento</span>
             </div>
             <h3 class="help-card-title">Versão Portátil (Pendrive & Modo Isolado)</h3>
-            <p class="help-card-snippet">A versão .zip portátil funciona direto do seu pendrive sem instalação, salvando o banco SQLite e configurações de forma 100% isolada e autocontida.</p>
+            <p class="help-card-snippet">A versão .zip portátil funciona direto do seu pendrive sem instalação, salvando
+              o banco SQLite e configurações de forma 100% isolada e autocontida.</p>
           </div>
           <div class="help-card-btn">
             <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
           <template class="help-card-full">
-            <p>O modo portátil foi projetado para profissionais e estudantes que precisam de mobilidade e privacidade total entre diferentes computadores:</p>
+            <p>O modo portátil foi projetado para profissionais e estudantes que precisam de mobilidade e privacidade
+              total entre diferentes computadores:</p>
             <ul>
-              <li><strong>Execução Standalone:</strong> Baixe o arquivo <code>.zip</code> portátil na página inicial do site ou nas Releases do GitHub e extraia em qualquer pendrive ou HD externo.</li>
-              <li><strong>Pasta <code>data/</code> Autocontida:</strong> O executável reconhece a pasta local e grava o banco SQLite (<code>notes.db</code>), suas preferências e logs dentro do próprio pendrive.</li>
-              <li><strong>Sem Rastros no Host:</strong> Ao abrir em qualquer PC com Windows, nenhum arquivo ou chave de registro é gravada no sistema operacional hospedeiro.</li>
-              <li><strong>Dica de Segurança:</strong> Lembre-se sempre de fechar a janela do Magnetares Notes antes de ejetar o seu pendrive com segurança no Windows para garantir que todas as transações em disco sejam concluídas.</li>
+              <li><strong>Execução Standalone:</strong> Baixe o arquivo <code>.zip</code> portátil na página inicial do
+                site ou nas Releases do GitHub e extraia em qualquer pendrive ou HD externo.</li>
+              <li><strong>Pasta <code>data/</code> Autocontida:</strong> O executável reconhece a pasta local e grava o
+                banco SQLite (<code>notes.db</code>), suas preferências e logs dentro do próprio pendrive.</li>
+              <li><strong>Sem Rastros no Host:</strong> Ao abrir em qualquer PC com Windows, nenhum arquivo ou chave de
+                registro é gravada no sistema operacional hospedeiro.</li>
+              <li><strong>Dica de Segurança:</strong> Lembre-se sempre de fechar a janela do Magnetares Notes antes de
+                ejetar o seu pendrive com segurança no Windows para garantir que todas as transações em disco sejam
+                concluídas.</li>
             </ul>
           </template>
         </div>
 
         <!-- Card 15: Licença e Termos de Uso -->
-        <div class="help-card" data-category="Licença" data-icon="⚖️" data-text="Licença e Termos de Uso pessoal gratuito não-comercial regras modificação comercial autoria vitor krewer source-available">
+        <div class="help-card" data-category="Licença" data-icon="⚖️"
+          data-text="Licença e Termos de Uso pessoal gratuito não-comercial regras modificação comercial autoria vitor krewer source-available">
           <div>
             <div class="help-card-header">
               <div class="help-card-icon">⚖️</div>
               <span class="help-card-badge">Licença</span>
             </div>
             <h3 class="help-card-title">Licença e Termos de Uso</h3>
-            <p class="help-card-snippet">Uso pessoal e estudo 100% gratuitos. Proibido uso comercial e qualquer modificação ou fork deve ser previamente comunicada ao autor.</p>
+            <p class="help-card-snippet">Uso pessoal e estudo 100% gratuitos. Proibido uso comercial e qualquer
+              modificação ou fork deve ser previamente comunicada ao autor.</p>
           </div>
           <div class="help-card-btn">
             <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </div>
           <template class="help-card-full">
-            <p>O <strong>Magnetares Notes</strong> é um software de código com fonte disponível (<em>Source-Available</em>), gratuito para download, estudo, auditoria técnica e uso pessoal (não-comercial).</p>
+            <p>O <strong>Magnetares Notes</strong> é um software de código com fonte disponível
+              (<em>Source-Available</em>), gratuito para download, estudo, auditoria técnica e uso pessoal
+              (não-comercial).</p>
             <p><strong>Diretrizes e Termos Importantes:</strong></p>
             <ul>
-              <li><strong>Uso Pessoal Gratuito:</strong> Você pode compilar, instalar e usar o Magnetares em quantos computadores pessoais desejar sem restrições de tempo ou limites de notas.</li>
-              <li><strong>Proibido Uso Comercial:</strong> É terminantemente vedada a venda, comercialização, distribuição paga ou exploração comercial direta/indireta do software ou de partes dele sem autorização formal prévia por escrito do autor.</li>
-              <li><strong>Modificações e Derivados:</strong> Qualquer alteração, fork ou trabalho derivado destinado à publicação pública deve ser previamente comunicado por escrito ao criador do projeto (Vitor Krewer).</li>
+              <li><strong>Uso Pessoal Gratuito:</strong> Você pode compilar, instalar e usar o Magnetares em quantos
+                computadores pessoais desejar sem restrições de tempo ou limites de notas.</li>
+              <li><strong>Proibido Uso Comercial:</strong> É terminantemente vedada a venda, comercialização,
+                distribuição paga ou exploração comercial direta/indireta do software ou de partes dele sem autorização
+                formal prévia por escrito do autor.</li>
+              <li><strong>Modificações e Derivados:</strong> Qualquer alteração, fork ou trabalho derivado destinado à
+                publicação pública deve ser previamente comunicado por escrito ao criador do projeto (Vitor Krewer).
+              </li>
             </ul>
           </template>
         </div>
 
       </div>
-      
-      <div id="no-results" style="display: none; text-align: center; color: #9da3c9; margin-top: 40px; font-size: 16px;">
+
+      <div id="no-results"
+        style="display: none; text-align: center; color: #9da3c9; margin-top: 40px; font-size: 16px;">
         Nenhum resultado encontrado para a sua busca.
       </div>
     </div>
 
     <!-- MODAL DE AJUDA COMPLETA -->
-    <div class="help-modal-overlay" id="help-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+    <div class="help-modal-overlay" id="help-modal" aria-hidden="true" role="dialog" aria-modal="true"
+      aria-labelledby="help-modal-title">
       <div class="help-modal-box" id="help-modal-box">
         <div class="help-modal-header">
           <div class="help-modal-header-info">
@@ -960,7 +1185,8 @@
               <h3 id="help-modal-title">Título do Artigo</h3>
             </div>
           </div>
-          <button class="help-modal-close" id="help-modal-close" type="button" aria-label="Fechar modal" title="Fechar">✕</button>
+          <button class="help-modal-close" id="help-modal-close" type="button" aria-label="Fechar modal"
+            title="Fechar">✕</button>
         </div>
         <div class="help-modal-body" id="help-modal-body">
           <!-- Conteúdo completo injetado dinamicamente -->
@@ -980,19 +1206,28 @@
           <span>Magnetares</span>
         </a>
         <p class="footer-tagline">
-          Onde pensamentos ganham gravidade própria. Um caderno local-first, rápido e privado para quem leva anotações a sério.
+          Onde pensamentos ganham gravidade própria. Um caderno local-first, rápido e privado para quem leva anotações a
+          sério.
         </p>
         <div class="footer-badge-list">
           <span class="footer-badge">
-            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" /></svg>
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+            </svg>
             100% Local-First
           </span>
           <span class="footer-badge">
-            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14h2v2h-2zm0-10h2v8h-2z" /></svg>
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14h2v2h-2zm0-10h2v8h-2z" />
+            </svg>
             Zero Rastreamento
           </span>
           <span class="footer-badge">
-            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" /></svg>
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+            </svg>
             Uso Pessoal (Não-Comercial)
           </span>
         </div>
@@ -1006,7 +1241,7 @@
           <li><a href="screenshots.html">Galeria de Telas</a></li>
           <li><a href="help.html">Ajuda & FAQ</a></li>
           <li><a href="blog.html">Blog</a></li>
-          <li><a href="index.html#downloads">Instaladores & Builds</a></li>
+          <li><a href="release.html">Notas de Release (Changelog)</a></li>
         </ul>
       </div>
 
@@ -1059,7 +1294,8 @@
 
     <div class="footer-bottom">
       <div class="footer-creator">
-        Desenvolvido por <a href="https://www.linkedin.com/in/vitorkrewer/" target="_blank" rel="noreferrer">Vitor Krewer</a>
+        Desenvolvido por <a href="https://www.linkedin.com/in/vitorkrewer/" target="_blank" rel="noreferrer">Vitor
+          Krewer</a>
       </div>
       <div>
         © <span id="year"></span> Magnetares Notes · Todos os direitos reservados.
@@ -1067,7 +1303,7 @@
     </div>
   </footer>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=1.8.0"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const searchInput = document.getElementById("help-search-input");

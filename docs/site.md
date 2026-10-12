@@ -7,9 +7,15 @@ O site de produto está em `site/` e não depende do frontend React do desktop:
 ```text
 site/
   index.html
+  recursos.html
+  screenshots.html
+  help.html
+  blog.html
+  post.html
+  release.html
   styles.css
   script.js
-  assets/magnetar-icon.png
+  assets/
 ```
 
 Isso permite publicar a mesma página diretamente no GitHub Pages.
