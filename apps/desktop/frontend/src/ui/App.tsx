@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { Archive, ArchiveRestore, Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FileCode2, FilePenLine, FileText, Folder, Globe, List, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Trash2, Upload, X } from "lucide-react";
+import { Archive, ArchiveRestore, Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FileCode2, FilePenLine, FileText, Folder, Globe, List, Minimize2, PictureInPicture2, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Trash2, Upload, X } from "lucide-react";
 import { StructuredEditor } from "./StructuredEditor";
 import { CodeEditor } from "./CodeEditor";
 import { TitleBar } from "./TitleBar";
@@ -10,6 +10,7 @@ import { StickerBoardDialog, STICKER_PALETTE, DelicateStickerIcon } from "./Stic
 import { StickerBoardView } from "./StickerBoardView";
 import { TaskListDialog, TASK_LIST_PALETTE, getTaskListIconComponent } from "./TaskListDialog";
 import { TaskListView } from "./TaskListView";
+import { FocusNoteModal } from "./FocusNoteModal";
 import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord, TaskListRecord } from "./types";
 import { downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
 
@@ -111,6 +112,7 @@ export function App() {
     const saved = ((localStorage.getItem("magnetares_theme") || localStorage.getItem("aster_theme")) as ThemeOption) || "light";
     return saved === "dark" || (saved === "system" && typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches);
   });
+  const [isFocusMode, setIsFocusMode] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [dbPath, setDbPath] = useState("%LOCALAPPDATA%\\Magnetares Notes\\magnetares.db");
   // Vazio = o backend usa o pipeline direto do Turso (ou syncApiUrl do config.json).
@@ -1788,12 +1790,36 @@ export function App() {
                       )}
                     </div>
                     <button className={`icon-button ${active.pinnedAt ? "active-pin" : ""}`} onClick={() => void togglePinActiveNote()} title={active.pinnedAt ? "Desafixar nota" : "Fixar nota"} aria-label={active.pinnedAt ? "Desafixar nota" : "Fixar nota"}><Pin aria-hidden="true" /></button>
+                    <button className={`icon-button focus-trigger-button ${isFocusMode ? "active-pin" : ""}`} onClick={() => setIsFocusMode((prev) => !prev)} title="Destacar nota no Modo Foco (Picture-in-Picture)" aria-label="Destacar nota no Modo Foco"><PictureInPicture2 aria-hidden="true" size={17} /></button>
                     <button className="icon-button danger-button" onClick={() => void deleteNote(active)} title="Mover para Apagadas recentemente" aria-label="Apagar nota"><Trash2 aria-hidden="true" /></button>
                     <button className="icon-button" onClick={() => createNote("rtf")} title="Nova nota (Ctrl+N)" aria-label="Nova nota"><FilePenLine aria-hidden="true" /></button>
                   </>
                 )}
               </div>
             </header>
+            {isFocusMode ? (
+              <div className="focus-mode-active-placeholder">
+                <div className="focus-mode-badge-pulse">
+                  <PictureInPicture2 size={40} aria-hidden="true" />
+                </div>
+                <h2>Modo Foco Ativado</h2>
+                <p className="focus-mode-desc">
+                  A nota <strong>"{active.title || "Sem título"}"</strong> está destacada em primeiro plano para você estudar, assistir a aulas e fazer anotações lado a lado.
+                </p>
+                <div className="focus-mode-actions">
+                  <button
+                    type="button"
+                    className="focus-return-cta"
+                    onClick={() => setIsFocusMode(false)}
+                  >
+                    <Minimize2 size={16} aria-hidden="true" /> Retornar à aplicação principal
+                  </button>
+                </div>
+                <div className="focus-mode-tips">
+                  <span>💡 <strong>Edição Ativa:</strong> As alterações feitas na janela de foco continuam sincronizadas e salvas automaticamente em tempo real.</span>
+                </div>
+              </div>
+            ) : (
             <div className="editor-scroll-area">
               <div className="editor-page">
                 <time className="edited-at">{fullDateLabel(active.updatedAt)}</time>
@@ -1893,6 +1919,7 @@ export function App() {
                 )}
               </div>
             </div>
+            )}
           </>
         ) : (
           <div className="empty-editor">
@@ -2074,6 +2101,17 @@ export function App() {
             setListToEdit(undefined);
           }}
           onSave={handleSaveTaskList}
+        />
+      )}
+
+      {active && (
+        <FocusNoteModal
+          isOpen={isFocusMode}
+          note={active}
+          saveState={saveState}
+          onClose={() => setIsFocusMode(false)}
+          onSave={(patch) => save(patch)}
+          onFlush={(id) => void flushNote(id)}
         />
       )}
     </main>
