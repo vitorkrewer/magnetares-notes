@@ -19,4 +19,5 @@ coverage/
 .DS_Store
 tools/
 .tmp/
+node_modules
 .wails-temp/
