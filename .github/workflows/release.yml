@@ -240,6 +240,85 @@ jobs:
           path: release-assets
           merge-multiple: true
 
+      - name: Build Multiverse Portable Package (Cross-Platform Pendrive)
+        shell: bash
+        run: |
+          MULTIVERSE_DIR="Magnetares-Notes-Multiverse-Portable"
+          rm -rf "$MULTIVERSE_DIR"
+          mkdir -p "$MULTIVERSE_DIR/data"
+          touch "$MULTIVERSE_DIR/data/.gitkeep"
+
+          # 1. Marcador de modo portátil
+          echo "# Magnetares Notes - Multiverse Portable" > "$MULTIVERSE_DIR/portable.dat"
+          echo "# Todos os dados locais, notas e banco SQLite sao salvos dentro da pasta ./data" >> "$MULTIVERSE_DIR/portable.dat"
+
+          # 2. Copiar binário Windows
+          if [ -f "release-assets/Magnetares-Notes-Windows-x64.exe" ]; then
+            cp "release-assets/Magnetares-Notes-Windows-x64.exe" "$MULTIVERSE_DIR/Magnetares-Notes.exe"
+          fi
+
+          # 3. Copiar binário Linux (AppImage)
+          if [ -f "release-assets/Magnetares-Notes-Linux-x64.AppImage" ]; then
+            cp "release-assets/Magnetares-Notes-Linux-x64.AppImage" "$MULTIVERSE_DIR/Magnetares-Notes-Linux.AppImage"
+            chmod +x "$MULTIVERSE_DIR/Magnetares-Notes-Linux.AppImage"
+          fi
+
+          # 4. Descompactar e incluir o bundle macOS
+          if [ -f "release-assets/Magnetares-Notes-macOS-universal.zip" ]; then
+            unzip -q "release-assets/Magnetares-Notes-macOS-universal.zip" -d "$MULTIVERSE_DIR/"
+          fi
+
+          # 5. Criar LEIA-ME explicativo
+          printf "%s\n" \
+            "=====================================================" \
+            " MAGNETARES NOTES - VERSAO PORTABLE MULTIVERSE" \
+            "=====================================================" \
+            "" \
+            "Esta versao foi criada para rodar diretamente a partir de um pendrive" \
+            "ou HD externo, compartilhando as mesmas notas entre multiplos sistemas operacionais." \
+            "" \
+            "COMO USAR NO SEU PENDRIVE:" \
+            "-----------------------------------------------------" \
+            "1. Windows:" \
+            "   - De duplo clique em 'Magnetares-Notes.exe'." \
+            "" \
+            "2. Linux:" \
+            "   - Execute 'Magnetares-Notes-Linux.AppImage'" \
+            "   - Se necessario, conceda permissao de execucao:" \
+            "     chmod +x Magnetares-Notes-Linux.AppImage" \
+            "" \
+            "3. macOS:" \
+            "   - Execute 'Magnetares Notes.app'." \
+            "   - Na primeira execucao, se o macOS avisar sobre desenvolvedor nao identificado:" \
+            "     Clique com botao direito no aplicativo -> selecione 'Abrir' -> confirme." \
+            "" \
+            "ONDE FICAM SUAS NOTAS?" \
+            "-----------------------------------------------------" \
+            "Todas as notas, listas, tarefas e configuracoes sao armazenadas na pasta:" \
+            "./data/magnetares.db" \
+            "" \
+            "O banco de dados SQLite e universal: alteracoes feitas no Windows estarao" \
+            "disponiveis imediatamente no Mac e no Linux e vice-versa." \
+            "" \
+            "RECOMENDACAO:" \
+            "-----------------------------------------------------" \
+            "- Formate seu pendrive como exFAT para compatibilidade nativa de leitura" \
+            "  e escrita entre Windows, macOS e Linux." \
+            "- Sempre feche o aplicativo e use a opcao 'Ejetar com seguranca' antes de" \
+            "  remover o pendrive." \
+            "=====================================================" \
+            > "$MULTIVERSE_DIR/LEIA-ME-MULTIVERSE.txt"
+
+          # 6. Garantir permissões de execução nos binários Linux e macOS
+          chmod +x "$MULTIVERSE_DIR"/*.AppImage 2>/dev/null || true
+          find "$MULTIVERSE_DIR" -type f -path "*/Contents/MacOS/*" -exec chmod +x {} + 2>/dev/null || true
+
+          # 7. Gerar arquivo compactado final para o release
+          zip -r -q "release-assets/Magnetares-Notes-Multiverse-Portable.zip" "$MULTIVERSE_DIR"
+          rm -rf "$MULTIVERSE_DIR"
+          echo "Pacote Multiverse Portable gerado com sucesso: release-assets/Magnetares-Notes-Multiverse-Portable.zip"
+
+
       - name: Extract tag and release notes from CHANGELOG
         id: release_info
         shell: python

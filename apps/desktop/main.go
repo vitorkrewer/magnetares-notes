@@ -51,6 +51,10 @@ func main() {
 		DisableWindowIcon:    false,
 	}
 
+	if portableDir := getPortableDataDir(); portableDir != "" {
+		winOpts.WebviewUserDataPath = filepath.Join(portableDir, "webview")
+	}
+
 	if focusNoteID != "" {
 		windowTitle = "Modo Foco — Magnetares"
 		windowWidth = 620

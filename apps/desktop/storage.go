@@ -12,6 +12,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -77,11 +78,49 @@ type appConfig struct {
 }
 
 func getPortableDataDir() string {
+	// 1. Linux AppImage: $APPIMAGE aponta para o arquivo .AppImage real na unidade/pendrive
+	if appImagePath := os.Getenv("APPIMAGE"); appImagePath != "" {
+		appImageDir := filepath.Dir(appImagePath)
+		dataDir := filepath.Join(appImageDir, "data")
+		if info, err := os.Stat(dataDir); err == nil && info.IsDir() {
+			return dataDir
+		}
+		markerFile := filepath.Join(appImageDir, "portable.dat")
+		if _, err := os.Stat(markerFile); err == nil {
+			_ = os.MkdirAll(dataDir, 0o700)
+			return dataDir
+		}
+	}
+
 	exePath, err := os.Executable()
 	if err != nil {
 		return ""
 	}
 	exeDir := filepath.Dir(exePath)
+
+	// 2. macOS: O binário fica dentro de Magnetares.app/Contents/MacOS/
+	// Buscamos se o executável está dentro de um bundle .app para localizar a pasta no pendrive
+	if runtime.GOOS == "darwin" {
+		cur := exeDir
+		for i := 0; i < 4; i++ {
+			if strings.HasSuffix(cur, ".app") {
+				bundleParent := filepath.Dir(cur)
+				dataDir := filepath.Join(bundleParent, "data")
+				if info, err := os.Stat(dataDir); err == nil && info.IsDir() {
+					return dataDir
+				}
+				markerFile := filepath.Join(bundleParent, "portable.dat")
+				if _, err := os.Stat(markerFile); err == nil {
+					_ = os.MkdirAll(dataDir, 0o700)
+					return dataDir
+				}
+				break
+			}
+			cur = filepath.Dir(cur)
+		}
+	}
+
+	// 3. Executável padrão (Windows .exe, Linux binário direto, etc.)
 	dataDir := filepath.Join(exeDir, "data")
 	if info, err := os.Stat(dataDir); err == nil && info.IsDir() {
 		return dataDir

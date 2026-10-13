@@ -25,6 +25,7 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 | Lixeira e restauração | Implementado | Exclusão lógica com confirmação, persistência de Tombstones para o Sync (v1.6.0) e redirecionamento seguro para a pasta padrão. |
 | Importar Markdown/texto | Implementado | `.md`, `.markdown` e `.txt` compilados para nós nativos do TipTap (títulos, checklists, tabelas, código e formatações). |
 | Exportar Markdown/HTML/texto | Implementado | Exportação pelo editor com diálogo nativo de salvamento (v1.3.0). |
+| Versão Portable Multiverse | Implementado | Pacote universal (Windows, Linux AppImage e macOS .app) para pendrive com base SQLite e WebView isolados em `./data`. |
 | Impressão/PDF | Implementado | `window.print()` e CSS de impressão. |
 | Compliance & Autocura | Implementado | Diagnóstico `EnsureDataCompliance`, reparo de checklists, limpeza de conflitos orfãos e normalização no SQLite. |
 | Listas & Tarefas (v1.8.0) | Implementado (v1.8.0) | Módulo de produtividade com 4 níveis hierárquicos, entrada rápida (Quick-Add), filtros, prazos e busca. |
