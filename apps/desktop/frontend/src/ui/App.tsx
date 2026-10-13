@@ -1695,53 +1695,55 @@ export function App() {
             </div>
           )}
         </>
-
-        <button className={`nav-item trash-item ${view === "deleted" ? "selected" : ""}`} onClick={() => selectQuery({ kind: "deleted" })}>
-          <span><Trash2 aria-hidden="true" /><span className="nav-item-title">Apagadas recentemente</span></span>
-          <small>{deletedNotes.length}</small>
-        </button>
         </div>
-        <footer>
-          <div
-            className={`footer-status ${syncing ? "syncing" : ""} ${syncConfiguration.configured ? "connected" : "local"}`}
-            onClick={() => setSettingsOpen(true)}
-            style={{ cursor: "pointer" }}
-            title={
-              syncing
-                ? "Sincronizando com a nuvem..."
-                : syncConfiguration.configured
-                ? syncConfiguration.autoSyncIntervalMinutes > 0 && nextSyncCountdown
-                  ? `Nuvem Ativa — Próxima sincronização automática em ${nextSyncCountdown}`
-                  : "Nuvem Ativa — clique para ver configurações"
-                : "Armazenamento local — clique para conectar nuvem"
-            }
-          >
-            <div className="footer-cloud-wrapper">
-              <Cloud
-                className={`footer-cloud-icon ${syncing ? "syncing-cloud" : syncConfiguration.configured ? "active-cloud" : "local-cloud"}`}
-                aria-hidden="true"
-              />
-              <span className={`sync-dot ${syncing ? "pulse-dot" : syncConfiguration.configured ? "cloud-active" : ""}`} />
-            </div>
-            <span className="footer-status-text">
-              {syncing ? "Sincronizando..." : syncConfiguration.configured ? "Nuvem Ativa" : "Armazenamento local"}
-            </span>
-            {syncConfiguration.configured && syncConfiguration.autoSyncIntervalMinutes > 0 && !syncing && nextSyncCountdown && (
-              <span className="footer-sync-countdown" title={`Próxima sincronização automática em ${nextSyncCountdown}`}>
-                {nextSyncCountdown}
-              </span>
-            )}
-          </div>
-          <button
-            type="button"
-            className="icon-button settings-btn"
-            onClick={() => setSettingsOpen(true)}
-            title="Preferências & Configurações"
-            aria-label="Preferências"
-          >
-            <Settings aria-hidden="true" />
+
+        <div className="sidebar-footer-group">
+          <button className={`nav-item trash-item ${view === "deleted" ? "selected" : ""}`} onClick={() => selectQuery({ kind: "deleted" })} title="Apagadas recentemente">
+            <span><Trash2 aria-hidden="true" /><span className="nav-item-title">Apagadas recentemente</span></span>
+            <small>{deletedNotes.length}</small>
           </button>
-        </footer>
+          <footer>
+            <div
+              className={`footer-status ${syncing ? "syncing" : ""} ${syncConfiguration.configured ? "connected" : "local"}`}
+              onClick={() => setSettingsOpen(true)}
+              style={{ cursor: "pointer" }}
+              title={
+                syncing
+                  ? "Sincronizando com a nuvem..."
+                  : syncConfiguration.configured
+                  ? syncConfiguration.autoSyncIntervalMinutes > 0 && nextSyncCountdown
+                    ? `Nuvem Ativa — Próxima sincronização automática em ${nextSyncCountdown}`
+                    : "Nuvem Ativa — clique para ver configurações"
+                  : "Armazenamento local — clique para conectar nuvem"
+              }
+            >
+              <div className="footer-cloud-wrapper">
+                <Cloud
+                  className={`footer-cloud-icon ${syncing ? "syncing-cloud" : syncConfiguration.configured ? "active-cloud" : "local-cloud"}`}
+                  aria-hidden="true"
+                />
+                <span className={`sync-dot ${syncing ? "pulse-dot" : syncConfiguration.configured ? "cloud-active" : ""}`} />
+              </div>
+              <span className="footer-status-text">
+                {syncing ? "Sincronizando..." : syncConfiguration.configured ? "Nuvem Ativa" : "Armazenamento local"}
+              </span>
+              {syncConfiguration.configured && syncConfiguration.autoSyncIntervalMinutes > 0 && !syncing && nextSyncCountdown && (
+                <span className="footer-sync-countdown" title={`Próxima sincronização automática em ${nextSyncCountdown}`}>
+                  {nextSyncCountdown}
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              className="icon-button settings-btn"
+              onClick={() => setSettingsOpen(true)}
+              title="Preferências & Configurações"
+              aria-label="Preferências"
+            >
+              <Settings aria-hidden="true" />
+            </button>
+          </footer>
+        </div>
       </aside>
 
       {view === "stickers" ? (

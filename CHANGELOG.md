@@ -13,6 +13,33 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
   - **Fixar no Topo (Always-on-Top):** Botão dedicado na barra de título da janela de foco para mantê-la flutuando sobre qualquer outro programa ou reprodutor de vídeo.
   - **Card de Estado na Janela Principal:** Espaço do editor na aplicação principal exibe aviso amigável de *Modo Foco Ativado* com botão de retorno em um clique (*Retornar edição para esta janela*).
   - **Atalhos e Controles de Janela:** Suporte a arrasto nativo da barra de título, controles de janela (minimizar, restaurar/maximizar, fechar), atalho `Esc` para retornar ao app e `Ctrl+S` para forçar salvamento.
+- **Versão Portable Multiverse (Universal Cross-Platform):**
+  - **Pacote Universal para Pendrive:** Um único arquivo ZIP (`Magnetares-Notes-Multiverse-Portable.zip`) contendo os executáveis para Windows (`.exe`), Linux (`.AppImage`) e macOS (`.app`) compartilhando uma única pasta `./data/magnetares.db`.
+  - **Resolução de Caminhos Agnóstica:** Detecção automática de ambiente em tempo de execução:
+    - Linux AppImage: leitura de `$APPIMAGE` para gravação na unidade onde o arquivo foi executado.
+    - macOS: travessia de bundle (`Contents/MacOS/`) para localização da pasta `data/` na raiz do dispositivo.
+    - Windows: isolamento de cache do WebView2 (`./data/webview`) para operação limpa sem resíduos na máquina hospedeira.
+  - **Automação no Release:** Geração e empacotamento automático do pacote Multiverse via GitHub Actions com manual `LEIA-ME-MULTIVERSE.txt` e permissões de execução preservadas.
+
+### Changed
+
+- **UX da Barra Lateral & Lixeira Fixa:**
+  - Desacoplamento do botão **"Apagadas recentemente"** da área de rolagem interna (`.sidebar-content`).
+  - Posicionamento fixo na base da barra lateral (`.sidebar-footer-group`), ancorado logo acima do status da nuvem e preferências, facilitando o scroll contínuo e a expansão de dezenas de etiquetas.
+- **Padronização e Conformidade de Nomenclatura (Monorepo):**
+  - Módulos Go atualizados para refletir o monorepo canônico no GitHub: `github.com/vitorkrewer/magnetares-notes/apps/desktop` e `github.com/vitorkrewer/magnetares-notes/apps/api`.
+  - Manifesto frontend renomeado para `"magnetares-notes-frontend"`.
+  - Limpeza de binários locais compilados em `apps/api` e adição de documentação arquitetural e de segurança com `apps/api/README.md`.
+- **Simetria no Exportador Markdown:**
+  - Suporte completo a todos os níveis de cabeçalho (`h1` a `h6`), blocos de código com linguagem, tachado (`~~`), destaques (`==`), código inline e links no `exportToMarkdown`.
+
+### Fixed
+
+- **Compilação e Importação Rica de Markdown (`.md`, `.markdown`, `.txt`):**
+  - Correção na importação de notas: anteriormente arquivos Markdown eram injetados como parágrafos de texto puro sem interpretação de sintaxe.
+  - Integração do pipeline `marked` + TipTap `generateJSON` via `editorExtensions.ts`, compilando títulos, listas, checklists nativas (`taskList`/`taskItem`), tabelas (`table`), blocos de código e marcas inline (`**negrito**`, `*itálico*`, `==destaque==`, `~~tachado~~`).
+  - Extração inteligente de título (suporte a frontmatter YAML e `# Título` no topo sem duplicação no corpo).
+  - Normalização automática de `bodyText` para indexação de busca e reconexão com contadores e badges de checklist no SQLite (`checklistTotal` e `checklistOpen`).
 
 ## [v1.8.0] - 2026-10-12
 
