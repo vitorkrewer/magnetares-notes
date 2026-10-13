@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"os"
@@ -415,6 +416,11 @@ func (a *App) ExportNoteFile(defaultFilename, content string) (string, error) {
 			{DisplayName: "Arquivo de Texto (*.txt)", Pattern: "*.txt"},
 			{DisplayName: "Todos os Arquivos (*.*)", Pattern: "*.*"},
 		}
+	case ".docx":
+		filters = []runtime.FileFilter{
+			{DisplayName: "Documento Word ABNT (*.docx)", Pattern: "*.docx"},
+			{DisplayName: "Todos os Arquivos (*.*)", Pattern: "*.*"},
+		}
 	default:
 		if ext != "" {
 			filters = []runtime.FileFilter{
@@ -441,7 +447,18 @@ func (a *App) ExportNoteFile(defaultFilename, content string) (string, error) {
 		return "", nil
 	}
 
-	if err := os.WriteFile(selectedPath, []byte(content), 0644); err != nil {
+	var dataToWrite []byte
+	if strings.HasPrefix(content, "base64:") {
+		decoded, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(content, "base64:"))
+		if err != nil {
+			return "", fmt.Errorf("decodificar conteúdo binário base64: %w", err)
+		}
+		dataToWrite = decoded
+	} else {
+		dataToWrite = []byte(content)
+	}
+
+	if err := os.WriteFile(selectedPath, dataToWrite, 0644); err != nil {
 		return "", fmt.Errorf("salvar arquivo exportado: %w", err)
 	}
 

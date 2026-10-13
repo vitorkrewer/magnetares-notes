@@ -54,6 +54,8 @@ O frontend fica em `apps/desktop/frontend` e é construído por Vite/React.
 - `CalloutNode.tsx`: nó estruturado de destaques acadêmicos com 5 categorias semânticas (Teoremas, Experimentos, Alertas Clínicos, Exemplos, Notas).
 - `ToggleNode.tsx`: nó expansível de estudo ativo (*active recall*) com suporte a KaTeX no título, botão de revelação e auto-teste.
 - `MermaidNode.tsx`: nó de diagramas gráficos offline com motor Mermaid.js, chips de templates (fluxogramas, ciclos bioquímicos, circuitos, sequência, estados, ER) e zoom SVG interativo.
+- `abntExport.ts`: motor de exportação de artigos científicos em Microsoft Word (`.docx`) em conformidade estrita com as normas da ABNT (NBR 14724, NBR 6024, NBR 10520, NBR 6023 e IBGE), gerando arquivos 100% em memória local.
+- `exportUtils.ts`: utilitários de exportação para Markdown, HTML, texto puro e download de blobs binários.
 - `SettingsDialog.tsx`: tema, dados locais, perfil e nuvem.
 - `SyncProfilePanel.tsx`: gerenciador de partições e perfis remotos de sincronização.
 - `types.ts`: contrato TypeScript da bridge Wails.

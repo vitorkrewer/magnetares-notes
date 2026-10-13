@@ -29,6 +29,7 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 | Lixeira e restauração | Implementado | Exclusão lógica com confirmação, persistência de Tombstones para o Sync (v1.6.0) e redirecionamento seguro para a pasta padrão. |
 | Importar Markdown/texto | Implementado | `.md`, `.markdown` e `.txt` compilados para nós nativos do TipTap (títulos, checklists, tabelas, código e formatações). |
 | Exportar Markdown/HTML/texto | Implementado | Exportação pelo editor com diálogo nativo de salvamento (v1.3.0). |
+| Exportar Artigo ABNT (.docx) | Implementado (v1.9.0) | Exportação de artigos acadêmicos normatizados (NBR 14724 / 6024 / 10520 / 6023) com margens 3-3-2-2 cm, Arial 12pt/10pt, 1,5 linha, recuo 1,25 cm, citações longas 4 cm, tabelas e fórmulas centralizadas. |
 | Versão Portable Multiverse | Implementado | Pacote universal (Windows, Linux AppImage e macOS .app) para pendrive com base SQLite e WebView isolados em `./data`. |
 | Impressão/PDF | Implementado (v1.9.0) | Regras completas `@media print` com prevenção de quebras órfãs (fórmulas KaTeX, diagramas Mermaid, callouts, toggles, tabelas), normalização de tema escuro, repetição de `thead`, paginação de código e nomeação nativa do PDF. |
 | Compliance & Autocura | Implementado | Diagnóstico `EnsureDataCompliance`, reparo de checklists, limpeza de conflitos orfãos e normalização no SQLite. |

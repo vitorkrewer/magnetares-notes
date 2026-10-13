@@ -11,7 +11,8 @@ import { StickerBoardView } from "./StickerBoardView";
 import { TaskListDialog, TASK_LIST_PALETTE, getTaskListIconComponent } from "./TaskListDialog";
 import { TaskListView } from "./TaskListView";
 import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord, TaskListRecord } from "./types";
-import { downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
+import { downloadBlob, downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
+import { exportToAbntDocxBase64, exportToAbntDocxBlob } from "./abntExport";
 
 type SaveState = "saved" | "saving" | "error";
 type LibraryView = "notes" | "deleted" | "stickers" | "tasks";
@@ -478,12 +479,13 @@ export function App() {
     }, 1500);
   };
 
-  const handleExport = async (format: "md" | "html" | "txt" | "code") => {
+  const handleExport = async (format: "md" | "html" | "txt" | "code" | "docx") => {
     if (!active) return;
     const cleanTitle = active.title.replace(/[\\/:*?"<>|]/g, "_").trim() || "Nota";
     let filename = "";
     let content = "";
     let mimeType = "";
+    let isDocx = false;
 
     if (active.type === "code" || format === "code") {
       let ext = ".txt";
@@ -504,6 +506,12 @@ export function App() {
       filename = `${cleanTitle}${ext}`;
       content = active.body;
       mimeType = "text/plain";
+    } else if (format === "docx") {
+      isDocx = true;
+      filename = `${cleanTitle} (ABNT).docx`;
+      mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      const base64Doc = await exportToAbntDocxBase64(active.title, active.body);
+      content = `base64:${base64Doc}`;
     } else if (format === "md") {
       filename = `${cleanTitle}.md`;
       content = exportToMarkdown(active.title, active.body, active.bodyText);
@@ -540,7 +548,12 @@ export function App() {
         setTimeout(() => setSyncNotification(null), 7000);
       }
     } else {
-      downloadFile(filename, content, mimeType);
+      if (isDocx) {
+        const blob = await exportToAbntDocxBlob(active.title, active.body);
+        downloadBlob(filename, blob);
+      } else {
+        downloadFile(filename, content, mimeType);
+      }
     }
   };
 
@@ -1901,6 +1914,9 @@ export function App() {
                             <button type="button" onClick={() => handleExport("code")}><FileCode aria-hidden="true" /> Exportar Código</button>
                           ) : (
                             <>
+                              <button type="button" onClick={() => handleExport("docx")} title="Exportar artigo formatado no padrão normativo ABNT (NBR 14724 / NBR 6022)">
+                                <FileText aria-hidden="true" /> Artigo ABNT (.docx)
+                              </button>
                               <button type="button" onClick={() => handleExport("md")}><FileCode aria-hidden="true" /> Markdown (.md)</button>
                               <button type="button" onClick={() => handleExport("html")}><Globe aria-hidden="true" /> HTML (.html)</button>
                             </>

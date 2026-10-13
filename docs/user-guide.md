@@ -165,6 +165,15 @@ No editor, abra o botão de download e escolha:
 - **Markdown:** estrutura legível em `.md`.
 - **HTML:** arquivo independente com estilos básicos.
 - **Texto:** título e texto extraído em `.txt`.
+- **Artigo ABNT (.docx):** gera documento formatado no padrão da ABNT para Word/Docs:
+  - Margens normatizadas: superior 3 cm, esquerda 3 cm, inferior 2 cm e direita 2 cm (NBR 14724).
+  - Fonte Arial 12 pt no corpo, espaçamento 1,5 linha e recuo de primeira linha de 1,25 cm.
+  - Título principal centralizado em caixa alta e negrito (14 pt); seções e subtítulos numerados sequencialmente (NBR 6024).
+  - Citações longas diretas (mais de 3 linhas) com recuo de 4 cm à esquerda, fonte 10 pt, entrelinhas simples e sem aspas (NBR 10520).
+  - Numeração automática de páginas no canto superior direito a 2 cm da borda.
+  - Tabelas acadêmicas no padrão IBGE/ABNT (bordas horizontais topo/base, sem bordas verticais externas, texto 10 pt, título no topo e indicação de fonte na base).
+  - Fórmulas matemáticas e diagramas com centralização e legendas numeradas.
+  - Seção final de Referências Bibliográficas com alinhamento justificado à esquerda e espaçamento simples (NBR 6023).
 
 ### Imprimir & Exportar para PDF
 

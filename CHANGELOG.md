@@ -6,6 +6,18 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ### Added
 
+- **Exportação de Artigos Acadêmicos no Padrão ABNT (.docx):**
+  - **Emissão 100% Offline e Local-First:** Geração direta de documentos Microsoft Word (`.docx`) em memória sem dependência de internet ou processamento externo na nuvem.
+  - **Margens Oficiais ABNT (NBR 14724):** Superior 3 cm, Esquerda 3 cm, Inferior 2 cm e Direita 2 cm.
+  - **Tipografia e Espaçamento Normatizados:** Fonte Arial tamanho 12 pt no corpo do texto, espaçamento entre linhas de 1,5 linha e recuo de primeira linha de 1,25 cm nos parágrafos.
+  - **Título e Seções Numeradas (NBR 6024):** Título principal do artigo centralizado em 14 pt negrito maiúsculo; seções e subseções primárias, secundárias e terciárias numeradas com diferenciação tipográfica normativa.
+  - **Citações Longas Diretas (NBR 10520):** Citações textuais com mais de 3 linhas destacadas com recuo de 4 cm à esquerda, fonte tamanho 10 pt, espaçamento simples e sem aspas.
+  - **Tabelas Acadêmicas Normatizadas (IBGE / ABNT):** Bordas horizontais superior e inferior nítidas, sem bordas verticais externas, texto em 10 pt, numeração consecutiva com título acima ("Tabela X") e indicação de fonte abaixo ("Fonte: ...").
+  - **Fórmulas e Diagramas Técnicos:** Centralização de fórmulas matemáticas e diagramas Mermaid estruturados com identificação de figura e autoria.
+  - **Caixas Semânticas (Callouts):** Conversão limpa de teoremas, experimentos e notas com recuo e borda lateral estilizada no Word.
+  - **Seção de Referências Bibliográficas (NBR 6023):** Alinhamento justificado à esquerda, espaçamento simples entre linhas e espaçamento entre referências individuais.
+  - **Integração Discreta na Barra de Ferramentas:** Nova opção discreta **Artigo ABNT (.docx)** adicionada ao menu dropdown de exportação, acionando o diálogo nativo do sistema operacional (`bridge.ExportNoteFile`) com suporte a download em navegadores.
+
 - **Modo Foco em Janela Independente (Multi-Window / Picture-in-Picture):**
   - **Janela de SO Independente:** Permite destacar qualquer nota em uma segunda janela nativa e independente do sistema operacional, perfeita para posicionar lado a lado com reprodutores de vídeo, aulas online ou em múltiplos monitores.
   - **Acesso Contínuo ao Magnetares:** A aplicação principal continua 100% aberta e navegável, permitindo ao usuário consultar listas de tarefas, checklists, stickers, pastas e outras anotações enquanto redige na janela destacada.
