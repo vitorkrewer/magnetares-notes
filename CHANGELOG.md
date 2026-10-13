@@ -13,6 +13,7 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
   - **Fixar no Topo (Always-on-Top):** Botão dedicado na barra de título da janela de foco para mantê-la flutuando sobre qualquer outro programa ou reprodutor de vídeo.
   - **Card de Estado na Janela Principal:** Espaço do editor na aplicação principal exibe aviso amigável de *Modo Foco Ativado* com botão de retorno em um clique (*Retornar edição para esta janela*).
   - **Atalhos e Controles de Janela:** Suporte a arrasto nativo da barra de título, controles de janela (minimizar, restaurar/maximizar, fechar), atalho `Esc` para retornar ao app e `Ctrl+S` para forçar salvamento.
+  
 - **Versão Portable Multiverse (Universal Cross-Platform):**
   - **Pacote Universal para Pendrive:** Um único arquivo ZIP (`Magnetares-Notes-Multiverse-Portable.zip`) contendo os executáveis para Windows (`.exe`), Linux (`.AppImage`) e macOS (`.app`) compartilhando uma única pasta `./data/magnetares.db`.
   - **Resolução de Caminhos Agnóstica:** Detecção automática de ambiente em tempo de execução:
