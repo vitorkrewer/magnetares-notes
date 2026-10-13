@@ -1,4 +1,4 @@
-module github.com/your-org/aster-notes-desktop
+module github.com/vitorkrewer/magnetares-notes/apps/desktop
 
 go 1.25.0
 
