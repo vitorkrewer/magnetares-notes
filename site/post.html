@@ -114,6 +114,16 @@
       border-radius: 8px;
     }
 
+    .markdown-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      margin: 24px 0;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+      display: block;
+    }
+
     @media (max-width: 768px) {
       .post-container {
         padding: 0 16px;
@@ -358,6 +368,9 @@
 
         const markdown = await response.text();
         let html = marked.parse(markdown);
+
+        // Normaliza caminhos de imagens relativas à pasta posts/
+        html = html.replace(/<img([^>]+)src=["'](?:\.\/)?images\//gi, '<img$1src="posts/images/');
 
         // Insere o autor e a data logo abaixo do primeiro h1
         const metaHtml = `<div style="color: #94a3b8; margin-bottom: 32px; font-weight: 500;">Por Vitor Krewer${dateStr ? ' • ' + dateStr : ''}</div>`;
