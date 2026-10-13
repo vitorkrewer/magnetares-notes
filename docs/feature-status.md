@@ -14,9 +14,10 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 | Blocos de código | Implementado | Lowlight com seleção de linguagem e syntax highlighting. |
 | Listas e citações | Implementado | Listas com marcador/numeradas e blockquote. |
 | Checklists | Implementado | Estado visual, contagem de itens e regras inteligentes. |
-| Tabelas | Implementado | Inserção, redimensionamento, exclusão de linhas/colunas e tabela inteira. |
+| Tabelas | Implementado | Inserção, redimensionamento, exclusão de linhas/colunas, tabela inteira e conversão inteligente de planilhas/CSV colados. |
 | Cálculos | Implementado | Nó inline com expressão e resultado; parser restringe identificadores. |
-| Fórmulas Matemáticas (LaTeX / KaTeX) | Implementado (v1.9.0) | Renderização KaTeX offline (inline e bloco), live preview, teclado de símbolos para Engenharia/Exatas e import/export Markdown e HTML. |
+| Fórmulas Matemáticas & Químicas (KaTeX + `mhchem`) | Implementado (v1.9.0) | Renderização KaTeX offline (inline e bloco), live preview, teclado de símbolos para Engenharia/Exatas, reações químicas `\ce{...}` e import/export Markdown e HTML. |
+| Destaques Acadêmicos (*Callouts*) | Implementado (v1.9.0) | Nó TipTap com 5 categorias semânticas (Notas, Teoremas, Experimentos, Alertas Clínicos e Exemplos), seletor de tipo integrado e compatibilidade GFM Markdown. |
 | Pastas e subpastas | Implementado | Criação e edição completa de pastas e subpastas com cores HSL e 8 ícones personalizáveis, suporte a pastas legadas. |
 | Notas fixadas | Implementado | Pin e ordenação no topo. |
 | Etiquetas | Implementado | CRUD, ícones, chips, associação persistida e layout responsivo para tags extensas. |

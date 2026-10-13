@@ -38,6 +38,24 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
     - Exportação HTML estática com KaTeX pré-renderizado de alta fidelidade e estilos embutidos para visualização em qualquer navegador.
   - **Design System Adaptável:** Suporte completo com contraste balanceado para os temas Claro e Escuro (`[data-theme="dark"]`).
 
+- **Química e Bioquímica com Notação `mhchem`:**
+  - Suporte nativo ao motor `mhchem` no KaTeX com a macro `\ce{...}` para fórmulas químicas, reações estequiométricas, cargas iônicas, equilíbrios ($\rightleftharpoons$), decaimento radioativo e reações bioquímicas.
+  - Nova aba **Química & Bio** no modal de fórmulas com modelos prontos para estudantes de Farmácia, Química, Medicina e Bioquímica (Tampão bicarbonato sanguíneo, Respiração celular / Glicose, Pilha galvânica / Redox, etc.).
+
+- **Caixas de Destaque Semânticas (*Callouts* Acadêmicos):**
+  - Novo nó TipTap estruturado `CalloutNode` com 5 categorias acadêmicas predefinidas com ícones e bordas temáticas:
+    - 💡 **Nota / Informação:** apontamentos gerais e ideias de estudo.
+    - 📐 **Teorema / Definição:** definições formais, leis e corolários (Matemática e Física).
+    - 🔬 **Experimento / Laboratório:** ensaios de bancada, métodos e dados empíricos.
+    - ⚠️ **Atenção / Alerta Clínico:** contraindicações, alertas médicos/farmacológicos e cuidados críticos.
+    - ⚡ **Exemplo Prático:** exercícios resolvidos e aplicações práticas.
+  - Dropdown dinâmico integrado no cabeçalho do callout para alternar de categoria com 1 clique e botão de remoção discreto.
+  - Suporte completo no ecossistema Markdown no padrão GFM/Obsidian (`> [!NOTE]`, `> [!THEOREM]`, `> [!EXPERIMENT]`, `> [!WARNING]`, etc.) e na exportação HTML.
+
+- **Colar Inteligente de Planilhas e CSV para Tabelas:**
+  - Conversão automática ao colar dados copiados do Microsoft Excel, Google Sheets ou arquivos `.csv`/`.tsv` separados por tabulação (`\t`).
+  - Transforma instantaneamente dados brutos de medição de laboratório em tabelas estruturadas nativas do TipTap com cabeçalhos e linhas formatadas.
+
 ### Changed
 
 - **UX da Barra Lateral & Lixeira Fixa:**

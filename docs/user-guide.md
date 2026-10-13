@@ -36,9 +36,10 @@ A barra do editor oferece:
 - Citações.
 - Hyperlinks: selecione um texto, use o botão de link e informe uma URL `http://` ou `https://`; o mesmo controle edita ou remove o link.
 - Bloco de código com highlight: ative o bloco e escolha a linguagem na toolbar. Linguagens comuns incluem JavaScript, TypeScript, Go, Python, JSON, HTML, CSS e Markdown.
-- Tabelas com cabeçalho; dentro de uma tabela surgem controles para adicionar/excluir linha, adicionar/excluir coluna ou remover a tabela inteira.
+- Tabelas com cabeçalho; dentro de uma tabela surgem controles para adicionar/excluir linha, adicionar/excluir coluna ou remover a tabela inteira. **Dica:** cole dados copiados diretamente do Excel, Google Sheets ou arquivos CSV/TSV para convertê-los automaticamente em tabelas formatadas.
 - Cálculos aritméticos: use o botão de calculadora, informe uma expressão matemática simples e insira o resultado; dê duplo clique no chip para editar.
-- **Fórmulas matemáticas com LaTeX (KaTeX):** clique no botão $\Sigma$ da barra de ferramentas ou selecione uma expressão para convertê-la. Oferece suporte a fórmulas em linha (`$latex$`) e blocos centralizados (`$$latex$$`), live preview instantâneo, teclado com atalhos de símbolos para cursos de Engenharia e Ciências Exatas (frações, raízes, integrais, somatórios, derivadas, matrizes e alfabeto grego), 100% offline e com suporte completo a exportação e importação Markdown.
+- **Fórmulas matemáticas e químicas com LaTeX (KaTeX + `mhchem`):** clique no botão $\Sigma$ da barra de ferramentas ou selecione uma expressão para convertê-la. Oferece suporte a fórmulas em linha (`$latex$`) e blocos centralizados (`$$latex$$`), live preview instantâneo, teclado com atalhos de símbolos para cursos de Engenharia e Ciências Exatas (frações, raízes, integrais, derivadas, matrizes, alfabeto grego) e aba de **Química & Bio** (`\ce{...}` para reações estequiométricas, tampão sanguíneo, íons e decaimentos), 100% offline e com suporte a exportação/importação Markdown.
+- **Destaques Acadêmicos (*Callouts*):** use o botão com ícone de marcador na toolbar para inserir caixas com bordas temáticas e ícones destacados para **Notas**, **Teoremas/Definições**, **Experimentos de Laboratório**, **Alertas Clínicos/Avisos** e **Exemplos Práticos**, com seletor de tipo integrado e compatibilidade com Markdown (`> [!NOTE]`, etc.).
 
 O editor persiste um documento estruturado Tiptap no banco local e gera `bodyText` para busca e prévias.
 

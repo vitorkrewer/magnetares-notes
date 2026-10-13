@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { EditorContent, useEditor, type Editor, type JSONContent } from "@tiptap/react";
-import { Bold, Calculator, Code2, Columns3, Highlighter, Italic, Link2, List as BulletList, ListChecks, ListOrdered, Quote, Redo2, Rows3, Table2, Trash2, Undo2, Unlink, AlignLeft, AlignCenter, AlignRight, AlignJustify, Palette, Space, Sigma } from "lucide-react";
+import { Bold, Calculator, Code2, Columns3, Highlighter, Italic, Link2, List as BulletList, ListChecks, ListOrdered, Quote, Redo2, Rows3, Table2, Trash2, Undo2, Unlink, AlignLeft, AlignCenter, AlignRight, AlignJustify, Palette, Space, Sigma, BookmarkCheck } from "lucide-react";
 import { calculateExpression } from "./CalculationNode";
 import { MATH_SNIPPETS, renderKaTeXToString } from "./MathNodes";
 import { editorExtensions } from "./editorExtensions";
@@ -273,6 +273,7 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
       <ToolButton label="Lista numerada" active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}><ListOrdered aria-hidden="true" /></ToolButton>
       <ToolButton label="Checklist" active={editor.isActive("taskList")} onClick={() => editor.chain().focus().toggleTaskList().run()}><ListChecks aria-hidden="true" /></ToolButton>
       <ToolButton label="Citação" active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()}><Quote aria-hidden="true" /></ToolButton>
+      <ToolButton label="Destaque acadêmico (Teorema, Experimento, Alerta)" active={editor.isActive("callout")} onClick={() => editor.chain().focus().insertContent({ type: "callout", attrs: { type: "info" }, content: [{ type: "paragraph", content: [{ type: "text", text: "Escreva aqui sua observação, teorema ou anotação acadêmica..." }] }] }).run()}><BookmarkCheck aria-hidden="true" /></ToolButton>
       <span className="toolbar-separator" />
       <ToolButton label="Inserir cálculo" active={editor.isActive("calculation") || calculationOpen} onClick={() => setCalculationOpen((open) => !open)}><Calculator aria-hidden="true" /></ToolButton>
       <ToolButton label="Fórmula matemática (LaTeX)" active={editor.isActive("mathInline") || editor.isActive("mathBlock") || mathOpen} onClick={openMathEditor}><Sigma aria-hidden="true" /></ToolButton>
@@ -316,6 +317,13 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
               onClick={() => setMathSnippetTab("calculus")}
             >
               Cálculo
+            </button>
+            <button
+              type="button"
+              className={`math-tab-btn ${mathSnippetTab === "chemistry" ? "active" : ""}`}
+              onClick={() => setMathSnippetTab("chemistry")}
+            >
+              Química
             </button>
             <button
               type="button"
@@ -422,6 +430,33 @@ export function StructuredEditor({ value, readOnly, onChange, onBlur }: Structur
     content: parseDocument(value),
     editable: !readOnly,
     immediatelyRender: false,
+    editorProps: {
+      handlePaste: (view, event) => {
+        const text = event.clipboardData?.getData("text/plain");
+        const html = event.clipboardData?.getData("text/html");
+        // Quando cola do Excel, Sheets ou TSV/CSV sem table HTML nativo
+        if (!html?.includes("<table") && text && text.includes("\t") && text.includes("\n")) {
+          const lines = text
+            .trim()
+            .split(/\r?\n/)
+            .map((line) => line.split("\t"));
+          if (lines.length >= 1 && lines[0].length >= 2) {
+            event.preventDefault();
+            const tableHtml = `<table>${lines
+              .map((row, rIdx) => {
+                const tag = rIdx === 0 ? "th" : "td";
+                return `<tr>${row.map((cell) => `<${tag}><p>${cell.trim() || ""}</p></${tag}>`).join("")}</tr>`;
+              })
+              .join("")}</table>`;
+            // @ts-ignore
+            view.props.dispatchTransaction(view.state.tr);
+            editor?.commands.insertContent(tableHtml);
+            return true;
+          }
+        }
+        return false;
+      }
+    },
     onUpdate: ({ editor: currentEditor }) => {
       onChangeRef.current(
         JSON.stringify(currentEditor.getJSON()),

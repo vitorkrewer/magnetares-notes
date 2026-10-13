@@ -43,7 +43,7 @@ flowchart LR
 
 | Área | Disponível hoje |
 | --- | --- |
-| **Editor** | Títulos, fórmulas matemáticas (LaTeX com KaTeX offline), cores customizáveis, alinhamento, espaçamento entre linhas, negrito, itálico, destaque, listas, citações, checklists, tabelas, cálculos inline, hyperlinks e blocos de código. |
+| **Editor** | Títulos, fórmulas matemáticas e químicas (LaTeX KaTeX + mhchem offline), destaques acadêmicos (Callouts), cores customizáveis, alinhamento, espaçamento entre linhas, negrito, itálico, destaque, listas, citações, checklists, tabelas com colagem direta do Excel/Sheets, cálculos inline, hyperlinks e blocos de código. |
 | **Code Snippets** | Notas de código independentes com motor Monaco Editor (o mesmo do VS Code). Syntax highlighting avançado, dropdown com diversas linguagens, Color Badges elegantes na interface, e botão de cópia com 1 clique. |
 | **Stickers** | Mural full-width de notas autoadesivas (post-its) organizado por quadros dedicados, 8 cores pastel (temas claro/escuro), fixação no topo, busca instantânea e reordenação por Drag & Drop (no mural e entre quadros na barra lateral). |
 | **Listas & Tarefas** | Módulo nativo de produtividade pessoal: hierarquia em 4 níveis (Listas ➔ Tarefas ➔ Subtarefas ➔ Múltiplas Notas contextuais), prioridades visuais semânticas (🔥 Alta, ⚠️ Média, ⬇️ Baixa, ➖ Nenhuma), barra de adição rápida (Quick-Add), arquivamento de listas com modo consulta e sincronização em tempo real (Turso LWW). |
@@ -65,14 +65,22 @@ A partir da versão **1.8.0**, o Magnetares Notes integra um módulo de gestão 
 - **Arquivamento inteligente (Soft-Delete):** arquive listas sazonais ou concluídas para manter a barra lateral despoluída, com seção expansível *Arquivadas* em modo consulta e desarquivamento em 1 clique.
 - **Modais nativos centralizados:** confirmações elegantes integradas ao tema, substituindo completamente caixas de alerta técnicas do navegador.
 
-### Fórmulas Matemáticas (LaTeX com KaTeX)
+### Suíte Acadêmica & Científica (v1.9.0)
 
-A partir da versão **1.9.0**, o editor conta com suporte completo para anotações acadêmicas e de engenharia:
-- **Renderização Local-First e 100% Offline:** fontes matemáticas e motor KaTeX embutidos no aplicativo, sem qualquer requisição de rede ou CDN externa.
-- **Fórmulas em Linha e em Bloco:** digite `$expressao$` no meio de um parágrafo ou use `$$expressao$$` para blocos em destaque centralizados.
-- **Teclado de Símbolos & Templates:** atalhos visuais categorizados em *Básico*, *Cálculo & Física*, *Letras Gregas* e *Modelos de Engenharia* (frações, integrais, somatórios, derivadas parciais, matrizes, etc.).
-- **Live Preview & Validação:** pré-visualização instantânea da renderização da fórmula com detecção amigável de sintaxe.
-- **Exportação e Importação:** preservação total em Markdown (`$...$` e `$$...$$`) e exportação HTML estática com alta fidelidade visual.
+A partir da versão **1.9.0**, o Magnetares Notes ganha recursos completos para estudantes de Exatas, Biológicas, Saúde e Engenharias:
+- **Fórmulas Matemáticas & Químicas (KaTeX + `mhchem`):**
+  - Renderização local-first 100% offline (fontes e motor KaTeX no binário).
+  - Suporte duplo para equações em linha (`$expressao$`) e blocos centralizados (`$$expressao$$`).
+  - Sintaxe química com macro `\ce{...}` para equações estequiométricas, dissociações iônicas, tampões e decaimentos.
+  - Teclado visual com atalhos categorizados em *Básico*, *Cálculo & Física*, *Química & Bio*, *Letras Gregas* e *Modelos de Engenharia*.
+  - Live preview instantâneo e validação amigável de sintaxe.
+- **Caixas de Destaque Semânticas (*Callouts*):**
+  - Blocos estruturados com 5 categorias: 💡 *Notas/Ideias*, 📐 *Teoremas/Definições*, 🔬 *Experimentos/Laboratório*, ⚠️ *Alertas Clínicos/Avisos* e ⚡ *Exemplos Práticos*.
+  - Dropdown dinâmico para alternar de categoria com 1 clique e preservação em Markdown (`> [!NOTE]`, etc.).
+- **Colar Inteligente de Planilhas e CSV em Tabelas:**
+  - Cole dados copiados do Excel, Google Sheets ou arquivos CSV/TSV e veja-os convertidos instantaneamente em tabelas TipTap formatadas com cabeçalhos.
+- **Exportação e Importação Fiel:**
+  - Preservação total em Markdown (`$...$`, `$$...$$`, callouts GFM) e exportação HTML com renderização KaTeX estática de alta performance.
 
 ### Stickers (Notas Autoadesivas)
 

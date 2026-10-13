@@ -3,6 +3,7 @@ import { mergeAttributes, Node } from "@tiptap/core";
 import { NodeViewWrapper, ReactNodeViewRenderer, type NodeViewProps } from "@tiptap/react";
 import { Check, X, Trash2, Edit3, Sparkles } from "lucide-react";
 import katex from "katex";
+import "katex/contrib/mhchem";
 
 // Simbolos matematicos e formulas pre-definidas para engenharia e ciencias exatas
 export const MATH_SNIPPETS = {
@@ -31,6 +32,16 @@ export const MATH_SNIPPETS = {
     { label: "lim", latex: "\\lim_{x \\to 0} f(x)", desc: "Limite" },
     { label: "v⃗", latex: "\\vec{v}", desc: "Vetor" },
     { label: "∇", latex: "\\nabla f", desc: "Gradiente" },
+  ],
+  chemistry: [
+    { label: "H₂O", latex: "\\ce{H2O}", desc: "Água" },
+    { label: "Glicose", latex: "\\ce{C6H12O6 + 6O2 -> 6CO2 + 6H2O}", desc: "Respiração celular / Glicose" },
+    { label: "Tampão Sangue", latex: "\\ce{CO2 + H2O <=> H2CO3 <=> H+ + HCO3-}", desc: "Tampão bicarbonato sanguíneo" },
+    { label: "Dissociação", latex: "\\ce{H2SO4 -> 2H+ + SO4^2-}", desc: "Ácido sulfúrico" },
+    { label: "Reação Iônica", latex: "\\ce{Ca^{2+} + 2Cl- -> CaCl2}", desc: "Cálcio e cloreto" },
+    { label: "Equilíbrio", latex: "\\ce{N2 + 3H2 <=> 2NH3}", desc: "Síntese de Haber-Bosch" },
+    { label: "Redox", latex: "\\ce{Zn + Cu^{2+} -> Zn^{2+} + Cu}", desc: "Pilha galvânica / Redox" },
+    { label: "Decaimento", latex: "\\ce{^{238}_{92}U -> ^{234}_{90}Th + ^{4}_{2}\\alpha}", desc: "Decaimento alfa nuclear" },
   ],
   greek: [
     { label: "α", latex: "\\alpha", desc: "Alfa" },
@@ -164,6 +175,13 @@ export function MathEditModal({ initialLatex, isBlock, onSave, onCancel, onDelet
           onClick={() => setActiveTab("calculus")}
         >
           Cálculo & Física
+        </button>
+        <button
+          type="button"
+          className={`math-tab-btn ${activeTab === "chemistry" ? "active" : ""}`}
+          onClick={() => setActiveTab("chemistry")}
+        >
+          Química & Bio
         </button>
         <button
           type="button"

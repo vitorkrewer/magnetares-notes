@@ -50,7 +50,8 @@ O frontend fica em `apps/desktop/frontend` e é construído por Vite/React.
 - `StickerBoardView.tsx`: mural full-width de notas adesivas com reordenação drag & drop e edição inline.
 - `StickerBoardDialog.tsx`: diálogo de criação e edição de quadros de stickers com paleta de cores.
 - `CalculationNode.tsx`: nó inline de cálculo matemático aritmético.
-- `MathNodes.tsx`: nós inline e em bloco de fórmulas matemáticas (LaTeX via KaTeX offline, teclado de símbolos para Engenharia e live preview).
+- `MathNodes.tsx`: nós inline e em bloco de fórmulas matemáticas e químicas (LaTeX via KaTeX + mhchem offline, teclado de símbolos para Engenharia e live preview).
+- `CalloutNode.tsx`: nó estruturado de destaques acadêmicos com 5 categorias semânticas (Teoremas, Experimentos, Alertas Clínicos, Exemplos, Notas).
 - `SettingsDialog.tsx`: tema, dados locais, perfil e nuvem.
 - `SyncProfilePanel.tsx`: gerenciador de partições e perfis remotos de sincronização.
 - `types.ts`: contrato TypeScript da bridge Wails.

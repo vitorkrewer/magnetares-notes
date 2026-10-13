@@ -1,6 +1,7 @@
 import { generateJSON, type JSONContent } from "@tiptap/react";
 import { marked } from "marked";
 import katex from "katex";
+import "katex/contrib/mhchem";
 import { editorExtensions } from "./editorExtensions";
 
 export function downloadFile(filename: string, content: string, mimeType: string) {
@@ -80,6 +81,17 @@ function nodeToMarkdown(node: JSONContent): string {
 
     case "mathBlock":
       return `$$\n${node.attrs?.latex || ""}\n$$`;
+
+    case "callout": {
+      const type = (node.attrs?.type || "info").toUpperCase();
+      const content = (node.content || [])
+        .map(nodeToMarkdown)
+        .join("\n")
+        .split("\n")
+        .map((l) => `> ${l}`)
+        .join("\n");
+      return `> [!${type}]\n${content}`;
+    }
 
     case "table": {
       const rows = node.content || [];
@@ -226,6 +238,12 @@ function jsonToHTML(node: JSONContent): string {
       return `<div class="math-block" data-latex="${encodeURIComponent(latex)}">${mathHtml}</div>`;
     }
 
+    case "callout": {
+      const type = node.attrs?.type || "info";
+      const inner = (node.content || []).map(jsonToHTML).join("");
+      return `<div class="academic-callout callout-${type}" data-callout="" data-callout-type="${type}"><div class="callout-content">${inner}</div></div>`;
+    }
+
     case "table": {
       const rows = (node.content || []).map((row, idx) => {
         const tag = idx === 0 ? "th" : "td";
@@ -344,6 +362,23 @@ function preprocessMarkdown(markdown: string): string {
       text = text.replace(/(^|[^\\])\$([^\$\r\n]+?)\$/g, (_m, prefix, latex) => {
         const clean = latex.trim().replace(/"/g, "&quot;");
         return `${prefix}<span data-math-inline="" data-latex="${clean}"></span>`;
+      });
+
+      // Convert callouts > [!TYPE]
+      text = text.replace(/>\s*\[!(NOTE|INFO|TIP|THEOREM|EXPERIMENT|WARNING|CAUTION|EXAMPLE)\]\s*\r?\n((?:>.*(?:\r?\n|$))*)/gi, (_m, rawType, rawBody) => {
+        let type = "info";
+        const upper = rawType.toUpperCase();
+        if (upper === "THEOREM" || upper === "DEF") type = "theorem";
+        else if (upper === "EXPERIMENT" || upper === "LAB") type = "experiment";
+        else if (upper === "WARNING" || upper === "CAUTION") type = "warning";
+        else if (upper === "EXAMPLE" || upper === "TIP") type = "example";
+
+        const cleanBody = rawBody
+          .split(/\r?\n/)
+          .map((l: string) => l.replace(/^>\s?/, "").trim())
+          .filter(Boolean)
+          .join("<br>");
+        return `\n\n<div data-callout="" data-callout-type="${type}"><p>${cleanBody}</p></div>\n\n`;
       });
 
       // Convert highlight ==...==

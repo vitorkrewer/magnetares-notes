@@ -340,7 +340,7 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-/* Barra de rolagem discreta estilo macOS */
+/* Barra de rolagem discreta */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
@@ -3690,6 +3690,219 @@ textarea:focus-visible {
   background: #2a2924;
   color: #f0bd3b;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Academic Callouts (Theorems, Experiments, Clinical Warnings, Examples, Info) */
+.academic-callout {
+  margin: 16px 0;
+  border-radius: 6px;
+  border-left: 4px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.06);
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.academic-callout.selected {
+  box-shadow: 0 0 0 2px rgba(209, 154, 19, 0.25);
+}
+
+.academic-callout.callout-info {
+  border-left-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.academic-callout.callout-theorem {
+  border-left-color: #d97706;
+  background: rgba(217, 119, 6, 0.07);
+}
+
+.academic-callout.callout-experiment {
+  border-left-color: #10b981;
+  background: rgba(16, 185, 129, 0.07);
+}
+
+.academic-callout.callout-warning {
+  border-left-color: #ef4444;
+  background: rgba(239, 68, 68, 0.07);
+}
+
+.academic-callout.callout-example {
+  border-left-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.07);
+}
+
+[data-theme="dark"] .academic-callout.callout-info {
+  background: rgba(59, 130, 246, 0.12);
+  border-left-color: #60a5fa;
+}
+
+[data-theme="dark"] .academic-callout.callout-theorem {
+  background: rgba(217, 119, 6, 0.13);
+  border-left-color: #f59e0b;
+}
+
+[data-theme="dark"] .academic-callout.callout-experiment {
+  background: rgba(16, 185, 129, 0.12);
+  border-left-color: #34d399;
+}
+
+[data-theme="dark"] .academic-callout.callout-warning {
+  background: rgba(239, 68, 68, 0.13);
+  border-left-color: #f87171;
+}
+
+[data-theme="dark"] .academic-callout.callout-example {
+  background: rgba(139, 92, 246, 0.13);
+  border-left-color: #a78bfa;
+}
+
+.callout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 4px 12px;
+  user-select: none;
+}
+
+.callout-type-badge-container {
+  position: relative;
+  display: inline-block;
+}
+
+.callout-type-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+[data-theme="dark"] .callout-type-btn {
+  background: rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.callout-type-btn:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .callout-type-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.callout-icon {
+  flex-shrink: 0;
+}
+
+.callout-info .callout-icon { color: #2563eb; }
+.callout-theorem .callout-icon { color: #d97706; }
+.callout-experiment .callout-icon { color: #059669; }
+.callout-warning .callout-icon { color: #dc2626; }
+.callout-example .callout-icon { color: #7c3aed; }
+
+[data-theme="dark"] .callout-info .callout-icon { color: #60a5fa; }
+[data-theme="dark"] .callout-theorem .callout-icon { color: #fbbf24; }
+[data-theme="dark"] .callout-experiment .callout-icon { color: #34d399; }
+[data-theme="dark"] .callout-warning .callout-icon { color: #f87171; }
+[data-theme="dark"] .callout-example .callout-icon { color: #c084fc; }
+
+.callout-label {
+  letter-spacing: 0.2px;
+}
+
+.callout-chevron {
+  opacity: 0.6;
+}
+
+.callout-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: var(--paper, #fff);
+  border: 1px solid #ddd9ce;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  z-index: 100;
+  min-width: 190px;
+}
+
+[data-theme="dark"] .callout-dropdown-menu {
+  background: #252420;
+  border-color: #3d3b33;
+}
+
+.callout-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  background: transparent;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.callout-dropdown-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .callout-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.callout-dropdown-item.active {
+  background: rgba(209, 154, 19, 0.12);
+  font-weight: 600;
+}
+
+.callout-delete-btn {
+  border: none;
+  background: transparent;
+  color: #9c978b;
+  cursor: pointer;
+  padding: 3px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.academic-callout:hover .callout-delete-btn {
+  opacity: 0.7;
+}
+
+.callout-delete-btn:hover {
+  opacity: 1 !important;
+  color: #ef4444;
+}
+
+.callout-content {
+  padding: 2px 14px 10px 14px;
+}
+
+.callout-editable-area {
+  outline: none;
+}
+
+.callout-editable-area > *:first-child {
+  margin-top: 0;
+}
+
+.callout-editable-area > *:last-child {
+  margin-bottom: 0;
 }
 
 .structured-editor .is-editor-empty:first-child::before {
