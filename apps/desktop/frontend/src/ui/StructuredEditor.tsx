@@ -1,23 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import Highlight from "@tiptap/extension-highlight";
-import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
-import Link from "@tiptap/extension-link";
-import Placeholder from "@tiptap/extension-placeholder";
-import { Table } from "@tiptap/extension-table";
-import TableCell from "@tiptap/extension-table-cell";
-import TableHeader from "@tiptap/extension-table-header";
-import TableRow from "@tiptap/extension-table-row";
-import TaskItem from "@tiptap/extension-task-item";
-import TaskList from "@tiptap/extension-task-list";
 import { EditorContent, useEditor, type Editor, type JSONContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import TextAlign from "@tiptap/extension-text-align";
-import { TextStyle } from "@tiptap/extension-text-style";
-import { Color } from "@tiptap/extension-color";
-import { LineHeight } from "./LineHeightExtension";
-import { common, createLowlight } from "lowlight";
 import { Bold, Calculator, Code2, Columns3, Highlighter, Italic, Link2, List as BulletList, ListChecks, ListOrdered, Quote, Redo2, Rows3, Table2, Trash2, Undo2, Unlink, AlignLeft, AlignCenter, AlignRight, AlignJustify, Palette, Space } from "lucide-react";
-import { calculateExpression, CalculationNode } from "./CalculationNode";
+import { calculateExpression } from "./CalculationNode";
+import { editorExtensions } from "./editorExtensions";
 
 const PRESET_COLORS = [
   "#000000", "#434343", "#666666", "#999999", "#b7b7b7", "#cccccc", "#d9d9d9", "#efefef", "#f3f3f3", "#ffffff",
@@ -38,25 +23,6 @@ type ToolButtonProps = {
   onClick: () => void;
   children: ReactNode;
 };
-
-const extensions = [
-  StarterKit.configure({ codeBlock: false }),
-  CodeBlockLowlight.configure({ lowlight: createLowlight(common), defaultLanguage: "plaintext" }),
-  Highlight,
-  Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
-  Table.configure({ resizable: true }),
-  TableRow,
-  TableHeader,
-  TableCell,
-  TaskList,
-  TaskItem.configure({ nested: true }),
-  CalculationNode,
-  Placeholder.configure({ placeholder: "Comece a escrever" }),
-  TextAlign.configure({ types: ["heading", "paragraph"] }),
-  TextStyle,
-  Color,
-  LineHeight
-];
 
 const codeLanguages = [
   { id: "plaintext", label: "Texto simples" },
@@ -294,7 +260,7 @@ export function StructuredEditor({ value, readOnly, onChange, onBlur }: Structur
   onChangeRef.current = onChange;
 
   const editor = useEditor({
-    extensions,
+    extensions: editorExtensions,
     content: parseDocument(value),
     editable: !readOnly,
     immediatelyRender: false,

@@ -23,7 +23,7 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 | Pastas Inteligentes | Implementado | Tag, período e checklist com atualização automática. |
 | Busca por texto local | Implementado | Título e `body_text`; não usa FTS/OCR. |
 | Lixeira e restauração | Implementado | Exclusão lógica com confirmação, persistência de Tombstones para o Sync (v1.6.0) e redirecionamento seguro para a pasta padrão. |
-| Importar Markdown/texto | Implementado | `.md`, `.markdown` e `.txt`. |
+| Importar Markdown/texto | Implementado | `.md`, `.markdown` e `.txt` compilados para nós nativos do TipTap (títulos, checklists, tabelas, código e formatações). |
 | Exportar Markdown/HTML/texto | Implementado | Exportação pelo editor com diálogo nativo de salvamento (v1.3.0). |
 | Impressão/PDF | Implementado | `window.print()` e CSS de impressão. |
 | Compliance & Autocura | Implementado | Diagnóstico `EnsureDataCompliance`, reparo de checklists, limpeza de conflitos orfãos e normalização no SQLite. |
