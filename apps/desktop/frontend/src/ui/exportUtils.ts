@@ -1,5 +1,6 @@
 import { generateJSON, type JSONContent } from "@tiptap/react";
 import { marked } from "marked";
+import katex from "katex";
 import { editorExtensions } from "./editorExtensions";
 
 export function downloadFile(filename: string, content: string, mimeType: string) {
@@ -77,6 +78,9 @@ function nodeToMarkdown(node: JSONContent): string {
     case "calculation":
       return `${node.attrs?.expression || ""} = ${node.attrs?.result || ""}`;
 
+    case "mathBlock":
+      return `$$\n${node.attrs?.latex || ""}\n$$`;
+
     case "table": {
       const rows = node.content || [];
       if (rows.length === 0) return "";
@@ -108,6 +112,9 @@ function nodeToMarkdown(node: JSONContent): string {
 function inlineToMarkdown(node: JSONContent): string {
   if (node.type === "calculation") {
     return `${node.attrs?.expression || ""} = ${node.attrs?.result || ""}`;
+  }
+  if (node.type === "mathInline") {
+    return `$${node.attrs?.latex || ""}$`;
   }
 
   let text = node.text || "";
@@ -142,6 +149,7 @@ export function exportToHTML(title: string, body: string, bodyText?: string): st
 <head>
   <meta charset="UTF-8">
   <title>${cleanTitle}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 20px; color: #252522; line-height: 1.6; }
     h1 { font-size: 28px; margin-bottom: 24px; border-bottom: 1px solid #e0ded7; padding-bottom: 12px; }
@@ -156,6 +164,8 @@ export function exportToHTML(title: string, body: string, bodyText?: string): st
     pre { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 6px; overflow-x: auto; }
     code { font-family: monospace; }
     .calc { background: #f1efe7; border: 1px solid #ddd8c9; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #705000; }
+    .math-block { margin: 18px 0; text-align: center; overflow-x: auto; padding: 8px 0; }
+    .math-inline { display: inline-block; vertical-align: middle; margin: 0 2px; }
   </style>
 </head>
 <body>
@@ -208,7 +218,13 @@ function jsonToHTML(node: JSONContent): string {
       return `<blockquote>${(node.content || []).map(jsonToHTML).join("")}</blockquote>`;
 
     case "calculation":
-      return `<span class="calc">${node.attrs?.expression || ""} = ${node.attrs?.result || ""}`;
+      return `<span class="calc">${node.attrs?.expression || ""} = ${node.attrs?.result || ""}</span>`;
+
+    case "mathBlock": {
+      const latex = node.attrs?.latex || "";
+      const mathHtml = katex.renderToString(latex, { displayMode: true, throwOnError: false });
+      return `<div class="math-block" data-latex="${encodeURIComponent(latex)}">${mathHtml}</div>`;
+    }
 
     case "table": {
       const rows = (node.content || []).map((row, idx) => {
@@ -230,6 +246,11 @@ function jsonToHTML(node: JSONContent): string {
 function inlineToHTML(node: JSONContent): string {
   if (node.type === "calculation") {
     return `<span class="calc">${node.attrs?.expression || ""} = ${node.attrs?.result || ""}</span>`;
+  }
+  if (node.type === "mathInline") {
+    const latex = node.attrs?.latex || "";
+    const mathHtml = katex.renderToString(latex, { displayMode: false, throwOnError: false });
+    return `<span class="math-inline" data-latex="${encodeURIComponent(latex)}">${mathHtml}</span>`;
   }
 
   let text = node.text || "";
@@ -253,6 +274,12 @@ export function tiptapJsonToPlainText(node: JSONContent): string {
   if (node.text) return node.text;
   if (node.type === "calculation") {
     return `${node.attrs?.expression || ""} = ${node.attrs?.result || ""}`;
+  }
+  if (node.type === "mathBlock") {
+    return `$$${node.attrs?.latex || ""}$$`;
+  }
+  if (node.type === "mathInline") {
+    return `$${node.attrs?.latex || ""}$`;
   }
   if (!node.content || !Array.isArray(node.content)) return "";
 
@@ -299,14 +326,28 @@ export function tiptapJsonToPlainText(node: JSONContent): string {
 }
 
 function preprocessMarkdown(markdown: string): string {
-  // Convert ==highlight== to <mark>highlight</mark>, skipping code blocks and inline code
+  // Convert ==highlight==, display math $$...$$ and inline math $...$, skipping code blocks and inline code
   const parts = markdown.split(/(```[\s\S]*?```|`[^`\r\n]+`)/g);
   return parts
     .map((part) => {
       if (part.startsWith("`")) {
         return part;
       }
-      return part.replace(/==([^=\r\n]+)==/g, "<mark>$1</mark>");
+
+      // Convert display math $$...$$
+      let text = part.replace(/\$\$([\s\S]*?)\$\$/g, (_m, latex) => {
+        const clean = latex.trim().replace(/"/g, "&quot;");
+        return `\n\n<div data-math-block="" data-latex="${clean}"></div>\n\n`;
+      });
+
+      // Convert inline math $...$
+      text = text.replace(/(^|[^\\])\$([^\$\r\n]+?)\$/g, (_m, prefix, latex) => {
+        const clean = latex.trim().replace(/"/g, "&quot;");
+        return `${prefix}<span data-math-inline="" data-latex="${clean}"></span>`;
+      });
+
+      // Convert highlight ==...==
+      return text.replace(/==([^=\r\n]+)==/g, "<mark>$1</mark>");
     })
     .join("");
 }

@@ -15,6 +15,7 @@ import { Color } from "@tiptap/extension-color";
 import { LineHeight } from "./LineHeightExtension";
 import { common, createLowlight } from "lowlight";
 import { CalculationNode } from "./CalculationNode";
+import { MathInlineNode, MathBlockNode } from "./MathNodes";
 
 export const editorExtensions = [
   StarterKit.configure({ codeBlock: false }),
@@ -28,6 +29,8 @@ export const editorExtensions = [
   TaskList,
   TaskItem.configure({ nested: true }),
   CalculationNode,
+  MathInlineNode,
+  MathBlockNode,
   Placeholder.configure({ placeholder: "Comece a escrever" }),
   TextAlign.configure({ types: ["heading", "paragraph"] }),
   TextStyle,

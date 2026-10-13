@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { EditorContent, useEditor, type Editor, type JSONContent } from "@tiptap/react";
-import { Bold, Calculator, Code2, Columns3, Highlighter, Italic, Link2, List as BulletList, ListChecks, ListOrdered, Quote, Redo2, Rows3, Table2, Trash2, Undo2, Unlink, AlignLeft, AlignCenter, AlignRight, AlignJustify, Palette, Space } from "lucide-react";
+import { Bold, Calculator, Code2, Columns3, Highlighter, Italic, Link2, List as BulletList, ListChecks, ListOrdered, Quote, Redo2, Rows3, Table2, Trash2, Undo2, Unlink, AlignLeft, AlignCenter, AlignRight, AlignJustify, Palette, Space, Sigma } from "lucide-react";
 import { calculateExpression } from "./CalculationNode";
+import { MATH_SNIPPETS, renderKaTeXToString } from "./MathNodes";
 import { editorExtensions } from "./editorExtensions";
 
 const PRESET_COLORS = [
@@ -71,6 +72,11 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
   const [calculationOpen, setCalculationOpen] = useState(false);
   const [calculationExpression, setCalculationExpression] = useState("");
   const [calculationError, setCalculationError] = useState("");
+  const [mathOpen, setMathOpen] = useState(false);
+  const [mathLatex, setMathLatex] = useState("");
+  const [mathIsBlock, setMathIsBlock] = useState(false);
+  const [mathSnippetTab, setMathSnippetTab] = useState<keyof typeof MATH_SNIPPETS>("basic");
+  const mathInputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkURL, setLinkURL] = useState("");
   const [linkError, setLinkError] = useState("");
@@ -105,6 +111,53 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
     } catch (calculationIssue) {
       setCalculationError(calculationIssue instanceof Error ? calculationIssue.message : "Expressão inválida.");
     }
+  };
+
+  const insertMath = (event: FormEvent) => {
+    event.preventDefault();
+    const cleanLatex = mathLatex.trim();
+    if (!cleanLatex) {
+      setMathOpen(false);
+      return;
+    }
+    if (mathIsBlock) {
+      editor.chain().focus().insertContent({ type: "mathBlock", attrs: { latex: cleanLatex } }).run();
+    } else {
+      editor.chain().focus().insertContent([
+        { type: "mathInline", attrs: { latex: cleanLatex } },
+        { type: "text", text: " " }
+      ]).run();
+    }
+    setMathLatex("");
+    setMathOpen(false);
+  };
+
+  const openMathEditor = () => {
+    const { from, to } = editor.state.selection;
+    const selectedText = editor.state.doc.textBetween(from, to, " ");
+    setMathLatex(selectedText || "");
+    setMathOpen((open) => !open);
+    setCalculationOpen(false);
+    setLinkOpen(false);
+    setColorOpen(false);
+    setLineHeightOpen(false);
+  };
+
+  const insertToolbarMathSnippet = (snippet: string) => {
+    const input = mathInputRef.current;
+    if (!input) {
+      setMathLatex((prev) => (prev ? prev + " " + snippet : snippet));
+      return;
+    }
+    const start = input.selectionStart ?? mathLatex.length;
+    const end = input.selectionEnd ?? mathLatex.length;
+    const nextVal = mathLatex.slice(0, start) + snippet + mathLatex.slice(end);
+    setMathLatex(nextVal);
+    setTimeout(() => {
+      input.focus();
+      const pos = start + snippet.length;
+      input.setSelectionRange(pos, pos);
+    }, 10);
   };
 
   const submitLink = (event: FormEvent) => {
@@ -222,6 +275,7 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
       <ToolButton label="Citação" active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()}><Quote aria-hidden="true" /></ToolButton>
       <span className="toolbar-separator" />
       <ToolButton label="Inserir cálculo" active={editor.isActive("calculation") || calculationOpen} onClick={() => setCalculationOpen((open) => !open)}><Calculator aria-hidden="true" /></ToolButton>
+      <ToolButton label="Fórmula matemática (LaTeX)" active={editor.isActive("mathInline") || editor.isActive("mathBlock") || mathOpen} onClick={openMathEditor}><Sigma aria-hidden="true" /></ToolButton>
       <ToolButton label="Inserir tabela" active={insideTable} onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}><Table2 aria-hidden="true" /></ToolButton>
       {insideTable && <ToolButton label="Adicionar linha" onClick={() => editor.chain().focus().addRowAfter().run()}><Rows3 aria-hidden="true" /></ToolButton>}
       {insideTable && <ToolButton label="Adicionar coluna" onClick={() => editor.chain().focus().addColumnAfter().run()}><Columns3 aria-hidden="true" /></ToolButton>}
@@ -229,6 +283,110 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
       {insideTable && <ToolButton label="Excluir coluna" onClick={() => editor.chain().focus().deleteColumn().run()}><Trash2 aria-hidden="true" /></ToolButton>}
       {insideTable && <ToolButton label="Excluir tabela" onClick={() => editor.chain().focus().deleteTable().run()}><Trash2 aria-hidden="true" /></ToolButton>}
       </div>
+      {mathOpen && (
+        <form className="calculation-popover math-toolbar-popover" onSubmit={insertMath}>
+          <div className="math-popover-mode-switch">
+            <button
+              type="button"
+              className={`mode-btn ${!mathIsBlock ? "active" : ""}`}
+              onClick={() => setMathIsBlock(false)}
+            >
+              Em Linha ($...$)
+            </button>
+            <button
+              type="button"
+              className={`mode-btn ${mathIsBlock ? "active" : ""}`}
+              onClick={() => setMathIsBlock(true)}
+            >
+              Bloco ($$...$$)
+            </button>
+          </div>
+
+          <div className="math-snippet-tabs compact">
+            <button
+              type="button"
+              className={`math-tab-btn ${mathSnippetTab === "basic" ? "active" : ""}`}
+              onClick={() => setMathSnippetTab("basic")}
+            >
+              Básico
+            </button>
+            <button
+              type="button"
+              className={`math-tab-btn ${mathSnippetTab === "calculus" ? "active" : ""}`}
+              onClick={() => setMathSnippetTab("calculus")}
+            >
+              Cálculo
+            </button>
+            <button
+              type="button"
+              className={`math-tab-btn ${mathSnippetTab === "greek" ? "active" : ""}`}
+              onClick={() => setMathSnippetTab("greek")}
+            >
+              Grego
+            </button>
+            <button
+              type="button"
+              className={`math-tab-btn ${mathSnippetTab === "engineering" ? "active" : ""}`}
+              onClick={() => setMathSnippetTab("engineering")}
+            >
+              Engenharia
+            </button>
+          </div>
+
+          <div className="math-snippets-grid compact">
+            {MATH_SNIPPETS[mathSnippetTab].map((s) => (
+              <button
+                key={s.label}
+                type="button"
+                className="math-snippet-chip"
+                onClick={() => insertToolbarMathSnippet(s.latex)}
+                title={`${s.desc} (${s.latex})`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+
+          <label htmlFor="math-toolbar-latex">Código LaTeX:</label>
+          {mathIsBlock ? (
+            <textarea
+              id="math-toolbar-latex"
+              ref={mathInputRef as React.RefObject<HTMLTextAreaElement>}
+              autoFocus
+              rows={2}
+              value={mathLatex}
+              onChange={(e) => setMathLatex(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) insertMath(e);
+                else if (e.key === "Escape") setMathOpen(false);
+              }}
+              placeholder="Ex.: \int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}"
+            />
+          ) : (
+            <input
+              id="math-toolbar-latex"
+              ref={mathInputRef as React.RefObject<HTMLInputElement>}
+              autoFocus
+              value={mathLatex}
+              onChange={(e) => setMathLatex(e.target.value)}
+              onKeyDown={(e) => e.key === "Escape" && setMathOpen(false)}
+              placeholder="Ex.: \frac{a}{b} ou \sqrt{x}"
+            />
+          )}
+
+          <div className="math-preview-container compact">
+            <div
+              className={`math-preview-render ${mathIsBlock ? "block-mode" : "inline-mode"}`}
+              dangerouslySetInnerHTML={{ __html: renderKaTeXToString(mathLatex, mathIsBlock).html }}
+            />
+          </div>
+
+          <div className="calculation-popover-actions">
+            <button type="button" onClick={() => setMathOpen(false)}>Cancelar</button>
+            <button type="submit">Inserir Fórmula</button>
+          </div>
+        </form>
+      )}
       {calculationOpen && (
         <form className="calculation-popover" onSubmit={insertCalculation}>
           <label htmlFor="calculation-expression">Expressão matemática</label>

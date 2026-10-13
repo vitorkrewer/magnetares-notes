@@ -22,6 +22,22 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
     - Windows: isolamento de cache do WebView2 (`./data/webview`) para operação limpa sem resíduos na máquina hospedeira.
   - **Automação no Release:** Geração e empacotamento automático do pacote Multiverse via GitHub Actions com manual `LEIA-ME-MULTIVERSE.txt` e permissões de execução preservadas.
 
+- **Fórmulas Matemáticas com LaTeX (KaTeX Local-First para Engenharia e Exatas):**
+  - **Suporte Duplo (Inline & Bloco):** Renderização de fórmulas em linha (`$latex$`) perfeitas para anotações teóricas e fórmulas em bloco centralizado (`$$latex$$`) ideais para deduções, equações de estado e matrizes.
+  - **100% Offline e Local-First:** Integração nativa com a biblioteca KaTeX e empacotamento completo de todas as fontes matemáticas vetoriais (`KaTeX_Main`, `KaTeX_Math`, `KaTeX_AMS`, etc.) no binário pelo Vite, eliminando qualquer dependência de internet ou chamadas externas a CDNs.
+  - **Editor Interativo com Live Preview:** Modal de edição instantânea com renderização visual da fórmula em tempo real e detecção de erros de sintaxe com alertas amigáveis.
+  - **Teclado Visual de Símbolos de Engenharia:** Painel de chips de inserção rápida categorizado em 4 conjuntos práticos:
+    - *Básico:* frações `\frac{a}{b}`, raízes $\sqrt{x}$, $\sqrt[n]{x}$, expoentes $x^2$, índices $x_i$, $\pm$, $\times$, $\approx$, $\le$, $\ge$, $\infty$.
+    - *Cálculo & Física:* integrais definidas $\int_a^b$, integrais duplas $\iint$, somatórios $\sum$, produtórios $\prod$, derivadas parciais $\frac{\partial f}{\partial x}$, limites $\lim$, vetores $\vec{v}$, gradiente $\nabla$.
+    - *Letras Gregas:* alfabeto grego completo para física e engenharias ($\alpha$, $\beta$, $\gamma$, $\Delta$, $\theta$, $\lambda$, $\mu$, $\pi$, $\rho$, $\sigma$, $\tau$, $\omega$, $\Omega$).
+    - *Modelos de Engenharia:* templates prontos para Bhaskara, Lei de Ohm, Potência Elétrica, Matrizes $2 \times 2$ e $3 \times 3$, Lei de Gauss e $E = m c^2$.
+  - **Integração na Barra de Ferramentas:** Botão com ícone $\Sigma$ (*Fórmula matemática*) com suporte a conversão de seleção (selecionar texto na nota e clicar no botão preenche automaticamente a fórmula).
+  - **Suporte Bidirecional em Markdown e HTML:**
+    - Exportação Markdown preservando sintaxe padrão `$latex$` e `$$\nlatex\n$$`.
+    - Importação inteligente de Markdown compilando equações `$latex$` e `$$latex$$` diretamente para os nós ricos e editáveis do TipTap.
+    - Exportação HTML estática com KaTeX pré-renderizado de alta fidelidade e estilos embutidos para visualização em qualquer navegador.
+  - **Design System Adaptável:** Suporte completo com contraste balanceado para os temas Claro e Escuro (`[data-theme="dark"]`).
+
 ### Changed
 
 - **UX da Barra Lateral & Lixeira Fixa:**

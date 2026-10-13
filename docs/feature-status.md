@@ -16,6 +16,7 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 | Checklists | Implementado | Estado visual, contagem de itens e regras inteligentes. |
 | Tabelas | Implementado | Inserção, redimensionamento, exclusão de linhas/colunas e tabela inteira. |
 | Cálculos | Implementado | Nó inline com expressão e resultado; parser restringe identificadores. |
+| Fórmulas Matemáticas (LaTeX / KaTeX) | Implementado (v1.9.0) | Renderização KaTeX offline (inline e bloco), live preview, teclado de símbolos para Engenharia/Exatas e import/export Markdown e HTML. |
 | Pastas e subpastas | Implementado | Criação e edição completa de pastas e subpastas com cores HSL e 8 ícones personalizáveis, suporte a pastas legadas. |
 | Notas fixadas | Implementado | Pin e ordenação no topo. |
 | Etiquetas | Implementado | CRUD, ícones, chips, associação persistida e layout responsivo para tags extensas. |
