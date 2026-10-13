@@ -2750,52 +2750,394 @@ textarea:focus-visible {
   color: #1a1a17;
 }
 
-/* Regras de impressão (CSS @media print) */
+.code-print-view {
+  display: none;
+}
+
+/* ==========================================================================
+   Regras de Impressão e Exportação para PDF (@media print)
+   ========================================================================== */
+@page {
+  size: A4 portrait;
+  margin: 18mm 15mm 20mm 15mm;
+}
+
 @media print {
+  /* 1. Reset estrutural de layout e rolagem */
+  html,
   body {
-    background: #fff !important;
-    color: #000 !important;
+    background: #ffffff !important;
+    color: #111111 !important;
+    font-size: 11pt !important;
+    line-height: 1.5 !important;
+    height: auto !important;
+    min-height: 0 !important;
     overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
+  /* 2. Ocultar todos os elementos de interface de navegação, controles e barras */
   .titlebar,
   .sidebar,
   .note-list,
+  .editor-header,
   .editor-toolbar,
   .format-toolbar,
   .tag-chips-bar,
+  .note-location-row,
   .editor-actions,
-  footer,
+  .focus-mode-active-placeholder,
+  .stickers-header,
+  .stickers-nav-bar,
+  .task-list-header,
+  .tasks-inspector,
+  .color-popover,
+  .link-popover,
+  .calculation-popover,
+  .math-toolbar-popover,
   .organization-dialog,
-  .dialog-backdrop {
+  .dialog-backdrop,
+  .modal-overlay,
+  .status-footer,
+  footer {
     display: none !important;
   }
 
+  /* 3. Permitir fluxo contínuo de páginas sem corte no editor */
   .app-container,
   .shell,
   .editor,
-  .editor-page {
+  .editor-scroll-area,
+  .editor-page,
+  .structured-editor {
     display: block !important;
+    position: static !important;
+    float: none !important;
     height: auto !important;
+    min-height: 0 !important;
     max-width: 100% !important;
+    width: 100% !important;
     overflow: visible !important;
     padding: 0 !important;
     margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
   }
 
+  /* 4. Cabeçalho da Nota (Título e Data de Edição) */
   .edited-at {
+    display: block !important;
+    color: #666666 !important;
+    font-size: 9pt !important;
+    margin-bottom: 8pt !important;
     text-align: left !important;
-    margin-bottom: 12px !important;
   }
 
-  .title {
+  .title,
+  input.title {
+    display: block !important;
     font-size: 22pt !important;
-    margin-bottom: 12pt !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+    color: #000000 !important;
+    margin: 0 0 16pt 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    width: 100% !important;
+    box-shadow: none !important;
   }
 
-  .structured-editor .tiptap {
-    font-size: 12pt !important;
-    padding: 0 !important;
+  /* 5. Hierarquia Tipográfica e Evitar Quebras Órfãs */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    color: #000000 !important;
+  }
+
+  h1 { font-size: 18pt !important; margin-top: 16pt !important; margin-bottom: 8pt !important; }
+  h2 { font-size: 15pt !important; margin-top: 14pt !important; margin-bottom: 6pt !important; }
+  h3 { font-size: 13pt !important; margin-top: 12pt !important; margin-bottom: 4pt !important; }
+
+  p {
+    margin: 6pt 0 !important;
+    orphans: 3 !important;
+    widows: 3 !important;
+  }
+
+  /* Reset completo de tema escuro nos textos e seletores */
+  [data-theme="dark"] body,
+  [data-theme="dark"] .editor-page,
+  [data-theme="dark"] .structured-editor,
+  [data-theme="dark"] .structured-editor .tiptap,
+  [data-theme="dark"] .title,
+  [data-theme="dark"] h1,
+  [data-theme="dark"] h2,
+  [data-theme="dark"] h3,
+  [data-theme="dark"] p,
+  [data-theme="dark"] li,
+  [data-theme="dark"] span {
+    color: #111111 !important;
+    background-color: transparent !important;
+  }
+
+  /* 6. Fórmulas Matemáticas & Químicas KaTeX */
+  .math-block-wrapper,
+  .math-block {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin: 12pt 0 !important;
+    padding: 10pt !important;
+    border: 1px solid #d5d0c5 !important;
+    border-radius: 6px !important;
+    background: #faf9f6 !important;
+    text-align: center !important;
+  }
+
+  .math-block-actions,
+  .math-block-edit-btn,
+  .math-block-delete-btn,
+  .math-toolbar-popover {
+    display: none !important;
+  }
+
+  .katex-display {
+    margin: 4pt 0 !important;
+    overflow-x: visible !important;
+  }
+
+  .katex {
+    color: #000000 !important;
+    font-size: 1.05em !important;
+  }
+
+  /* 7. Diagramas Mermaid.js */
+  .mermaid-node-wrapper {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin: 14pt 0 !important;
+    border: 1px solid #d5d0c5 !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+  }
+
+  .mermaid-node-header,
+  .mermaid-editor-panel,
+  .mermaid-tool-btn,
+  .mermaid-zoom-controls,
+  .mermaid-delete-btn,
+  .mermaid-templates-bar,
+  .mermaid-error-bar,
+  .mermaid-error-box {
+    display: none !important;
+  }
+
+  .mermaid-preview-container {
+    display: flex !important;
+    padding: 10pt !important;
+    overflow: visible !important;
+    background: transparent !important;
+    cursor: default !important;
+  }
+
+  .mermaid-svg-wrapper {
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+
+  .mermaid-svg-wrapper svg {
+    max-width: 100% !important;
+    max-height: 220mm !important;
+    height: auto !important;
+    display: block !important;
+  }
+
+  .mermaid-caption-rendered {
+    color: #555555 !important;
+    font-size: 9.5pt !important;
+    font-style: italic !important;
+    margin-top: 6pt !important;
+    text-align: center !important;
+  }
+
+  /* 8. Blocos Expansíveis (Toggles de Estudo Ativo) */
+  .study-toggle-wrapper {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin: 12pt 0 !important;
+    border: 1px solid #d5d0c5 !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+  }
+
+  .study-toggle-header {
+    background: #f4f3ef !important;
+    border-bottom: 1px solid #ded9cd !important;
+    padding: 6pt 10pt !important;
+  }
+
+  .study-toggle-chevron-btn,
+  .study-toggle-actions,
+  .study-toggle-peek-btn,
+  .study-toggle-delete-btn {
+    display: none !important;
+  }
+
+  .study-toggle-title-rendered {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    font-size: 11pt !important;
+    cursor: default !important;
+  }
+
+  .study-toggle-help-icon {
+    display: none !important;
+  }
+
+  /* Sempre expande e imprime o conteúdo da resposta na impressão */
+  .study-toggle-body {
+    display: block !important;
+    padding: 8pt 10pt !important;
+    background: transparent !important;
+  }
+
+  /* 9. Destaques Acadêmicos (Callouts) */
+  .academic-callout {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin: 12pt 0 !important;
+    padding: 8pt 12pt !important;
+    border-radius: 6px !important;
+    border-left-width: 4px !important;
+    background: #faf9f6 !important;
+    color: #111111 !important;
+  }
+
+  .callout-chevron,
+  .callout-delete-btn,
+  .callout-dropdown-menu {
+    display: none !important;
+  }
+
+  .callout-header {
+    padding-bottom: 4pt !important;
+    font-weight: 700 !important;
+  }
+
+  /* 10. Tabelas */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 12pt 0 !important;
+    page-break-inside: auto !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  th,
+  td {
+    border: 1px solid #cccccc !important;
+    padding: 6pt 8pt !important;
+    font-size: 10pt !important;
+    color: #111111 !important;
+    background: #ffffff !important;
+  }
+
+  th {
+    background: #f2f1ed !important;
+    font-weight: 700 !important;
+  }
+
+  /* 11. Blocos de Código & Snippets */
+  pre {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    background: #f8f7f4 !important;
+    color: #111111 !important;
+    border: 1px solid #ded9cd !important;
+    border-radius: 6px !important;
+    padding: 10pt !important;
+    font-size: 9.5pt !important;
+    line-height: 1.45 !important;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+  }
+
+  .code-editor-wrapper {
+    display: none !important;
+  }
+
+  .code-print-view {
+    display: block !important;
+    page-break-inside: auto !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+    font-size: 9.5pt !important;
+    line-height: 1.45 !important;
+    background: #f8f7f4 !important;
+    color: #111111 !important;
+    border: 1px solid #ded9cd !important;
+    border-radius: 6px !important;
+    padding: 12pt !important;
+    margin-top: 10pt !important;
+  }
+
+  /* 12. Checklists */
+  ul[data-type="taskList"] {
+    list-style: none !important;
+    padding-left: 0 !important;
+  }
+
+  li[data-type="taskItem"] {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    margin: 3pt 0 !important;
+  }
+
+  li[data-type="taskItem"] input[type="checkbox"] {
+    margin-top: 3px !important;
+  }
+
+  /* 13. Cálculos Inline */
+  .calculation {
+    background: #f4f3ef !important;
+    border: 1px solid #ded9cd !important;
+    border-radius: 4px !important;
+    padding: 1px 5px !important;
+    color: #000000 !important;
+  }
+
+  .calculation-inline-form {
+    display: none !important;
+  }
+
+  /* 14. Remoção de placeholders vazios */
+  .structured-editor .is-editor-empty:first-child::before {
+    display: none !important;
   }
 }
 

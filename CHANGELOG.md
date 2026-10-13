@@ -90,6 +90,14 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 - **UX da Barra Lateral & Lixeira Fixa:**
   - Desacoplamento do botão **"Apagadas recentemente"** da área de rolagem interna (`.sidebar-content`).
   - Posicionamento fixo na base da barra lateral (`.sidebar-footer-group`), ancorado logo acima do status da nuvem e preferências, facilitando o scroll contínuo e a expansão de dezenas de etiquetas.
+- **Motor de Impressão e Exportação em PDF de Alta Fidelidade (@media print):**
+  - **Prevenção de Quebras Indesejadas de Página:** Adicionado `break-inside: avoid` e `page-break-inside: avoid` rigoroso para fórmulas matemáticas KaTeX em bloco (`$$...$$`), diagramas Mermaid.js vetoriais (SVG), blocos sanfonados de estudo ativo (Toggles), caixas de destaque semânticas (Callouts), linhas de tabelas (`tr`), blocos de código e itens de checklist.
+  - **Repetição Automática de Cabeçalhos de Tabelas:** O elemento `thead` agora utiliza `display: table-header-group !important`, repetindo os títulos das colunas automaticamente no topo de cada nova página em tabelas longas.
+  - **Adaptação Total do Modo Escuro:** Normalização forçada de cores e contrastes na impressão (`print-color-adjust: exact`), convertendo fundos escuros para fundos limpos e textos para preto puro (#111), eliminando problemas de textos invisíveis ao imprimir no tema escuro.
+  - **Revelação Inteligente de Toggles para Estudo:** Na impressão, todos os blocos sanfonados revelam automaticamente suas respostas e deduções, ocultando botões interativos (chevrons, botões de revelar/excluir) para gerar apostilas e resumos de estudo perfeitos.
+  - **Diagramas Mermaid Vetoriais Escalados:** Remoção de barras de ferramentas, botões de edição/zoom e formulários de código durante a impressão, mantendo apenas o diagrama SVG nítido em tamanho ajustado à página A4 e sua legenda.
+  - **Suporte a Múltiplas Páginas para Notas de Código:** Substituição da área fixa do Monaco Editor por visualizador paginado (`.code-print-view`), permitindo imprimir arquivos de código extensos sem cortes.
+  - **Nomeação Automática do Arquivo PDF:** O título da nota ativa é temporariamente associado ao documento antes de invocar `window.print()`, sugerindo o nome real da nota no diálogo nativo de salvamento em PDF.
 - **Padronização e Conformidade de Nomenclatura (Monorepo):**
   - Módulos Go atualizados para refletir o monorepo canônico no GitHub: `github.com/vitorkrewer/magnetares-notes/apps/desktop` e `github.com/vitorkrewer/magnetares-notes/apps/api`.
   - Manifesto frontend renomeado para `"magnetares-notes-frontend"`.

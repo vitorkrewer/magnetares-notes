@@ -463,7 +463,19 @@ export function App() {
   };
 
   const handlePrint = () => {
+    if (!active) return;
+    // Tenta desmarcar foco de inputs ou popovers ativos antes da impressão
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    const originalDocTitle = document.title;
+    if (active.title && active.title.trim()) {
+      document.title = active.title.trim();
+    }
     window.print();
+    setTimeout(() => {
+      document.title = originalDocTitle;
+    }, 1500);
   };
 
   const handleExport = async (format: "md" | "html" | "txt" | "code") => {

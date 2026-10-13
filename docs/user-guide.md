@@ -166,9 +166,16 @@ No editor, abra o botão de download e escolha:
 - **HTML:** arquivo independente com estilos básicos.
 - **Texto:** título e texto extraído em `.txt`.
 
-### Imprimir
+### Imprimir & Exportar para PDF
 
-Use o botão de impressora. O diálogo nativo do sistema é aberto; o CSS de impressão oculta a navegação, toolbars e controles para gerar um documento limpo ou PDF.
+Clique no botão de impressora na barra superior do editor (ou use `Ctrl+P`). O diálogo nativo do sistema operacional é acionado com motor de diagramação `@media print` de alta fidelidade:
+- **Prevenção de Quebras Órfãs:** Fórmulas matemáticas KaTeX (`$$...$$`), diagramas Mermaid.js, caixas de destaque (callouts), tabelas e itens de checklist não são fatiados no meio de quebras de página.
+- **Tabelas com Cabeçalho Contínuo:** Cabeçalhos de tabelas extensas repetem automaticamente no topo das páginas seguintes (`thead`).
+- **Resumos de Estudo & Toggles:** Blocos sanfonados de estudo ativo expandem automaticamente suas respostas e deduções, ocultando botões interativos para compor apostilas de revisão completas.
+- **Diagramas Vetoriais em SVG:** Diagramas Mermaid são escalados com proporção visual perfeita para o padrão A4/Letter com suas respectivas legendas.
+- **Notas de Código Paginadas:** Arquivos de código extensos utilizam visualizador paginado que flui por múltiplas páginas sem cortes.
+- **Sugestão Automática de Nome:** O nome do arquivo PDF sugerido no diálogo do sistema utiliza automaticamente o título real da nota.
+- **Compatibilidade com Tema Escuro:** Normaliza automaticamente fundos e contrastes para impressão preto no branco, prevenindo textos ilegíveis ao imprimir no modo escuro.
 
 ## Sincronização opcional
 

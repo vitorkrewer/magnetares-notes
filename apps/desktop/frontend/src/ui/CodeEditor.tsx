@@ -235,6 +235,10 @@ export function CodeEditor({ value, language, readOnly, title, onChange, onLangu
         />
       </div>
 
+      <pre className="code-print-view" aria-hidden="true">
+        <code>{value}</code>
+      </pre>
+
       <CodePreviewModal
         isOpen={previewOpen}
         onClose={() => setPreviewOpen(false)}

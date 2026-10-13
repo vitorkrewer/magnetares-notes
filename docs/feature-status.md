@@ -30,7 +30,7 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 | Importar Markdown/texto | Implementado | `.md`, `.markdown` e `.txt` compilados para nós nativos do TipTap (títulos, checklists, tabelas, código e formatações). |
 | Exportar Markdown/HTML/texto | Implementado | Exportação pelo editor com diálogo nativo de salvamento (v1.3.0). |
 | Versão Portable Multiverse | Implementado | Pacote universal (Windows, Linux AppImage e macOS .app) para pendrive com base SQLite e WebView isolados em `./data`. |
-| Impressão/PDF | Implementado | `window.print()` e CSS de impressão. |
+| Impressão/PDF | Implementado (v1.9.0) | Regras completas `@media print` com prevenção de quebras órfãs (fórmulas KaTeX, diagramas Mermaid, callouts, toggles, tabelas), normalização de tema escuro, repetição de `thead`, paginação de código e nomeação nativa do PDF. |
 | Compliance & Autocura | Implementado | Diagnóstico `EnsureDataCompliance`, reparo de checklists, limpeza de conflitos orfãos e normalização no SQLite. |
 | Listas & Tarefas (v1.8.0) | Implementado (v1.8.0) | Módulo de produtividade com 4 níveis hierárquicos, entrada rápida (Quick-Add), filtros, prazos e busca. |
 | Subtarefas & Checklists de Tarefas | Implementado (v1.8.0) | Criação, reordenação e conclusão de subtarefas por tarefa com barra de progresso visual. |
