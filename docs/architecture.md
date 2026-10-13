@@ -52,6 +52,7 @@ O frontend fica em `apps/desktop/frontend` e é construído por Vite/React.
 - `CalculationNode.tsx`: nó inline de cálculo matemático aritmético.
 - `MathNodes.tsx`: nós inline e em bloco de fórmulas matemáticas e químicas (LaTeX via KaTeX + mhchem offline, teclado de símbolos para Engenharia e live preview).
 - `CalloutNode.tsx`: nó estruturado de destaques acadêmicos com 5 categorias semânticas (Teoremas, Experimentos, Alertas Clínicos, Exemplos, Notas).
+- `ToggleNode.tsx`: nó expansível de estudo ativo (*active recall*) com suporte a KaTeX no título, botão de revelação e auto-teste.
 - `SettingsDialog.tsx`: tema, dados locais, perfil e nuvem.
 - `SyncProfilePanel.tsx`: gerenciador de partições e perfis remotos de sincronização.
 - `types.ts`: contrato TypeScript da bridge Wails.

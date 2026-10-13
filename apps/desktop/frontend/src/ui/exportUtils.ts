@@ -93,6 +93,12 @@ function nodeToMarkdown(node: JSONContent): string {
       return `> [!${type}]\n${content}`;
     }
 
+    case "toggle": {
+      const title = node.attrs?.title || "Pergunta / Tópico";
+      const inner = (node.content || []).map(nodeToMarkdown).join("\n\n");
+      return `<details>\n<summary>${title}</summary>\n\n${inner}\n</details>`;
+    }
+
     case "table": {
       const rows = node.content || [];
       if (rows.length === 0) return "";
@@ -244,6 +250,12 @@ function jsonToHTML(node: JSONContent): string {
       return `<div class="academic-callout callout-${type}" data-callout="" data-callout-type="${type}"><div class="callout-content">${inner}</div></div>`;
     }
 
+    case "toggle": {
+      const title = node.attrs?.title || "Pergunta / Tópico";
+      const inner = (node.content || []).map(jsonToHTML).join("");
+      return `<details class="study-toggle" ${node.attrs?.open ? "open" : ""} data-toggle="" data-title="${encodeURIComponent(title)}"><summary>${title}</summary><div class="study-toggle-content">${inner}</div></details>`;
+    }
+
     case "table": {
       const rows = (node.content || []).map((row, idx) => {
         const tag = idx === 0 ? "th" : "td";
@@ -298,6 +310,11 @@ export function tiptapJsonToPlainText(node: JSONContent): string {
   }
   if (node.type === "mathInline") {
     return `$${node.attrs?.latex || ""}$`;
+  }
+  if (node.type === "toggle") {
+    const title = node.attrs?.title || "";
+    const inner = (node.content || []).map(tiptapJsonToPlainText).filter(Boolean).join("\n");
+    return `▶ ${title}\n${inner}`;
   }
   if (!node.content || !Array.isArray(node.content)) return "";
 
@@ -379,6 +396,12 @@ function preprocessMarkdown(markdown: string): string {
           .filter(Boolean)
           .join("<br>");
         return `\n\n<div data-callout="" data-callout-type="${type}"><p>${cleanBody}</p></div>\n\n`;
+      });
+
+      // Convert details / summary
+      text = text.replace(/<details(?:\s+[^>]*)?>\s*<summary>([\s\S]*?)<\/summary>([\s\S]*?)<\/details>/gi, (_m, rawSummary, rawBody) => {
+        const cleanTitle = rawSummary.trim().replace(/"/g, "&quot;");
+        return `\n\n<details data-toggle="" data-title="${cleanTitle}">${rawBody}</details>\n\n`;
       });
 
       // Convert highlight ==...==

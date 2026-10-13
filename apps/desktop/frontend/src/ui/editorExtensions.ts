@@ -17,6 +17,7 @@ import { common, createLowlight } from "lowlight";
 import { CalculationNode } from "./CalculationNode";
 import { MathInlineNode, MathBlockNode } from "./MathNodes";
 import { CalloutNode } from "./CalloutNode";
+import { ToggleNode } from "./ToggleNode";
 
 export const editorExtensions = [
   StarterKit.configure({ codeBlock: false }),
@@ -33,6 +34,7 @@ export const editorExtensions = [
   MathInlineNode,
   MathBlockNode,
   CalloutNode,
+  ToggleNode,
   Placeholder.configure({ placeholder: "Comece a escrever" }),
   TextAlign.configure({ types: ["heading", "paragraph"] }),
   TextStyle,

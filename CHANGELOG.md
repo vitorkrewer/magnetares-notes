@@ -56,6 +56,18 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
   - Conversão automática ao colar dados copiados do Microsoft Excel, Google Sheets ou arquivos `.csv`/`.tsv` separados por tabulação (`\t`).
   - Transforma instantaneamente dados brutos de medição de laboratório em tabelas estruturadas nativas do TipTap com cabeçalhos e linhas formatadas.
 
+- **Blocos Expansíveis (*Toggles* para Estudo Ativo e Auto-teste):**
+  - **Prática de Recuperação Ativa (*Active Recall*):** Permite ocultar respostas, deduções de fórmulas, diagnósticos ou resoluções de exercícios dentro de blocos sanfonados, criando cartões de auto-teste diretamente na nota.
+  - **Fórmulas Matemáticas no Título/Pergunta:** Suporte a equações LaTeX inline (`$...$`) renderizadas em tempo real no próprio cabeçalho do toggle via KaTeX (ex: *"Qual a transformada de $\delta(t)$?"* ou *"Calcule $\int \frac{1}{x} dx$*).
+  - **Botão Rápido Revelar / Ocultar (*Peek*):** Alternância instantânea de visibilidade com feedback visual suave, preservando o estado do cursor e o conteúdo do nó.
+  - **Modo Auto-teste / Simulado na Barra de Ferramentas:** Botão global *Ocultar/Expandir todos os toggles* na barra de ferramentas do editor para recolher todas as respostas da nota em um clique e simular um teste prático antes de provas.
+  - **Conteúdo Rico Irrestrito:** A área interna do toggle suporta múltiplos parágrafos, fórmulas KaTeX em bloco, checklists, callouts acadêmicos, tabelas e imagens.
+  - **Compatibilidade Markdown e HTML Nativa:**
+    - Exportação em Markdown padrão HTML5 compatível com GitHub e Obsidian (`<details><summary>Pergunta</summary>\n\nResposta\n</details>`).
+    - Importação de notas e arquivos Markdown reconhecendo automaticamente tags `<details>` com conversão direta para os nós interativos do TipTap.
+    - Exportação HTML estática estilizada com suporte a modo claro e escuro.
+
+
 ### Changed
 
 - **UX da Barra Lateral & Lixeira Fixa:**

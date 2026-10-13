@@ -79,8 +79,13 @@ A partir da versão **1.9.0**, o Magnetares Notes ganha recursos completos para 
   - Dropdown dinâmico para alternar de categoria com 1 clique e preservação em Markdown (`> [!NOTE]`, etc.).
 - **Colar Inteligente de Planilhas e CSV em Tabelas:**
   - Cole dados copiados do Excel, Google Sheets ou arquivos CSV/TSV e veja-os convertidos instantaneamente em tabelas TipTap formatadas com cabeçalhos.
+- **Blocos Expansíveis (*Toggles* para Estudo Ativo e Auto-teste):**
+  - Prática de *Active Recall* (recuperação ativa) diretamente na nota, ocultando deduções, diagnósticos clínicos ou resoluções de problemas.
+  - Suporte a fórmulas matemáticas KaTeX inline no cabeçalho/pergunta (ex: `$\int \sin(x)dx$`).
+  - Botão rápido *Revelar/Ocultar* no bloco e botão global na barra de ferramentas para alternar o modo auto-teste (recolher todos os toggles para simular exames).
+  - Conteúdo interno irrestrito (parágrafos, equações KaTeX em bloco, checklists, callouts e imagens) e compatibilidade nativa com tags `<details><summary>` em Markdown e HTML.
 - **Exportação e Importação Fiel:**
-  - Preservação total em Markdown (`$...$`, `$$...$$`, callouts GFM) e exportação HTML com renderização KaTeX estática de alta performance.
+  - Preservação total em Markdown (`$...$`, `$$...$$`, callouts GFM, `<details>`) e exportação HTML com renderização KaTeX estática de alta performance.
 
 ### Stickers (Notas Autoadesivas)
 

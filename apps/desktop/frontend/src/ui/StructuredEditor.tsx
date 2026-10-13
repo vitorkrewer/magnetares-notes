@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { EditorContent, useEditor, type Editor, type JSONContent } from "@tiptap/react";
-import { Bold, Calculator, Code2, Columns3, Highlighter, Italic, Link2, List as BulletList, ListChecks, ListOrdered, Quote, Redo2, Rows3, Table2, Trash2, Undo2, Unlink, AlignLeft, AlignCenter, AlignRight, AlignJustify, Palette, Space, Sigma, BookmarkCheck } from "lucide-react";
+import { Bold, Calculator, Code2, Columns3, Highlighter, Italic, Link2, List as BulletList, ListChecks, ListOrdered, Quote, Redo2, Rows3, Table2, Trash2, Undo2, Unlink, AlignLeft, AlignCenter, AlignRight, AlignJustify, Palette, Space, Sigma, BookmarkCheck, ListCollapse, ChevronsUpDown } from "lucide-react";
 import { calculateExpression } from "./CalculationNode";
 import { MATH_SNIPPETS, renderKaTeXToString } from "./MathNodes";
 import { editorExtensions } from "./editorExtensions";
@@ -160,6 +160,44 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
     }, 10);
   };
 
+  const insertToggle = () => {
+    const { from, to } = editor.state.selection;
+    const selectedText = editor.state.doc.textBetween(from, to, " ");
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: "toggle",
+        attrs: { title: selectedText || "", open: true },
+        content: [
+          {
+            type: "paragraph",
+            content: [{ type: "text", text: "Escreva aqui a resposta ou dedução detalhada..." }]
+          }
+        ]
+      })
+      .run();
+  };
+
+  const toggleAllToggles = () => {
+    let anyOpen = false;
+    editor.state.doc.descendants((node) => {
+      if (node.type.name === "toggle" && node.attrs.open) {
+        anyOpen = true;
+      }
+    });
+
+    const targetState = !anyOpen;
+    editor.state.doc.descendants((node, pos) => {
+      if (node.type.name === "toggle") {
+        editor.commands.command(({ tr }) => {
+          tr.setNodeMarkup(pos, undefined, { ...node.attrs, open: targetState });
+          return true;
+        });
+      }
+    });
+  };
+
   const submitLink = (event: FormEvent) => {
     event.preventDefault();
     const value = linkURL.trim();
@@ -274,6 +312,8 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
       <ToolButton label="Checklist" active={editor.isActive("taskList")} onClick={() => editor.chain().focus().toggleTaskList().run()}><ListChecks aria-hidden="true" /></ToolButton>
       <ToolButton label="Citação" active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()}><Quote aria-hidden="true" /></ToolButton>
       <ToolButton label="Destaque acadêmico (Teorema, Experimento, Alerta)" active={editor.isActive("callout")} onClick={() => editor.chain().focus().insertContent({ type: "callout", attrs: { type: "info" }, content: [{ type: "paragraph", content: [{ type: "text", text: "Escreva aqui sua observação, teorema ou anotação acadêmica..." }] }] }).run()}><BookmarkCheck aria-hidden="true" /></ToolButton>
+      <ToolButton label="Bloco expansível / Toggle (Estudo Ativo)" active={editor.isActive("toggle")} onClick={insertToggle}><ListCollapse aria-hidden="true" /></ToolButton>
+      <ToolButton label="Modo Auto-teste (Ocultar/Revelar todas as respostas)" onClick={toggleAllToggles}><ChevronsUpDown aria-hidden="true" /></ToolButton>
       <span className="toolbar-separator" />
       <ToolButton label="Inserir cálculo" active={editor.isActive("calculation") || calculationOpen} onClick={() => setCalculationOpen((open) => !open)}><Calculator aria-hidden="true" /></ToolButton>
       <ToolButton label="Fórmula matemática (LaTeX)" active={editor.isActive("mathInline") || editor.isActive("mathBlock") || mathOpen} onClick={openMathEditor}><Sigma aria-hidden="true" /></ToolButton>

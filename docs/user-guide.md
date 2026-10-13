@@ -40,6 +40,12 @@ A barra do editor oferece:
 - Cálculos aritméticos: use o botão de calculadora, informe uma expressão matemática simples e insira o resultado; dê duplo clique no chip para editar.
 - **Fórmulas matemáticas e químicas com LaTeX (KaTeX + `mhchem`):** clique no botão $\Sigma$ da barra de ferramentas ou selecione uma expressão para convertê-la. Oferece suporte a fórmulas em linha (`$latex$`) e blocos centralizados (`$$latex$$`), live preview instantâneo, teclado com atalhos de símbolos para cursos de Engenharia e Ciências Exatas (frações, raízes, integrais, derivadas, matrizes, alfabeto grego) e aba de **Química & Bio** (`\ce{...}` para reações estequiométricas, tampão sanguíneo, íons e decaimentos), 100% offline e com suporte a exportação/importação Markdown.
 - **Destaques Acadêmicos (*Callouts*):** use o botão com ícone de marcador na toolbar para inserir caixas com bordas temáticas e ícones destacados para **Notas**, **Teoremas/Definições**, **Experimentos de Laboratório**, **Alertas Clínicos/Avisos** e **Exemplos Práticos**, com seletor de tipo integrado e compatibilidade com Markdown (`> [!NOTE]`, etc.).
+- **Blocos Expansíveis (*Toggles* para Estudo Ativo e Auto-teste):** clique no botão de bloco expansível na barra de ferramentas para inserir uma pergunta ou tópico sanfonado. Ideal para a técnica de *Active Recall* (recuperação ativa) em vésperas de provas e revisões:
+  - Oculte resoluções de exercícios, deduções de fórmulas, diagnósticos médicos ou gabaritos.
+  - O cabeçalho da pergunta aceita fórmulas matemáticas LaTeX inline (ex: `$\int \sin(x)dx$`).
+  - Botão rápido **Revelar / Ocultar** no cabeçalho de cada bloco para alternar visualização sem perder o foco.
+  - Botão global **Ocultar/Expandir todos os toggles** na barra de ferramentas para recolher todas as respostas da nota em um clique e simular um teste prático.
+  - Compatibilidade nativa com tags `<details><summary>` na importação e exportação de Markdown e HTML.
 
 O editor persiste um documento estruturado Tiptap no banco local e gera `bodyText` para busca e prévias.
 
