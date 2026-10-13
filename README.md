@@ -84,8 +84,12 @@ A partir da versão **1.9.0**, o Magnetares Notes ganha recursos completos para 
   - Suporte a fórmulas matemáticas KaTeX inline no cabeçalho/pergunta (ex: `$\int \sin(x)dx$`).
   - Botão rápido *Revelar/Ocultar* no bloco e botão global na barra de ferramentas para alternar o modo auto-teste (recolher todos os toggles para simular exames).
   - Conteúdo interno irrestrito (parágrafos, equações KaTeX em bloco, checklists, callouts e imagens) e compatibilidade nativa com tags `<details><summary>` em Markdown e HTML.
+- **Diagramas Mermaid.js (Engenharia, Biologia, Computação & Saúde):**
+  - Renderização gráfica 100% offline para diagramas vetoriais SVG de alta resolução.
+  - Modelos rápidos com 1 clique: Fluxogramas de Engenharia, Ciclos Bioquímicos (Krebs), Feedback Homeostático, Diagramas de Sequência, Máquinas de Estados, Mapas Mentais (Mindmaps) e Modelos ER.
+  - Editor interativo com live preview, indentação com Tab, controle de zoom (50% a 200%), legendas de figuras e retorno à edição com duplo clique.
 - **Exportação e Importação Fiel:**
-  - Preservação total em Markdown (`$...$`, `$$...$$`, callouts GFM, `<details>`) e exportação HTML com renderização KaTeX estática de alta performance.
+  - Preservação total em Markdown (`$...$`, `$$...$$`, callouts GFM, `<details>`, blocos ```` ```mermaid ````) e exportação HTML com renderização estática de alta fidelidade.
 
 ### Stickers (Notas Autoadesivas)
 

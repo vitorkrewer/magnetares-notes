@@ -4183,6 +4183,440 @@ details.study-toggle[open] summary {
   border-bottom: 1px solid #32302a;
 }
 
+/* ==========================================================================
+   Diagramas Mermaid.js (Engenharia, Biologia, Computação & Saúde)
+   ========================================================================== */
+.mermaid-node-wrapper {
+  margin: 18px 0;
+  border: 1px solid #e2ded5;
+  border-radius: 8px;
+  background: #faf9f6;
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.mermaid-node-wrapper:hover {
+  border-color: #d5d0c5;
+}
+
+.mermaid-node-wrapper.selected {
+  border-color: #d19a13;
+  box-shadow: 0 0 0 2px rgba(209, 154, 19, 0.2);
+}
+
+[data-theme="dark"] .mermaid-node-wrapper {
+  background: #1e1d1a;
+  border-color: #383630;
+}
+
+[data-theme="dark"] .mermaid-node-wrapper:hover {
+  border-color: #4a473f;
+}
+
+.mermaid-node-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  background: rgba(0, 0, 0, 0.025);
+  border-bottom: 1px solid #ebe7de;
+  user-select: none;
+  font-size: 12px;
+}
+
+[data-theme="dark"] .mermaid-node-header {
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom-color: #32302a;
+}
+
+.mermaid-header-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  color: #78716c;
+}
+
+[data-theme="dark"] .mermaid-header-title {
+  color: #a8a29e;
+}
+
+.mermaid-icon {
+  color: #d19a13;
+}
+
+.mermaid-badge {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.mermaid-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mermaid-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border: 1px solid #ded9cd;
+  border-radius: 4px;
+  background: var(--paper, #fff);
+  color: #57534e;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.mermaid-tool-btn:hover {
+  border-color: #d19a13;
+  color: #d19a13;
+  background: rgba(209, 154, 19, 0.06);
+}
+
+.mermaid-tool-btn.active {
+  background: #d19a13;
+  color: #ffffff;
+  border-color: #d19a13;
+}
+
+[data-theme="dark"] .mermaid-tool-btn {
+  border-color: #3f3d36;
+  background: #2a2924;
+  color: #a8a29e;
+}
+
+[data-theme="dark"] .mermaid-tool-btn:hover {
+  border-color: #d19a13;
+  color: #fbbf24;
+  background: rgba(209, 154, 19, 0.12);
+}
+
+[data-theme="dark"] .mermaid-tool-btn.active {
+  background: #d19a13;
+  color: #ffffff;
+  border-color: #d19a13;
+}
+
+.mermaid-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 2px 4px;
+  border-radius: 4px;
+  border: 1px solid #ded9cd;
+}
+
+[data-theme="dark"] .mermaid-zoom-controls {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: #3f3d36;
+}
+
+.mermaid-icon-btn {
+  border: none;
+  background: transparent;
+  padding: 2px 4px;
+  cursor: pointer;
+  color: #78716c;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.mermaid-icon-btn:hover {
+  color: #d19a13;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .mermaid-icon-btn {
+  color: #a8a29e;
+}
+
+[data-theme="dark"] .mermaid-icon-btn:hover {
+  color: #fbbf24;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mermaid-zoom-label {
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 32px;
+  text-align: center;
+  color: #78716c;
+}
+
+[data-theme="dark"] .mermaid-zoom-label {
+  color: #a8a29e;
+}
+
+.mermaid-delete-btn {
+  border: none;
+  background: transparent;
+  color: #9c978b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  opacity: 0.6;
+  transition: opacity 0.15s, color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mermaid-delete-btn:hover {
+  opacity: 1;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.mermaid-editor-panel {
+  padding: 12px;
+  background: var(--paper, #fff);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+[data-theme="dark"] .mermaid-editor-panel {
+  background: #1c1b18;
+}
+
+.mermaid-templates-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mermaid-templates-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #78716c;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+[data-theme="dark"] .mermaid-templates-title {
+  color: #a8a29e;
+}
+
+.mermaid-templates-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mermaid-template-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  padding: 3px 8px;
+  border: 1px solid #e2ded5;
+  border-radius: 4px;
+  background: #faf9f6;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.mermaid-template-chip:hover {
+  border-color: #d19a13;
+  background: rgba(209, 154, 19, 0.08);
+}
+
+[data-theme="dark"] .mermaid-template-chip {
+  background: #252420;
+  border-color: #383630;
+}
+
+[data-theme="dark"] .mermaid-template-chip:hover {
+  border-color: #d19a13;
+  background: rgba(209, 154, 19, 0.15);
+}
+
+.mermaid-code-textarea {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  padding: 10px;
+  border: 1px solid #d5d0c5;
+  border-radius: 6px;
+  background: #fdfdfc;
+  color: inherit;
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+  tab-size: 2;
+}
+
+.mermaid-code-textarea:focus {
+  border-color: #d19a13;
+  box-shadow: 0 0 0 2px rgba(209, 154, 19, 0.15);
+}
+
+[data-theme="dark"] .mermaid-code-textarea {
+  background: #161513;
+  border-color: #383630;
+  color: #f5f5f4;
+}
+
+.mermaid-error-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 4px;
+  font-size: 11.5px;
+  color: #dc2626;
+}
+
+[data-theme="dark"] .mermaid-error-bar {
+  color: #f87171;
+}
+
+.mermaid-caption-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.mermaid-caption-label {
+  font-weight: 600;
+  color: #78716c;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .mermaid-caption-label {
+  color: #a8a29e;
+}
+
+.mermaid-caption-input {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid #d5d0c5;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  outline: none;
+}
+
+.mermaid-caption-input:focus {
+  border-color: #d19a13;
+}
+
+[data-theme="dark"] .mermaid-caption-input {
+  border-color: #383630;
+}
+
+.mermaid-editor-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.mermaid-editor-hint {
+  font-size: 11px;
+  color: #a8a29e;
+  font-style: italic;
+}
+
+.mermaid-apply-btn {
+  background: #d19a13;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.mermaid-apply-btn:hover {
+  background: #b8850f;
+}
+
+.mermaid-preview-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  overflow-x: auto;
+  cursor: pointer;
+}
+
+.mermaid-svg-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  transition: transform 0.15s ease;
+}
+
+.mermaid-svg-wrapper svg {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+.mermaid-caption-rendered {
+  margin-top: 12px;
+  font-size: 12.5px;
+  font-style: italic;
+  color: #78716c;
+  text-align: center;
+}
+
+[data-theme="dark"] .mermaid-caption-rendered {
+  color: #a8a29e;
+}
+
+.mermaid-error-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 6px;
+  color: #dc2626;
+  font-size: 12px;
+}
+
+[data-theme="dark"] .mermaid-error-box {
+  color: #f87171;
+}
+
+.mermaid-fix-btn {
+  margin-top: 8px;
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+
 
 .structured-editor .is-editor-empty:first-child::before {
   content: attr(data-placeholder);

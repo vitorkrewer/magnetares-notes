@@ -46,6 +46,11 @@ A barra do editor oferece:
   - Botão rápido **Revelar / Ocultar** no cabeçalho de cada bloco para alternar visualização sem perder o foco.
   - Botão global **Ocultar/Expandir todos os toggles** na barra de ferramentas para recolher todas as respostas da nota em um clique e simular um teste prático.
   - Compatibilidade nativa com tags `<details><summary>` na importação e exportação de Markdown e HTML.
+- **Diagramas Mermaid.js (Engenharia, Biologia, Computação & Saúde):** clique no botão de diagrama na barra de ferramentas para inserir fluxogramas, ciclos e modelos gráficos interativos renderizados em SVG:
+  - **Modelos Rápidos (1-clique):** insira templates prontos de Fluxogramas de Controle, Ciclo de Krebs (Bioquímica), Feedback Homeostático (Fisiologia), Diagramas de Sequência, Máquinas de Estados, Mapas Mentais (Mindmaps) e Modelagem de Dados (ER).
+  - **Edição & Live Preview:** alterne entre o modo de visualização e edição de código a qualquer momento ou com duplo clique no diagrama.
+  - **Zoom & Legendas:** ajuste o zoom (50% a 200%), adicione legenda/título da figura e copie o código Mermaid com 1 clique.
+  - **Exportação & Importação:** exporta e importa como blocos de código padrão ```` ```mermaid ```` em Markdown e como figuras semânticas `<figure><pre class="mermaid">` em HTML.
 
 O editor persiste um documento estruturado Tiptap no banco local e gera `bodyText` para busca e prévias.
 

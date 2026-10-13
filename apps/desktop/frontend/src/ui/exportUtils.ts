@@ -99,6 +99,11 @@ function nodeToMarkdown(node: JSONContent): string {
       return `<details>\n<summary>${title}</summary>\n\n${inner}\n</details>`;
     }
 
+    case "mermaid": {
+      const code = (node.attrs?.code || "").trim();
+      return `\`\`\`mermaid\n${code}\n\`\`\``;
+    }
+
     case "table": {
       const rows = node.content || [];
       if (rows.length === 0) return "";
@@ -256,6 +261,12 @@ function jsonToHTML(node: JSONContent): string {
       return `<details class="study-toggle" ${node.attrs?.open ? "open" : ""} data-toggle="" data-title="${encodeURIComponent(title)}"><summary>${title}</summary><div class="study-toggle-content">${inner}</div></details>`;
     }
 
+    case "mermaid": {
+      const code = (node.attrs?.code || "").trim();
+      const caption = node.attrs?.caption ? `<figcaption style="margin-top:8px;font-style:italic;color:#78716c;text-align:center;">${node.attrs.caption}</figcaption>` : "";
+      return `<figure class="mermaid-diagram-export" style="margin:16px 0;text-align:center;"><pre class="mermaid">${code}</pre>${caption}</figure>`;
+    }
+
     case "table": {
       const rows = (node.content || []).map((row, idx) => {
         const tag = idx === 0 ? "th" : "td";
@@ -316,6 +327,11 @@ export function tiptapJsonToPlainText(node: JSONContent): string {
     const inner = (node.content || []).map(tiptapJsonToPlainText).filter(Boolean).join("\n");
     return `▶ ${title}\n${inner}`;
   }
+  if (node.type === "mermaid") {
+    const code = (node.attrs?.code || "").trim();
+    const caption = node.attrs?.caption ? ` [${node.attrs.caption}]` : "";
+    return `[Diagrama Mermaid${caption}]\n${code}`;
+  }
   if (!node.content || !Array.isArray(node.content)) return "";
 
   if (node.type === "doc") {
@@ -361,10 +377,18 @@ export function tiptapJsonToPlainText(node: JSONContent): string {
 }
 
 function preprocessMarkdown(markdown: string): string {
-  // Convert ==highlight==, display math $$...$$ and inline math $...$, skipping code blocks and inline code
+  // Convert ==highlight==, display math $$...$$, inline math $...$, and ```mermaid blocks
   const parts = markdown.split(/(```[\s\S]*?```|`[^`\r\n]+`)/g);
   return parts
     .map((part) => {
+      if (part.startsWith("```mermaid")) {
+        const match = part.match(/^```mermaid\s*\r?\n([\s\S]*?)\r?\n```$/);
+        if (match) {
+          const cleanCode = match[1].trim().replace(/"/g, "&quot;");
+          return `\n\n<div data-mermaid="" data-code="${cleanCode}"></div>\n\n`;
+        }
+      }
+
       if (part.startsWith("`")) {
         return part;
       }

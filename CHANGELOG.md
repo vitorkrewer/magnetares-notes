@@ -67,6 +67,23 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
     - Importação de notas e arquivos Markdown reconhecendo automaticamente tags `<details>` com conversão direta para os nós interativos do TipTap.
     - Exportação HTML estática estilizada com suporte a modo claro e escuro.
 
+- **Diagramas Mermaid.js (Engenharia, Biologia, Computação e Saúde):**
+  - **Renderização SVG Offline de Alta Resolução:** Motor Mermaid.js totalmente embutido e local no binário para geração de diagramas sem depender de internet, APIs ou servidores de renderização.
+  - **Modelos Rápidos Integrados (Chips de 1 Clique):**
+    - *Fluxogramas de Engenharia & Controle:* nós de processo, decisão, sensores e atuadores.
+    - *Ciclos Bioquímicos:* rotas metabólicas completas (ex: Glicólise, Ciclo de Krebs e Fosforilação Oxidativa).
+    - *Feedback Fisiológico:* homeostase e arcos reflexos (ex: regulação da glicemia por insulina/glucagon).
+    - *Diagramas de Sequência:* comunicação entre atores, sistemas e banco de dados com numeração automática.
+    - *Máquinas de Estados:* transições de estados e alarmes para eletrônica, firmware e automação.
+    - *Mapas Mentais & Conceituais (Mindmaps):* hierarquias radiais para fisiologia, taxonomia e resumos teóricos.
+    - *Modelagem de Dados (ER):* diagramas entidade-relacionamento com cardinalidades e atributos tipados.
+  - **Editor Interativo com Live Preview:** Painel de alternância entre "Visualizar Diagrama" e "Editar Código", com suporte a indentação com `Tab`, detecção amigável de erros de sintaxe em tempo real e campo de legenda da figura.
+  - **Controles de Escala & Zoom:** Botões de zoom-in, zoom-out e reset de zoom (50% a 200%) com cópia rápida do código para a área de transferência.
+  - **Adaptação Dinâmica ao Tema:** Re-renderização automática e variáveis visuais sob medida para temas Claro e Escuro (`[data-theme="dark"]`).
+  - **Compatibilidade Markdown e HTML:**
+    - Exportação Markdown utilizando o bloco de código padrão do ecossistema técnico (```` ```mermaid ````).
+    - Importação de arquivos Markdown convertendo automaticamente blocos ```mermaid` em nós ricos do TipTap.
+    - Exportação HTML com tags semânticas `<figure><pre class="mermaid">` e legendas `<figcaption>`.
 
 ### Changed
 

@@ -19,6 +19,7 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 | Fórmulas Matemáticas & Químicas (KaTeX + `mhchem`) | Implementado (v1.9.0) | Renderização KaTeX offline (inline e bloco), live preview, teclado de símbolos para Engenharia/Exatas, reações químicas `\ce{...}` e import/export Markdown e HTML. |
 | Destaques Acadêmicos (*Callouts*) | Implementado (v1.9.0) | Nó TipTap com 5 categorias semânticas (Notas, Teoremas, Experimentos, Alertas Clínicos e Exemplos), seletor de tipo integrado e compatibilidade GFM Markdown. |
 | Blocos Expansíveis (*Toggles* / Estudo Ativo) | Implementado (v1.9.0) | Nó sanfonado TipTap para fixação e *active recall*, suporte a KaTeX no título, botão revelar/ocultar e atalho global para modo auto-teste/simulado. |
+| Diagramas Mermaid.js | Implementado (v1.9.0) | Renderização local offline de fluxogramas de engenharia, ciclos biológicos, feedback fisiológico, máquinas de estados, mapas mentais e modelos ER com live preview e zoom. |
 | Pastas e subpastas | Implementado | Criação e edição completa de pastas e subpastas com cores HSL e 8 ícones personalizáveis, suporte a pastas legadas. |
 | Notas fixadas | Implementado | Pin e ordenação no topo. |
 | Etiquetas | Implementado | CRUD, ícones, chips, associação persistida e layout responsivo para tags extensas. |

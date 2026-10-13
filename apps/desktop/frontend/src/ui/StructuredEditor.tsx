@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { EditorContent, useEditor, type Editor, type JSONContent } from "@tiptap/react";
-import { Bold, Calculator, Code2, Columns3, Highlighter, Italic, Link2, List as BulletList, ListChecks, ListOrdered, Quote, Redo2, Rows3, Table2, Trash2, Undo2, Unlink, AlignLeft, AlignCenter, AlignRight, AlignJustify, Palette, Space, Sigma, BookmarkCheck, ListCollapse, ChevronsUpDown } from "lucide-react";
+import { Bold, Calculator, Code2, Columns3, Highlighter, Italic, Link2, List as BulletList, ListChecks, ListOrdered, Quote, Redo2, Rows3, Table2, Trash2, Undo2, Unlink, AlignLeft, AlignCenter, AlignRight, AlignJustify, Palette, Space, Sigma, BookmarkCheck, ListCollapse, ChevronsUpDown, Workflow } from "lucide-react";
 import { calculateExpression } from "./CalculationNode";
 import { MATH_SNIPPETS, renderKaTeXToString } from "./MathNodes";
+import { MERMAID_TEMPLATES } from "./MermaidNode";
 import { editorExtensions } from "./editorExtensions";
 
 const PRESET_COLORS = [
@@ -198,6 +199,20 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
     });
   };
 
+  const insertMermaid = () => {
+    editor
+      .chain()
+      .focus()
+      .insertContent({
+        type: "mermaid",
+        attrs: {
+          code: MERMAID_TEMPLATES[0].code,
+          caption: ""
+        }
+      })
+      .run();
+  };
+
   const submitLink = (event: FormEvent) => {
     event.preventDefault();
     const value = linkURL.trim();
@@ -317,6 +332,7 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
       <span className="toolbar-separator" />
       <ToolButton label="Inserir cálculo" active={editor.isActive("calculation") || calculationOpen} onClick={() => setCalculationOpen((open) => !open)}><Calculator aria-hidden="true" /></ToolButton>
       <ToolButton label="Fórmula matemática (LaTeX)" active={editor.isActive("mathInline") || editor.isActive("mathBlock") || mathOpen} onClick={openMathEditor}><Sigma aria-hidden="true" /></ToolButton>
+      <ToolButton label="Diagrama Mermaid (Fluxogramas, Ciclos, Sequência)" active={editor.isActive("mermaid")} onClick={insertMermaid}><Workflow aria-hidden="true" /></ToolButton>
       <ToolButton label="Inserir tabela" active={insideTable} onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}><Table2 aria-hidden="true" /></ToolButton>
       {insideTable && <ToolButton label="Adicionar linha" onClick={() => editor.chain().focus().addRowAfter().run()}><Rows3 aria-hidden="true" /></ToolButton>}
       {insideTable && <ToolButton label="Adicionar coluna" onClick={() => editor.chain().focus().addColumnAfter().run()}><Columns3 aria-hidden="true" /></ToolButton>}
