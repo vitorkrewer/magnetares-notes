@@ -4915,6 +4915,8 @@ details.study-toggle[open] summary {
 
 .mermaid-svg-wrapper svg {
   max-width: 100% !important;
+  max-height: 440px !important;
+  width: auto !important;
   height: auto !important;
 }
 

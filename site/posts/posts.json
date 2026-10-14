@@ -1,5 +1,11 @@
 [
   {
+    "id": "ciencias-exatas-biologicas-abnt",
+    "title": "Fórmulas KaTeX, Diagramas Mermaid, Active Recall e Exportação ABNT",
+    "date": "2026-10-14",
+    "summary": "Um mergulho aprofundado nas ferramentas acadêmicas da v1.9.0: equações matemáticas offline, reações químicas com mhchem, teclado de engenharia, diagramas biológicos com Mermaid.js, toggles para auto-teste e exportação de artigos no padrão ABNT (.docx)."
+  },
+  {
     "id": "pendrive-multiverse-markdown",
     "title": "Portabilidade total e Markdown com vida",
     "date": "2026-10-13",
