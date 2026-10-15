@@ -195,8 +195,7 @@
             </svg>
           </div>
           <h3>Editor de texto rico e estruturado</h3>
-          <p>Escreva notas com títulos, checklists interativos, citações, tabelas e até cálculos matemáticos em tempo
-            real com Tiptap e Math.js.</p>
+          <p>Escreva notas com títulos, checklists interativos, citações, tabelas, cálculos com Math.js e tipografia matemática de precisão com KaTeX e mhchem.</p>
           <div class="interactive-preview">
             <div class="editor-snippet">
               <div class="snippet-title">
@@ -380,6 +379,58 @@
             </div>
           </div>
         </article>
+
+        <!-- Card 9: Ciências & Diagramas Mermaid -->
+        <article class="bento-card card-span-12">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 24px;">
+            <div style="max-width: 580px;">
+              <div class="bento-icon" aria-hidden="true" style="background: rgba(147, 51, 234, 0.15); border-color: rgba(147, 51, 234, 0.35); color: #c084fc;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 7V4H6l6 8-6 8h12v-3" />
+                </svg>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <h3 style="margin-bottom: 0;">Ciências Exatas & Biológicas: KaTeX, mhchem & Mermaid.js</h3>
+                <span class="pill-dot" style="background: #c084fc;"></span>
+                <span style="font-size: 11px; font-weight: 700; color: #c084fc; text-transform: uppercase; letter-spacing: 0.05em;">Científico & Acadêmico</span>
+              </div>
+              <p>Escreva equações matemáticas de nível TeX com KaTeX, equações químicas balanceadas com <code>mhchem</code> e modele processos com <strong>Mermaid.js</strong> embutido. Gere rotas bioquímicas, sistemas de feedback dinâmico e fluxogramas vetoriais SVG nítidos com controles de zoom e legendas científicas.</p>
+            </div>
+            <div class="interactive-preview" style="align-self: center; margin-top: 0; min-width: 320px; flex: 1; max-width: 440px;">
+              <div style="border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+                <img src="assets/screenshots/diagramas-mermaid.png" alt="Diagramas Mermaid.js e Fórmulas KaTeX integradas no Magnetares Notes" style="width: 100%; display: block; object-fit: cover;" />
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Card 10: Paper Export ABNT & Active Recall -->
+        <article class="bento-card card-span-12">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 24px;">
+            <div style="max-width: 580px;">
+              <div class="bento-icon" aria-hidden="true" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <h3 style="margin-bottom: 0;">Exportação de Artigos ABNT (.docx) & Active Recall</h3>
+                <span class="pill-dot" style="background: #34d399;"></span>
+                <span style="font-size: 11px; font-weight: 700; color: #34d399; text-transform: uppercase; letter-spacing: 0.05em;">Publicação Oficial</span>
+              </div>
+              <p>Exporte suas anotações diretamente como artigo científico no padrão <strong>ABNT (.docx)</strong> (NBR 14724, 6024, 10520 e 6023) com capa institucional, sumário com paginação automática e tipografia regulamentar. Para fixação de conteúdo, use <strong>Toggles expansíveis</strong> para recuperação ativa e <strong>Callouts Semânticos</strong> com 5 categorias temáticas.</p>
+            </div>
+            <div class="interactive-preview" style="align-self: center; margin-top: 0; min-width: 320px; flex: 1; max-width: 440px;">
+              <div style="border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 10px 25px rgba(0,0,0,0.4);">
+                <img src="assets/screenshots/export-abnt.png" alt="Exportação no padrão ABNT com menu dedicado e conformidade com normas" style="width: 100%; display: block; object-fit: cover;" />
+              </div>
+            </div>
+          </div>
+        </article>
       </div>
 
       <div style="text-align: center; margin-top: 48px;">
@@ -402,39 +453,55 @@
         <article class="tech-item">
           <div class="tech-number">01</div>
           <h4>Wails + Go</h4>
-          <p>Binário desktop compilado nativo, baixo consumo de memória RAM e operações ultrarrápidas no sistema de
-            arquivos.</p>
+          <p>Binário desktop nativo de altíssima performance, baixo consumo de memória RAM e operações atômicas diretas no disco.</p>
         </article>
 
         <article class="tech-item">
           <div class="tech-number">02</div>
           <h4>React + TypeScript</h4>
-          <p>Interface responsiva e componentizada com tipagem estrita de ponta a ponta para maior estabilidade.</p>
+          <p>Interface responsiva e componentizada com tipagem estrita de ponta a ponta para máxima robustez e velocidade de interação.</p>
         </article>
 
         <article class="tech-item">
           <div class="tech-number">03</div>
           <h4>SQLite + WAL Mode</h4>
-          <p>Persistência local confiável, suporte a transações concorrentes e integridade dos seus dados garantida.</p>
+          <p>Persistência local confiável 100% offline, Write-Ahead Logging para concorrência segura e integridade de dados garantida.</p>
         </article>
 
         <article class="tech-item">
           <div class="tech-number">04</div>
-          <h4>Tiptap + Math.js</h4>
-          <p>Editor headless altamente extensível com suporte nativo a equações matemáticas e formatação rica.</p>
+          <h4>Tiptap + KaTeX & mhchem</h4>
+          <p>Editor headless rico com suporte nativo a equações TeX, reações químicas balanceadas e cálculos matemáticos em tempo real.</p>
         </article>
 
         <article class="tech-item">
           <div class="tech-number">05</div>
-          <h4>Turso Database</h4>
-          <p>Camada de sincronização remota opcional distribuída na borda com compatibilidade total SQLite.</p>
+          <h4>Mermaid.js Engine</h4>
+          <p>Motor integrado de diagramação vetorial SVG client-side para fluxogramas, sequências, máquinas de estado e vias bioquímicas.</p>
         </article>
 
         <article class="tech-item">
           <div class="tech-number">06</div>
+          <h4>Monaco Editor & VS Code Core</h4>
+          <p>Ambiente profissional para notas de código, dezenas de linguagens nativas, realce de sintaxe e protótipos interativos HTML.</p>
+        </article>
+
+        <article class="tech-item">
+          <div class="tech-number">07</div>
+          <h4>Turso LibSQL Database</h4>
+          <p>Camada de sincronização remota opcional distribuída na borda com criptografia de credenciais e resolução de conflitos.</p>
+        </article>
+
+        <article class="tech-item">
+          <div class="tech-number">08</div>
+          <h4>Motor de Artigos ABNT (.docx)</h4>
+          <p>Geração nativa de documentos acadêmicos estruturados segundo normas NBR 14724, 6024, 10520 e 6023 para Word e LibreOffice.</p>
+        </article>
+
+        <article class="tech-item">
+          <div class="tech-number">09</div>
           <h4>Multiplataforma CI/CD</h4>
-          <p>Pipelines no GitHub Actions que geram compilações assinadas para Windows, macOS e Linux automaticamente.
-          </p>
+          <p>Pipelines no GitHub Actions que geram compilações assinadas e versões portáteis para Windows, macOS e Linux automaticamente.</p>
         </article>
       </div>
     </section>
@@ -598,6 +665,16 @@
                   d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
               </svg></a></li>
           <li><a href="https://tiptap.dev" target="_blank" rel="noreferrer">Tiptap Editor <svg class="external-icon"
+                viewBox="0 0 24 24">
+                <path
+                  d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+              </svg></a></li>
+          <li><a href="https://katex.org" target="_blank" rel="noreferrer">KaTeX Math <svg class="external-icon"
+                viewBox="0 0 24 24">
+                <path
+                  d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+              </svg></a></li>
+          <li><a href="https://mermaid.js.org" target="_blank" rel="noreferrer">Mermaid.js <svg class="external-icon"
                 viewBox="0 0 24 24">
                 <path
                   d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
