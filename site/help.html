@@ -16,11 +16,23 @@
 
   <link rel="stylesheet" href="styles.css?v=1.8.0" />
   <style>
-    .mobile-drawer-overlay, .mobile-nav-drawer { display: none; }
+    .mobile-drawer-overlay,
+    .mobile-nav-drawer {
+      display: none;
+    }
+
     @media (max-width: 980px) {
-      .menu-toggle-btn { display: inline-flex !important; }
-      .mobile-drawer-overlay.active { display: block !important; }
-      .mobile-nav-drawer.active { display: flex !important; }
+      .menu-toggle-btn {
+        display: inline-flex !important;
+      }
+
+      .mobile-drawer-overlay.active {
+        display: block !important;
+      }
+
+      .mobile-nav-drawer.active {
+        display: flex !important;
+      }
     }
   </style>
   <style>
@@ -437,10 +449,12 @@
 
     <nav class="header-nav" aria-label="Navegação principal">
       <a href="recursos.html">Recursos</a>
+      <a href="guia-usuario.html">Guia de Uso</a>
       <a href="index.html#arquitetura">Arquitetura</a>
       <a href="screenshots.html">Screenshots</a>
       <a class="active" href="#top">Ajuda & FAQ</a>
       <a href="blog.html">Blog</a>
+      <a href="release.html">Releases</a>
     </nav>
 
     <div class="header-actions">
@@ -448,7 +462,8 @@
         <span>Baixar</span>
         <span id="header-version-badge">v1.8.0</span>
       </a>
-      <button class="menu-toggle-btn" id="mobile-menu-toggle" type="button" aria-label="Abrir menu de navegação" aria-expanded="false">
+      <button class="menu-toggle-btn" id="mobile-menu-toggle" type="button" aria-label="Abrir menu de navegação"
+        aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" />
         </svg>
@@ -461,6 +476,7 @@
   <aside class="mobile-nav-drawer" id="mobile-nav-drawer" aria-label="Navegação mobile" aria-hidden="true">
     <div class="mobile-nav-links">
       <a href="recursos.html">Recursos</a>
+      <a href="guia-usuario.html">Guia de Uso</a>
       <a href="index.html#arquitetura">Arquitetura Técnica</a>
       <a href="screenshots.html">Galeria de Telas</a>
       <a class="active" href="help.html">Ajuda & FAQ</a>
@@ -1162,224 +1178,290 @@
                 publicação pública deve ser previamente comunicado por escrito ao criador do projeto (Vitor Krewer).
               </li>
             </ul>
-        <!-- Card 16: Como escrever Fórmulas Matemáticas e Reações Químicas (KaTeX & mhchem) -->
-        <div class="help-card" data-category="Ciências & Fórmulas" data-icon="📐"
-          data-text="como escrever formulas matematicas equacoes reacoes quimicas katex mhchem fisica calculo algebra grego teclado simbolos latex inline display">
-          <div>
-            <div class="help-card-header">
-              <div class="help-card-icon">📐</div>
-              <span class="help-card-badge">Ciências & Fórmulas</span>
-            </div>
-            <h3 class="help-card-title">Como escrever Fórmulas Matemáticas e Reações Químicas (KaTeX & mhchem)</h3>
-            <p class="help-card-snippet">Insira equações em linha ($) ou em bloco ($$), use o Teclado de Símbolos com abas de Engenharia/Física e monte reações químicas completas com mhchem.</p>
-          </div>
-          <div class="help-card-btn">
-            <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </div>
-          <template class="help-card-full">
-            <p>O <strong>Magnetares Notes</strong> integra o motor <strong>KaTeX</strong> diretamente no editor TipTap, 100% offline e com renderização matemática de nível TeX com latência zero (0ms), sem enviar dados para a internet.</p>
+            <!-- Card 16: Como escrever Fórmulas Matemáticas e Reações Químicas (KaTeX & mhchem) -->
+            <div class="help-card" data-category="Ciências & Fórmulas" data-icon="📐"
+              data-text="como escrever formulas matematicas equacoes reacoes quimicas katex mhchem fisica calculo algebra grego teclado simbolos latex inline display">
+              <div>
+                <div class="help-card-header">
+                  <div class="help-card-icon">📐</div>
+                  <span class="help-card-badge">Ciências & Fórmulas</span>
+                </div>
+                <h3 class="help-card-title">Como escrever Fórmulas Matemáticas e Reações Químicas (KaTeX & mhchem)</h3>
+                <p class="help-card-snippet">Insira equações em linha ($) ou em bloco ($$), use o Teclado de Símbolos
+                  com abas de Engenharia/Física e monte reações químicas completas com mhchem.</p>
+              </div>
+              <div class="help-card-btn">
+                <span>Ver resposta completa</span>
+                <svg viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </div>
+              <template class="help-card-full">
+                <p>O <strong>Magnetares Notes</strong> integra o motor <strong>KaTeX</strong> diretamente no editor
+                  TipTap, 100% offline e com renderização matemática de nível TeX com latência zero (0ms), sem enviar
+                  dados para a internet.</p>
 
-            <h4>1. Modos de Inserção: Inline e Display</h4>
-            <ul>
-              <li><strong>Fórmula em linha:</strong> Digite <code>$expressão$</code> diretamente no texto para inserir notações no meio do parágrafo, como <code>$E = mc^2$</code> ou <code>$\nabla \cdot \mathbf{B} = 0$</code>.</li>
-              <li><strong>Bloco matemático centralizado:</strong> Digite <code>$$</code> em uma nova linha ou clique no botão de fórmula (<strong>∑</strong>) na barra de ferramentas. O bloco renderiza em destaque centralizado com fundo contrastante.</li>
-            </ul>
+                <h4>1. Modos de Inserção: Inline e Display</h4>
+                <ul>
+                  <li><strong>Fórmula em linha:</strong> Digite <code>$expressão$</code> diretamente no texto para
+                    inserir notações no meio do parágrafo, como <code>$E = mc^2$</code> ou
+                    <code>$\nabla \cdot \mathbf{B} = 0$</code>.
+                  </li>
+                  <li><strong>Bloco matemático centralizado:</strong> Digite <code>$$</code> em uma nova linha ou clique
+                    no botão de fórmula (<strong>∑</strong>) na barra de ferramentas. O bloco renderiza em destaque
+                    centralizado com fundo contrastante.</li>
+                </ul>
 
-            <h4>2. Teclado Virtual de Símbolos Científicos</h4>
-            <p>Para acelerar a escrita sem memorizar comandos complexos de LaTeX, clique no ícone <strong>∑</strong> para abrir o modal com cinco abas temáticas:</p>
-            <ul>
-              <li><strong>Básico:</strong> Frações (<code>\frac{a}{b}</code>), raízes (<code>\sqrt{x}</code>), potências, subscritos e operadores lógicos.</li>
-              <li><strong>Cálculo & Vetores:</strong> Derivadas parciais (<code>\partial</code>), integrais simples e duplas (<code>\int</code>, <code>\iint</code>), somatórios (<code>\sum</code>), produtos (<code>\prod</code>) e operadores vetoriais (<code>\nabla</code>, gradiente, divergente, rotacional).</li>
-              <li><strong>Álgebra Linear:</strong> Matrizes delimitadas por colchetes ou parênteses, determinantes e vetores em negrito (<code>\mathbf{v}</code>).</li>
-              <li><strong>Letras Gregas:</strong> Alfabeto grego completo em maiúsculas e minúsculas (<code>\alpha, \beta, \gamma, \Delta, \theta, \lambda, \Omega</code>).</li>
-              <li><strong>Química & Reações:</strong> Notação química estruturada pelo pacote <code>mhchem</code>.</li>
-            </ul>
+                <h4>2. Teclado Virtual de Símbolos Científicos</h4>
+                <p>Para acelerar a escrita sem memorizar comandos complexos de LaTeX, clique no ícone <strong>∑</strong>
+                  para abrir o modal com cinco abas temáticas:</p>
+                <ul>
+                  <li><strong>Básico:</strong> Frações (<code>\frac{a}{b}</code>), raízes (<code>\sqrt{x}</code>),
+                    potências, subscritos e operadores lógicos.</li>
+                  <li><strong>Cálculo & Vetores:</strong> Derivadas parciais (<code>\partial</code>), integrais simples
+                    e duplas (<code>\int</code>, <code>\iint</code>), somatórios (<code>\sum</code>), produtos
+                    (<code>\prod</code>) e operadores vetoriais (<code>\nabla</code>, gradiente, divergente,
+                    rotacional).</li>
+                  <li><strong>Álgebra Linear:</strong> Matrizes delimitadas por colchetes ou parênteses, determinantes e
+                    vetores em negrito (<code>\mathbf{v}</code>).</li>
+                  <li><strong>Letras Gregas:</strong> Alfabeto grego completo em maiúsculas e minúsculas
+                    (<code>\alpha, \beta, \gamma, \Delta, \theta, \lambda, \Omega</code>).</li>
+                  <li><strong>Química & Reações:</strong> Notação química estruturada pelo pacote <code>mhchem</code>.
+                  </li>
+                </ul>
 
-            <h4>3. Reações Químicas com mhchem</h4>
-            <p>Escreva reações químicas balanceadas, equilíbrios iônicos e termodinâmica usando o comando <code>\ce{...}</code>:</p>
-            <div class="help-callout">
-              <strong>Exemplo de Tampão Fisiológico:</strong><br />
-              <code>$$\ce{H+ + HCO3- <=> H2CO3 <=> CO2 + H2O}$$</code>
+                <h4>3. Reações Químicas com mhchem</h4>
+                <p>Escreva reações químicas balanceadas, equilíbrios iônicos e termodinâmica usando o comando
+                  <code>\ce{...}</code>:
+                </p>
+                <div class="help-callout">
+                  <strong>Exemplo de Tampão Fisiológico:</strong><br />
+                  <code>$$\ce{H+ + HCO3- <=> H2CO3 <=> CO2 + H2O}$$</code>
+                </div>
+                <div class="help-callout">
+                  <strong>Exemplo de Respiração Celular:</strong><br />
+                  <code>$$\ce{C6H12O6 + 6O2 -> 6CO2 + 6H2O + 32ATP}$$</code>
+                </div>
+                <p>O motor gerencia subscritos, cargas elétricas e setas de equilíbrio químico automaticamente sem
+                  necessidade de formatação manual.</p>
+              </template>
             </div>
-            <div class="help-callout">
-              <strong>Exemplo de Respiração Celular:</strong><br />
-              <code>$$\ce{C6H12O6 + 6O2 -> 6CO2 + 6H2O + 32ATP}$$</code>
+
+            <!-- Card 17: Como criar e gerenciar Diagramas Técnicos com Mermaid.js -->
+            <div class="help-card" data-category="Modelagem Visual" data-icon="📊"
+              data-text="como criar diagramas tecnicos mermaid js fluxogramas engenharia krebs bioquimica sequencia maquinas de estado zoom svg rotas">
+              <div>
+                <div class="help-card-header">
+                  <div class="help-card-icon">📊</div>
+                  <span class="help-card-badge">Modelagem Visual</span>
+                </div>
+                <h3 class="help-card-title">Como criar e gerenciar Diagramas Técnicos com Mermaid.js</h3>
+                <p class="help-card-snippet">Modele fluxogramas de decisão, rotas metabólicas celulares, arcos reflexos
+                  de fisiologia e diagramas de sequência em gráficos vetoriais SVG nítidos.</p>
+              </div>
+              <div class="help-card-btn">
+                <span>Ver resposta completa</span>
+                <svg viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </div>
+              <template class="help-card-full">
+                <p>O <strong>Mermaid.js</strong> integrado no Magnetares Notes permite transformar texto em diagramas
+                  vetoriais SVG profissionais, renderizados localmente com total fidelidade em telas de qualquer
+                  resolução.</p>
+
+                <h4>1. Como Inserir um Bloco Mermaid</h4>
+                <ul>
+                  <li>Na barra de ferramentas do editor, clique no ícone de <strong>Diagrama Mermaid</strong> ou digite
+                    uma cerca de código com <code>```mermaid</code>.</li>
+                  <li>Um bloco estruturado será inserido contendo controles no topo: <strong>Editar Código</strong>,
+                    <strong>Copiar Código</strong>, <strong>Zoom</strong> e campo para <strong>Legenda
+                      Científica</strong>.
+                  </li>
+                </ul>
+
+                <h4>2. Templates Integrados com 1 Clique</h4>
+                <p>Ao editar o bloco, você pode escolher templates prontos para acelerar seu trabalho:</p>
+                <ul>
+                  <li>⚙️ <strong>Fluxograma de Engenharia (flowchart TD):</strong> Nós de partida, aquisição de
+                    sensores, blocos condicionais de tomada de decisão e acionamento de atuadores.</li>
+                  <li>🔬 <strong>Ciclo Bioquímico (graph LR):</strong> Integração metabólica entre Glicólise, Ciclo de
+                    Krebs mitocondrial, Cadeia de Elétrons e ATP Sintase com rendimento energético.</li>
+                  <li>🩺 <strong>Feedback Fisiológico & Homeostase (graph LR):</strong> Modelagem de arcos reflexos com
+                    estímulo, receptores, mediadores hormonais e alça de retroalimentação negativa.</li>
+                  <li>🔄 <strong>Diagrama de Sequência (sequenceDiagram):</strong> Fluxo temporal de mensagens entre
+                    atores e subsistemas com numeração automática de passos.</li>
+                  <li>⚡ <strong>Máquina de Estados (stateDiagram-v2):</strong> Estados de operação, alertas de
+                    emergência, transições e rotinas de reinício seguro.</li>
+                </ul>
+
+                <h4>3. Controles de Zoom e Legendas</h4>
+                <p>Diagramas extensos podem ser facilmente inspecionados com os botões de <strong>Zoom In (+)</strong>,
+                  <strong>Zoom Out (-)</strong> e <strong>Reset (100%)</strong>. A legenda no rodapé do bloco é
+                  preservada na exportação Markdown e na impressão em PDF.
+                </p>
+              </template>
             </div>
-            <p>O motor gerencia subscritos, cargas elétricas e setas de equilíbrio químico automaticamente sem necessidade de formatação manual.</p>
-          </template>
+
+            <!-- Card 18: Estudo Ativo: Blocos Expansíveis (Toggles) e Destaques Semânticos (Callouts) -->
+            <div class="help-card" data-category="Estudo Ativo" data-icon="🧠"
+              data-text="estudo ativo active recall blocos expansiveis toggles callouts destaques semanticos teoremas experimentos alertas clinicos perguntas auto-teste">
+              <div>
+                <div class="help-card-header">
+                  <div class="help-card-icon">🧠</div>
+                  <span class="help-card-badge">Estudo Ativo</span>
+                </div>
+                <h3 class="help-card-title">Estudo Ativo: Blocos Expansíveis (Toggles) e Destaques Semânticos (Callouts)
+                </h3>
+                <p class="help-card-snippet">Maximize a retenção para provas e concursos utilizando recuperação ativa em
+                  blocos sanfonados e organize seus cadernos com 5 categorias semânticas.</p>
+              </div>
+              <div class="help-card-btn">
+                <span>Ver resposta completa</span>
+                <svg viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </div>
+              <template class="help-card-full">
+                <p>O Magnetares Notes foi desenhado para ir além de um simples repositório passivo de notas. A
+                  metodologia de <strong>Active Recall</strong> (Recuperação Ativa) é implementada nativamente para
+                  potencializar a retenção em disciplinas de alta densidade teórica.</p>
+
+                <h4>1. O que são os Blocos Expansíveis (Toggles de Estudo)?</h4>
+                <ul>
+                  <li><strong>Estrutura:</strong> Você insere a pergunta ou problema no título do bloco expansível e
+                    mantém a resolução, prova matemática ou resposta oculta em seu interior.</li>
+                  <li><strong>Fórmulas no título:</strong> Os títulos dos toggles aceitam expressões KaTeX (ex:
+                    <em>"Como calcular a impedância total $Z$ em um circuito RLC paralelo?"</em>).
+                  </li>
+                  <li><strong>Botão Revelar / Ocultar:</strong> Cada bloco possui alternância rápida individual com
+                    preservação do estado de abertura na sessão.</li>
+                  <li><strong>Modo Auto-Teste Global:</strong> Use o atalho na barra do editor para recolher ou expandir
+                    todas as questões da nota simultaneamente antes de uma revisão geral.</li>
+                  <li><strong>Impressão Inteligente:</strong> Ao imprimir a nota ou gerar PDF, o Magnetares expande
+                    automaticamente todos os toggles para que nenhuma resolução seja cortada no papel.</li>
+                </ul>
+
+                <h4>2. Caixas Semânticas Acadêmicas (Callouts)</h4>
+                <p>Substitua anotações confusas por caixas com identificação visual imediata em 5 categorias:</p>
+                <ul>
+                  <li>💡 <strong>Nota / Informação:</strong> Contexto histórico, avisos bibliográficos e notas pontuais.
+                  </li>
+                  <li>📐 <strong>Teorema / Definição:</strong> Enunciados matemáticos formais, postulados da física e
+                    corolários.</li>
+                  <li>🔬 <strong>Experimento / Laboratório:</strong> Protocolos de bancada, calibração de instrumentos e
+                    dados amostrais.</li>
+                  <li>⚠️ <strong>Atenção / Alerta Clínico:</strong> Contraindicações farmacológicas, diagnósticos
+                    diferenciais e alertas de segurança.</li>
+                  <li>⚡ <strong>Exemplo Prático:</strong> Exercícios passo a passo, dimensionamento e aplicações reais
+                    de mercado.</li>
+                </ul>
+                <div class="help-callout">
+                  <strong>Compatibilidade garantida:</strong> Ao exportar suas notas em Markdown, os Callouts
+                  convertem-se perfeitamente para a sintaxe padrão do GitHub e Obsidian (<code>&gt; [!THEOREM]</code>,
+                  <code>&gt; [!WARNING]</code>).
+                </div>
+              </template>
+            </div>
+
+            <!-- Card 19: Exportação de Artigos e Trabalhos no Padrão ABNT (.docx) -->
+            <div class="help-card" data-category="Publicação Acadêmica" data-icon="🎓"
+              data-text="exportacao artigo abnt docx word normas nbr 14724 6024 10520 6023 sumario capa margens formatacao monografia tcc faculdade pos">
+              <div>
+                <div class="help-card-header">
+                  <div class="help-card-icon">🎓</div>
+                  <span class="help-card-badge">Publicação Acadêmica</span>
+                </div>
+                <h3 class="help-card-title">Exportação de Artigos e Trabalhos no Padrão ABNT (.docx)</h3>
+                <p class="help-card-snippet">Exporte suas anotações diretamente como artigo científico formatado em
+                  .docx para Microsoft Word e LibreOffice, 100% aderente às normas ABNT.</p>
+              </div>
+              <div class="help-card-btn">
+                <span>Ver resposta completa</span>
+                <svg viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </div>
+              <template class="help-card-full">
+                <p>O Magnetares Notes resolve o maior gargalo do estudante e pesquisador: transformar o caderno de
+                  estudos em um documento formal aceito por universidades e periódicos sem perder horas configurando
+                  margens e espaçamentos manuais.</p>
+
+                <h4>1. Normas ABNT Atendidas pelo Motor Nativo</h4>
+                <ul>
+                  <li><strong>NBR 14724 (Estrutura de Trabalhos Acadêmicos):</strong> Montagem automática de Capa
+                    Institucional (Instituição, Título, Autor, Cidade e Ano), Folha de Rosto explicativa, Sumário
+                    automático e Corpo do Trabalho.</li>
+                  <li><strong>NBR 6024 (Numeração Progressiva de Seções):</strong> Formatação hierárquica rigorosa (1
+                    SEÇÃO PRIMÁRIA em caixa alta negrito, 1.1 Seção Secundária, 1.1.1 Seção Terciária).</li>
+                  <li><strong>NBR 10520 (Citações):</strong> Citações diretas curtas mantidas no texto e citações longas
+                    (mais de 3 linhas) formatadas em bloco recuado a 4,0 cm da margem esquerda, tamanho 10 pt e
+                    entrelinhas simples.</li>
+                  <li><strong>NBR 6023 (Referências Bibliográficas):</strong> Seção final alinhada à esquerda com
+                    espaçamento entrelinhas simples e 1 linha em branco entre referências.</li>
+                </ul>
+
+                <h4>2. Geometria da Página e Tipografia</h4>
+                <ul>
+                  <li><strong>Margens:</strong> Superior de 3,0 cm, Esquerda de 3,0 cm, Inferior de 2,0 cm e Direita de
+                    2,0 cm.</li>
+                  <li><strong>Fonte:</strong> Arial (12 pt para o corpo do texto e títulos; 10 pt para citações longas e
+                    notas de rodapé).</li>
+                  <li><strong>Espaçamento:</strong> 1,5 linha com recuo de primeira linha de parágrafo configurado
+                    exatamente em 1,25 cm.</li>
+                  <li><strong>Alinhamento:</strong> Texto justificado com controle contra viúvas e órfãs.</li>
+                </ul>
+
+                <h4>3. Como Realizar a Exportação</h4>
+                <ol>
+                  <li>Abra a nota rica que você deseja transformar em trabalho ou artigo.</li>
+                  <li>Na barra de ferramentas superior direita, clique no ícone de <strong>Exportar Nota</strong>
+                    (Download).</li>
+                  <li>Selecione <strong>Artigo ABNT (.docx)</strong>.</li>
+                  <li>O arquivo formatado é gerado instantaneamente no seu computador, pronto para abrir no Microsoft
+                    Word, LibreOffice Writer, Google Docs ou Apple Pages.</li>
+                </ol>
+              </template>
+            </div>
+
         </div>
 
-        <!-- Card 17: Como criar e gerenciar Diagramas Técnicos com Mermaid.js -->
-        <div class="help-card" data-category="Modelagem Visual" data-icon="📊"
-          data-text="como criar diagramas tecnicos mermaid js fluxogramas engenharia krebs bioquimica sequencia maquinas de estado zoom svg rotas">
-          <div>
-            <div class="help-card-header">
-              <div class="help-card-icon">📊</div>
-              <span class="help-card-badge">Modelagem Visual</span>
-            </div>
-            <h3 class="help-card-title">Como criar e gerenciar Diagramas Técnicos com Mermaid.js</h3>
-            <p class="help-card-snippet">Modele fluxogramas de decisão, rotas metabólicas celulares, arcos reflexos de fisiologia e diagramas de sequência em gráficos vetoriais SVG nítidos.</p>
-          </div>
-          <div class="help-card-btn">
-            <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </div>
-          <template class="help-card-full">
-            <p>O <strong>Mermaid.js</strong> integrado no Magnetares Notes permite transformar texto em diagramas vetoriais SVG profissionais, renderizados localmente com total fidelidade em telas de qualquer resolução.</p>
-
-            <h4>1. Como Inserir um Bloco Mermaid</h4>
-            <ul>
-              <li>Na barra de ferramentas do editor, clique no ícone de <strong>Diagrama Mermaid</strong> ou digite uma cerca de código com <code>```mermaid</code>.</li>
-              <li>Um bloco estruturado será inserido contendo controles no topo: <strong>Editar Código</strong>, <strong>Copiar Código</strong>, <strong>Zoom</strong> e campo para <strong>Legenda Científica</strong>.</li>
-            </ul>
-
-            <h4>2. Templates Integrados com 1 Clique</h4>
-            <p>Ao editar o bloco, você pode escolher templates prontos para acelerar seu trabalho:</p>
-            <ul>
-              <li>⚙️ <strong>Fluxograma de Engenharia (flowchart TD):</strong> Nós de partida, aquisição de sensores, blocos condicionais de tomada de decisão e acionamento de atuadores.</li>
-              <li>🔬 <strong>Ciclo Bioquímico (graph LR):</strong> Integração metabólica entre Glicólise, Ciclo de Krebs mitocondrial, Cadeia de Elétrons e ATP Sintase com rendimento energético.</li>
-              <li>🩺 <strong>Feedback Fisiológico & Homeostase (graph LR):</strong> Modelagem de arcos reflexos com estímulo, receptores, mediadores hormonais e alça de retroalimentação negativa.</li>
-              <li>🔄 <strong>Diagrama de Sequência (sequenceDiagram):</strong> Fluxo temporal de mensagens entre atores e subsistemas com numeração automática de passos.</li>
-              <li>⚡ <strong>Máquina de Estados (stateDiagram-v2):</strong> Estados de operação, alertas de emergência, transições e rotinas de reinício seguro.</li>
-            </ul>
-
-            <h4>3. Controles de Zoom e Legendas</h4>
-            <p>Diagramas extensos podem ser facilmente inspecionados com os botões de <strong>Zoom In (+)</strong>, <strong>Zoom Out (-)</strong> e <strong>Reset (100%)</strong>. A legenda no rodapé do bloco é preservada na exportação Markdown e na impressão em PDF.</p>
-          </template>
+        <div id="no-results"
+          style="display: none; text-align: center; color: #9da3c9; margin-top: 40px; font-size: 16px;">
+          Nenhum resultado encontrado para a sua busca.
         </div>
-
-        <!-- Card 18: Estudo Ativo: Blocos Expansíveis (Toggles) e Destaques Semânticos (Callouts) -->
-        <div class="help-card" data-category="Estudo Ativo" data-icon="🧠"
-          data-text="estudo ativo active recall blocos expansiveis toggles callouts destaques semanticos teoremas experimentos alertas clinicos perguntas auto-teste">
-          <div>
-            <div class="help-card-header">
-              <div class="help-card-icon">🧠</div>
-              <span class="help-card-badge">Estudo Ativo</span>
-            </div>
-            <h3 class="help-card-title">Estudo Ativo: Blocos Expansíveis (Toggles) e Destaques Semânticos (Callouts)</h3>
-            <p class="help-card-snippet">Maximize a retenção para provas e concursos utilizando recuperação ativa em blocos sanfonados e organize seus cadernos com 5 categorias semânticas.</p>
-          </div>
-          <div class="help-card-btn">
-            <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </div>
-          <template class="help-card-full">
-            <p>O Magnetares Notes foi desenhado para ir além de um simples repositório passivo de notas. A metodologia de <strong>Active Recall</strong> (Recuperação Ativa) é implementada nativamente para potencializar a retenção em disciplinas de alta densidade teórica.</p>
-
-            <h4>1. O que são os Blocos Expansíveis (Toggles de Estudo)?</h4>
-            <ul>
-              <li><strong>Estrutura:</strong> Você insere a pergunta ou problema no título do bloco expansível e mantém a resolução, prova matemática ou resposta oculta em seu interior.</li>
-              <li><strong>Fórmulas no título:</strong> Os títulos dos toggles aceitam expressões KaTeX (ex: <em>"Como calcular a impedância total $Z$ em um circuito RLC paralelo?"</em>).</li>
-              <li><strong>Botão Revelar / Ocultar:</strong> Cada bloco possui alternância rápida individual com preservação do estado de abertura na sessão.</li>
-              <li><strong>Modo Auto-Teste Global:</strong> Use o atalho na barra do editor para recolher ou expandir todas as questões da nota simultaneamente antes de uma revisão geral.</li>
-              <li><strong>Impressão Inteligente:</strong> Ao imprimir a nota ou gerar PDF, o Magnetares expande automaticamente todos os toggles para que nenhuma resolução seja cortada no papel.</li>
-            </ul>
-
-            <h4>2. Caixas Semânticas Acadêmicas (Callouts)</h4>
-            <p>Substitua anotações confusas por caixas com identificação visual imediata em 5 categorias:</p>
-            <ul>
-              <li>💡 <strong>Nota / Informação:</strong> Contexto histórico, avisos bibliográficos e notas pontuais.</li>
-              <li>📐 <strong>Teorema / Definição:</strong> Enunciados matemáticos formais, postulados da física e corolários.</li>
-              <li>🔬 <strong>Experimento / Laboratório:</strong> Protocolos de bancada, calibração de instrumentos e dados amostrais.</li>
-              <li>⚠️ <strong>Atenção / Alerta Clínico:</strong> Contraindicações farmacológicas, diagnósticos diferenciais e alertas de segurança.</li>
-              <li>⚡ <strong>Exemplo Prático:</strong> Exercícios passo a passo, dimensionamento e aplicações reais de mercado.</li>
-            </ul>
-            <div class="help-callout">
-              <strong>Compatibilidade garantida:</strong> Ao exportar suas notas em Markdown, os Callouts convertem-se perfeitamente para a sintaxe padrão do GitHub e Obsidian (<code>&gt; [!THEOREM]</code>, <code>&gt; [!WARNING]</code>).
-            </div>
-          </template>
-        </div>
-
-        <!-- Card 19: Exportação de Artigos e Trabalhos no Padrão ABNT (.docx) -->
-        <div class="help-card" data-category="Publicação Acadêmica" data-icon="🎓"
-          data-text="exportacao artigo abnt docx word normas nbr 14724 6024 10520 6023 sumario capa margens formatacao monografia tcc faculdade pos">
-          <div>
-            <div class="help-card-header">
-              <div class="help-card-icon">🎓</div>
-              <span class="help-card-badge">Publicação Acadêmica</span>
-            </div>
-            <h3 class="help-card-title">Exportação de Artigos e Trabalhos no Padrão ABNT (.docx)</h3>
-            <p class="help-card-snippet">Exporte suas anotações diretamente como artigo científico formatado em .docx para Microsoft Word e LibreOffice, 100% aderente às normas ABNT.</p>
-          </div>
-          <div class="help-card-btn">
-            <span>Ver resposta completa</span>
-            <svg viewBox="0 0 24 24">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </div>
-          <template class="help-card-full">
-            <p>O Magnetares Notes resolve o maior gargalo do estudante e pesquisador: transformar o caderno de estudos em um documento formal aceito por universidades e periódicos sem perder horas configurando margens e espaçamentos manuais.</p>
-
-            <h4>1. Normas ABNT Atendidas pelo Motor Nativo</h4>
-            <ul>
-              <li><strong>NBR 14724 (Estrutura de Trabalhos Acadêmicos):</strong> Montagem automática de Capa Institucional (Instituição, Título, Autor, Cidade e Ano), Folha de Rosto explicativa, Sumário automático e Corpo do Trabalho.</li>
-              <li><strong>NBR 6024 (Numeração Progressiva de Seções):</strong> Formatação hierárquica rigorosa (1 SEÇÃO PRIMÁRIA em caixa alta negrito, 1.1 Seção Secundária, 1.1.1 Seção Terciária).</li>
-              <li><strong>NBR 10520 (Citações):</strong> Citações diretas curtas mantidas no texto e citações longas (mais de 3 linhas) formatadas em bloco recuado a 4,0 cm da margem esquerda, tamanho 10 pt e entrelinhas simples.</li>
-              <li><strong>NBR 6023 (Referências Bibliográficas):</strong> Seção final alinhada à esquerda com espaçamento entrelinhas simples e 1 linha em branco entre referências.</li>
-            </ul>
-
-            <h4>2. Geometria da Página e Tipografia</h4>
-            <ul>
-              <li><strong>Margens:</strong> Superior de 3,0 cm, Esquerda de 3,0 cm, Inferior de 2,0 cm e Direita de 2,0 cm.</li>
-              <li><strong>Fonte:</strong> Arial (12 pt para o corpo do texto e títulos; 10 pt para citações longas e notas de rodapé).</li>
-              <li><strong>Espaçamento:</strong> 1,5 linha com recuo de primeira linha de parágrafo configurado exatamente em 1,25 cm.</li>
-              <li><strong>Alinhamento:</strong> Texto justificado com controle contra viúvas e órfãs.</li>
-            </ul>
-
-            <h4>3. Como Realizar a Exportação</h4>
-            <ol>
-              <li>Abra a nota rica que você deseja transformar em trabalho ou artigo.</li>
-              <li>Na barra de ferramentas superior direita, clique no ícone de <strong>Exportar Nota</strong> (Download).</li>
-              <li>Selecione <strong>Artigo ABNT (.docx)</strong>.</li>
-              <li>O arquivo formatado é gerado instantaneamente no seu computador, pronto para abrir no Microsoft Word, LibreOffice Writer, Google Docs ou Apple Pages.</li>
-            </ol>
-          </template>
-        </div>
-
       </div>
 
-      <div id="no-results"
-        style="display: none; text-align: center; color: #9da3c9; margin-top: 40px; font-size: 16px;">
-        Nenhum resultado encontrado para a sua busca.
-      </div>
-    </div>
-
-    <!-- MODAL DE AJUDA COMPLETA -->
-    <div class="help-modal-overlay" id="help-modal" aria-hidden="true" role="dialog" aria-modal="true"
-      aria-labelledby="help-modal-title">
-      <div class="help-modal-box" id="help-modal-box">
-        <div class="help-modal-header">
-          <div class="help-modal-header-info">
-            <div class="help-modal-header-icon" id="help-modal-icon">☁️</div>
-            <div class="help-modal-header-titles">
-              <span class="help-modal-badge" id="help-modal-badge">Nuvem</span>
-              <h3 id="help-modal-title">Título do Artigo</h3>
+      <!-- MODAL DE AJUDA COMPLETA -->
+      <div class="help-modal-overlay" id="help-modal" aria-hidden="true" role="dialog" aria-modal="true"
+        aria-labelledby="help-modal-title">
+        <div class="help-modal-box" id="help-modal-box">
+          <div class="help-modal-header">
+            <div class="help-modal-header-info">
+              <div class="help-modal-header-icon" id="help-modal-icon">☁️</div>
+              <div class="help-modal-header-titles">
+                <span class="help-modal-badge" id="help-modal-badge">Nuvem</span>
+                <h3 id="help-modal-title">Título do Artigo</h3>
+              </div>
             </div>
+            <button class="help-modal-close" id="help-modal-close" type="button" aria-label="Fechar modal"
+              title="Fechar">✕</button>
           </div>
-          <button class="help-modal-close" id="help-modal-close" type="button" aria-label="Fechar modal"
-            title="Fechar">✕</button>
-        </div>
-        <div class="help-modal-body" id="help-modal-body">
-          <!-- Conteúdo completo injetado dinamicamente -->
-        </div>
-        <div class="help-modal-footer">
-          <button class="help-modal-btn-done" id="help-modal-btn-close" type="button">Fechar</button>
+          <div class="help-modal-body" id="help-modal-body">
+            <!-- Conteúdo completo injetado dinamicamente -->
+          </div>
+          <div class="help-modal-footer">
+            <button class="help-modal-btn-done" id="help-modal-btn-close" type="button">Fechar</button>
+          </div>
         </div>
       </div>
-    </div>
   </main>
 
+  <!-- RODAPÉ INSTITUCIONAL PROFISSIONAL -->
   <footer class="site-footer">
     <div class="footer-top">
       <div class="footer-brand-col">
-        <a class="brand" href="#top" aria-label="Voltar ao topo">
+        <a class="brand" href="index.html" aria-label="Magnetares Notes">
           <img src="assets/magnetar-icon.png" alt="" />
           <span>Magnetares</span>
         </a>
@@ -1414,7 +1496,8 @@
       <div class="footer-col">
         <h5>Navegação</h5>
         <ul>
-          <li><a href="recursos.html">Recursos do Editor</a></li>
+          <li><a href="recursos.html">Recursos</a></li>
+          <li><a href="guia-usuario.html">Guia de Uso</a></li>
           <li><a href="index.html#arquitetura">Arquitetura Técnica</a></li>
           <li><a href="screenshots.html">Galeria de Telas</a></li>
           <li><a href="help.html">Ajuda & FAQ</a></li>
@@ -1426,12 +1509,36 @@
       <div class="footer-col">
         <h5>Tecnologias</h5>
         <ul>
-          <li><a href="https://wails.io" target="_blank" rel="noreferrer">Wails Framework</a></li>
-          <li><a href="https://golang.org" target="_blank" rel="noreferrer">Go Language</a></li>
-          <li><a href="https://turso.tech" target="_blank" rel="noreferrer">Turso LibSQL</a></li>
-          <li><a href="https://tiptap.dev" target="_blank" rel="noreferrer">Tiptap Editor</a></li>
-          <li><a href="https://katex.org" target="_blank" rel="noreferrer">KaTeX Math</a></li>
-          <li><a href="https://mermaid.js.org" target="_blank" rel="noreferrer">Mermaid.js</a></li>
+          <li><a href="https://wails.io" target="_blank" rel="noreferrer">Wails Framework <svg class="external-icon"
+                viewBox="0 0 24 24">
+                <path
+                  d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+              </svg></a></li>
+          <li><a href="https://golang.org" target="_blank" rel="noreferrer">Go Language <svg class="external-icon"
+                viewBox="0 0 24 24">
+                <path
+                  d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+              </svg></a></li>
+          <li><a href="https://turso.tech" target="_blank" rel="noreferrer">Turso LibSQL <svg class="external-icon"
+                viewBox="0 0 24 24">
+                <path
+                  d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+              </svg></a></li>
+          <li><a href="https://tiptap.dev" target="_blank" rel="noreferrer">Tiptap Editor <svg class="external-icon"
+                viewBox="0 0 24 24">
+                <path
+                  d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+              </svg></a></li>
+          <li><a href="https://katex.org" target="_blank" rel="noreferrer">KaTeX Math <svg class="external-icon"
+                viewBox="0 0 24 24">
+                <path
+                  d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+              </svg></a></li>
+          <li><a href="https://mermaid.js.org" target="_blank" rel="noreferrer">Mermaid.js <svg class="external-icon"
+                viewBox="0 0 24 24">
+                <path
+                  d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
+              </svg></a></li>
         </ul>
       </div>
 
@@ -1482,6 +1589,13 @@
       </div>
     </div>
   </footer>
+
+  <!-- BOTÃO FLUTUANTE VOLTAR AO TOPO -->
+  <button class="scroll-top-btn" id="scroll-top-btn" type="button" aria-label="Voltar ao topo" title="Voltar ao topo">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z" />
+    </svg>
+  </button>
 
   <script src="script.js?v=1.8.0"></script>
   <script>

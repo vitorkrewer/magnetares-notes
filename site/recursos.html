@@ -18,11 +18,23 @@
 
   <link rel="stylesheet" href="styles.css?v=1.8.0" />
   <style>
-    .mobile-drawer-overlay, .mobile-nav-drawer { display: none; }
+    .mobile-drawer-overlay,
+    .mobile-nav-drawer {
+      display: none;
+    }
+
     @media (max-width: 980px) {
-      .menu-toggle-btn { display: inline-flex !important; }
-      .mobile-drawer-overlay.active { display: block !important; }
-      .mobile-nav-drawer.active { display: flex !important; }
+      .menu-toggle-btn {
+        display: inline-flex !important;
+      }
+
+      .mobile-drawer-overlay.active {
+        display: block !important;
+      }
+
+      .mobile-nav-drawer.active {
+        display: flex !important;
+      }
     }
   </style>
 </head>
@@ -37,18 +49,21 @@
 
     <nav class="header-nav" aria-label="Navegação principal">
       <a class="active" href="#top">Recursos</a>
+      <a href="guia-usuario.html">Guia de Uso</a>
       <a href="index.html#arquitetura">Arquitetura</a>
       <a href="screenshots.html">Screenshots</a>
       <a href="help.html">Ajuda & FAQ</a>
       <a href="blog.html">Blog</a>
+      <a href="release.html">Releases</a>
     </nav>
 
     <div class="header-actions">
-      <a class="header-download-btn" href="#downloads">
+      <a class="header-download-btn" href="index.html#downloads">
         <span>Baixar</span>
         <span id="header-version-badge">v1.8.0</span>
       </a>
-      <button class="menu-toggle-btn" id="mobile-menu-toggle" type="button" aria-label="Abrir menu de navegação" aria-expanded="false">
+      <button class="menu-toggle-btn" id="mobile-menu-toggle" type="button" aria-label="Abrir menu de navegação"
+        aria-expanded="false">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" />
         </svg>
@@ -61,6 +76,7 @@
   <aside class="mobile-nav-drawer" id="mobile-nav-drawer" aria-label="Navegação mobile" aria-hidden="true">
     <div class="mobile-nav-links">
       <a class="active" href="recursos.html">Recursos</a>
+      <a href="guia-usuario.html">Guia de Uso</a>
       <a href="index.html#arquitetura">Arquitetura Técnica</a>
       <a href="screenshots.html">Galeria de Telas</a>
       <a href="help.html">Ajuda & FAQ</a>
@@ -68,7 +84,7 @@
       <a href="release.html">Notas de Release (Changelog)</a>
     </div>
     <div class="mobile-drawer-footer">
-      <a class="btn-drawer-download" href="#downloads">
+      <a class="btn-drawer-download" href="index.html#downloads">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
@@ -259,7 +275,8 @@
               <span class="feature-tag-status">KaTeX + mhchem</span>
             </div>
             <h3>Fórmulas Matemáticas & Químicas</h3>
-            <p>Escreva e visualize equações matemáticas de nível TeX e reações químicas com renderização KaTeX de alta precisão, 100% offline.</p>
+            <p>Escreva e visualize equações matemáticas de nível TeX e reações químicas com renderização KaTeX de alta
+              precisão, 100% offline.</p>
             <ul>
               <li>Fórmulas em linha ($...$) e em bloco centralizado ($$...$$)</li>
               <li>Reações químicas com sintaxe mhchem (tampão sanguíneo, íons, redox e decaimentos)</li>
@@ -278,7 +295,8 @@
               <span class="feature-tag-status">Teclado Virtual</span>
             </div>
             <h3>Teclado de Símbolos Científicos</h3>
-            <p>Modal com abas temáticas para inserção ágil de notações avançadas sem necessidade de decorar toda a sintaxe LaTeX.</p>
+            <p>Modal com abas temáticas para inserção ágil de notações avançadas sem necessidade de decorar toda a
+              sintaxe LaTeX.</p>
             <ul>
               <li>Abas especializadas: Básico, Cálculo & Vetores, Álgebra Linear, Letras Gregas e Química</li>
               <li>Inserção de derivadas parciais, integrais duplas, gradientes, matrizes e setas de equilíbrio</li>
@@ -298,7 +316,8 @@
               <span class="feature-tag-status">Mermaid.js</span>
             </div>
             <h3>Diagramas Técnicos & Científicos</h3>
-            <p>Renderize fluxogramas, rotas bioquímicas, modelos de homeostase e arquiteturas gráficas em SVG vetorial de alta definição.</p>
+            <p>Renderize fluxogramas, rotas bioquímicas, modelos de homeostase e arquiteturas gráficas em SVG vetorial
+              de alta definição.</p>
             <ul>
               <li>Templates com 1 clique para Engenharia, Biologia (Krebs), Fisiologia e Computação</li>
               <li>Editor interativo com live preview, zoom escalável (+/-) e restauração (100%)</li>
@@ -316,9 +335,11 @@
               <span class="feature-tag-status">Acadêmico</span>
             </div>
             <h3>Destaques Semânticos (Callouts)</h3>
-            <p>Organize deduções e conceitos com caixas de destaque temáticas com ícones dedicados e bordas vibrantes.</p>
+            <p>Organize deduções e conceitos com caixas de destaque temáticas com ícones dedicados e bordas vibrantes.
+            </p>
             <ul>
-              <li>5 categorias: 💡 Notas, 📐 Teoremas, 🔬 Experimentos de Laboratório, ⚠️ Alertas Clínicos e ⚡ Exemplos Práticos</li>
+              <li>5 categorias: 💡 Notas, 📐 Teoremas, 🔬 Experimentos de Laboratório, ⚠️ Alertas Clínicos e ⚡ Exemplos
+                Práticos</li>
               <li>Alternância de categoria em 1 clique e design adaptado aos temas claro e escuro</li>
               <li>Compatibilidade bidirecional com Markdown GFM e Obsidian (&gt; [!THEOREM])</li>
             </ul>
@@ -334,7 +355,8 @@
               <span class="feature-tag-status">Active Recall</span>
             </div>
             <h3>Blocos Expansíveis (Toggles)</h3>
-            <p>Oculte e revele respostas, deduções e diagnósticos para praticar estudo ativo e auto-teste antes de provas.</p>
+            <p>Oculte e revele respostas, deduções e diagnósticos para praticar estudo ativo e auto-teste antes de
+              provas.</p>
             <ul>
               <li>Fórmulas matemáticas KaTeX integradas no título/pergunta</li>
               <li>Botão rápido Revelar/Ocultar e controle global para modo auto-teste</li>
@@ -355,7 +377,8 @@
               <span class="feature-tag-status">ABNT Oficial</span>
             </div>
             <h3>Motor de Artigos ABNT (.docx)</h3>
-            <p>Exportação direta de notas para documentos do Microsoft Word formatados rigorosamente nas normas ABNT vigentes.</p>
+            <p>Exportação direta de notas para documentos do Microsoft Word formatados rigorosamente nas normas ABNT
+              vigentes.</p>
             <ul>
               <li>Normas NBR 14724 (Estrutura), NBR 6024 (Numeração), NBR 10520 (Citações) e NBR 6023 (Referências)</li>
               <li>Margens 3-3-2-2 cm, fonte Arial 12/10 pt, entrelinhas 1,5 e recuo de parágrafo de 1,25 cm</li>
@@ -371,7 +394,8 @@
           <div>
             <p class="kicker">Produtividade Pessoal · Novo v1.8.0</p>
             <h2>Listas, Tarefas & Subtarefas</h2>
-            <p>Gerenciamento completo de pendências. Hierarquia em quatro níveis, prioridades visuais semânticas e sincronização atômica.</p>
+            <p>Gerenciamento completo de pendências. Hierarquia em quatro níveis, prioridades visuais semânticas e
+              sincronização atômica.</p>
           </div>
           <span class="feature-tag-status">v1.8.0 Estável</span>
         </div>
@@ -387,7 +411,9 @@
               <span class="feature-tag-status">4 Níveis</span>
             </div>
             <h3>Hierarquia de Quatro Níveis</h3>
-            <p>Estruture compromissos em quatro camadas lógicas e complementares: <strong>Listas</strong> ➔ <strong>Tarefas</strong> ➔ <strong>Subtarefas (Checklists)</strong> ➔ <strong>Múltiplas Notas</strong>.</p>
+            <p>Estruture compromissos em quatro camadas lógicas e complementares: <strong>Listas</strong> ➔
+              <strong>Tarefas</strong> ➔ <strong>Subtarefas (Checklists)</strong> ➔ <strong>Múltiplas Notas</strong>.
+            </p>
             <ul>
               <li>Lista padrão "Entrada" (<code>list-inbox</code>) protegida para triagem imediata</li>
               <li>Criação de listas temáticas com paleta de cores e ícones customizáveis</li>
@@ -405,7 +431,8 @@
               <span class="feature-tag-status">Quick-Add</span>
             </div>
             <h3>Entrada Rápida & Painel Inspector</h3>
-            <p>Adicione pendências teclando <code>Enter</code> e faça ajustes finos no painel lateral de inspeção sem perder o fluxo de foco.</p>
+            <p>Adicione pendências teclando <code>Enter</code> e faça ajustes finos no painel lateral de inspeção sem
+              perder o fluxo de foco.</p>
             <ul>
               <li>Barra Quick-Add com seleção direta de prioridade e prazo relativo</li>
               <li>Edição inline de título, notas e troca de lista de destino em tempo real</li>
@@ -417,13 +444,15 @@
             <div class="feature-card-header">
               <div class="feature-icon-badge">
                 <svg viewBox="0 0 24 24">
-                  <path d="M12 2c1.1 0 2 .9 2 2 0 .74-.4 1.38-1 1.72v2.34C16.89 8.54 20 11.9 20 16c0 4.41-3.59 8-8 8s-8-3.59-8-8c0-4.1 3.11-7.46 7-7.94V5.72C10.4 5.38 10 4.74 10 4c0-1.1.9-2 2-2zm-1 8.08C7.62 10.53 5 13.04 5 16.2 5 19.96 8.14 23 12 23s7-3.04 7-6.8c0-3.16-2.62-5.67-6-6.12v2.24c1.83.4 3.2 1.95 3.2 3.88 0 2.21-1.79 4-4 4s-4-1.79-4-4c0-1.93 1.37-3.48 3.2-3.88v-2.24z" />
+                  <path
+                    d="M12 2c1.1 0 2 .9 2 2 0 .74-.4 1.38-1 1.72v2.34C16.89 8.54 20 11.9 20 16c0 4.41-3.59 8-8 8s-8-3.59-8-8c0-4.1 3.11-7.46 7-7.94V5.72C10.4 5.38 10 4.74 10 4c0-1.1.9-2 2-2zm-1 8.08C7.62 10.53 5 13.04 5 16.2 5 19.96 8.14 23 12 23s7-3.04 7-6.8c0-3.16-2.62-5.67-6-6.12v2.24c1.83.4 3.2 1.95 3.2 3.88 0 2.21-1.79 4-4 4s-4-1.79-4-4c0-1.93 1.37-3.48 3.2-3.88v-2.24z" />
                 </svg>
               </div>
               <span class="feature-tag-status">Semântica</span>
             </div>
             <h3>Prioridades Semânticas Distintas</h3>
-            <p>Identificação visual imediata que substitui bandeiras genéricas por ícones com significado e cores dedicadas.</p>
+            <p>Identificação visual imediata que substitui bandeiras genéricas por ícones com significado e cores
+              dedicadas.</p>
             <ul>
               <li>🔥 <strong>Alta:</strong> Chama vermelha para urgência máxima</li>
               <li>⚠️ <strong>Média:</strong> Triângulo laranja e ⬇️ <strong>Baixa:</strong> Seta azul</li>
@@ -435,13 +464,15 @@
             <div class="feature-card-header">
               <div class="feature-icon-badge">
                 <svg viewBox="0 0 24 24">
-                  <path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z" />
+                  <path
+                    d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z" />
                 </svg>
               </div>
               <span class="feature-tag-status">Soft-Delete</span>
             </div>
             <h3>Arquivamento Inteligente de Listas</h3>
-            <p>Despolua a barra lateral arquivando listas concluídas ou sazonais sem perder histórico, notas ou subtarefas.</p>
+            <p>Despolua a barra lateral arquivando listas concluídas ou sazonais sem perder histórico, notas ou
+              subtarefas.</p>
             <ul>
               <li>Seção recolhível dedicada "Arquivadas (N)" na barra lateral</li>
               <li>Modo consulta com banner explicativo e desarquivamento em 1 clique</li>
@@ -453,13 +484,15 @@
             <div class="feature-card-header">
               <div class="feature-icon-badge">
                 <svg viewBox="0 0 24 24">
-                  <path d="M19 4H5c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.89-2-2-2zm0 14H5V8h14v10z" />
+                  <path
+                    d="M19 4H5c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.89-2-2-2zm0 14H5V8h14v10z" />
                 </svg>
               </div>
               <span class="feature-tag-status">Modais Nativos</span>
             </div>
             <h3>Diálogos Centralizados sem window.confirm</h3>
-            <p>Telas de confirmação elegantes e integradas ao tema, substituindo completamente pop-ups técnicos do navegador.</p>
+            <p>Telas de confirmação elegantes e integradas ao tema, substituindo completamente pop-ups técnicos do
+              navegador.</p>
             <ul>
               <li>Eliminação de mensagens do browser com portas ou IPs locais</li>
               <li>Avisos detalhados de exclusão com impacto claro na nuvem Turso</li>
@@ -471,13 +504,15 @@
             <div class="feature-card-header">
               <div class="feature-icon-badge">
                 <svg viewBox="0 0 24 24">
-                  <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z" />
+                  <path
+                    d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z" />
                 </svg>
               </div>
               <span class="feature-tag-status">Sync Turso</span>
             </div>
             <h3>Sincronização em Tempo Real (LWW)</h3>
-            <p>Tabelas remotas dedicadas para listas, tarefas e subtarefas mantidas em sincronia instantânea na nuvem.</p>
+            <p>Tabelas remotas dedicadas para listas, tarefas e subtarefas mantidas em sincronia instantânea na nuvem.
+            </p>
             <ul>
               <li>Disparo imediato ao criar, atualizar, arquivar ou remover registros</li>
               <li>Resolução Last-Write-Wins (LWW) com proteção contra concorrência</li>
@@ -811,7 +846,8 @@
             <h3>Exportação em Múltiplos Formatos</h3>
             <p>Leve o conteúdo da sua nota formatado para qualquer outro ecossistema de software.</p>
             <ul>
-              <li><strong>Artigo ABNT (.docx):</strong> padrão acadêmico oficial (NBR 14724/6024/10520/6023) com margens 3-3-2-2 cm, Arial 12/10 pt, 1,5 linha e recuo de 1,25 cm</li>
+              <li><strong>Artigo ABNT (.docx):</strong> padrão acadêmico oficial (NBR 14724/6024/10520/6023) com margens
+                3-3-2-2 cm, Arial 12/10 pt, 1,5 linha e recuo de 1,25 cm</li>
               <li><strong>Markdown (.md):</strong> sintaxe limpa e estruturada</li>
               <li><strong>HTML (.html):</strong> arquivo independente com estilos básicos</li>
               <li><strong>Texto (.txt):</strong> título e corpo extraído em texto puro</li>
@@ -925,7 +961,8 @@
       <div class="footer-col">
         <h5>Navegação</h5>
         <ul>
-          <li><a href="recursos.html">Recursos do Editor</a></li>
+          <li><a href="recursos.html">Recursos</a></li>
+          <li><a href="guia-usuario.html">Guia de Uso</a></li>
           <li><a href="index.html#arquitetura">Arquitetura Técnica</a></li>
           <li><a href="screenshots.html">Galeria de Telas</a></li>
           <li><a href="help.html">Ajuda & FAQ</a></li>

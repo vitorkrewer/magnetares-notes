@@ -1,0 +1,102 @@
+{
+  "title": "Guia de Uso — Magnetares Notes",
+  "version": "v1.9.0",
+  "groups": [
+    {
+      "name": "Começando",
+      "chapters": [
+        {
+          "id": "01-introducao-instalacao",
+          "title": "Primeiros Passos & Instalação",
+          "icon": "rocket",
+          "badge": "Essencial",
+          "summary": "Filosofia local-first, download para Windows, Linux e Mac, e a versão portátil Multiverse."
+        }
+      ]
+    },
+    {
+      "name": "Edição & Ciências",
+      "chapters": [
+        {
+          "id": "02-editor-texto-rico",
+          "title": "Editor de Texto Rico",
+          "icon": "edit-3",
+          "summary": "Títulos, checklists, tabelas com colagem do Excel, citações e cálculos aritméticos."
+        },
+        {
+          "id": "03-ciencias-formulas-mermaid",
+          "title": "Fórmulas, Ciências & Diagramas",
+          "icon": "activity",
+          "badge": "Novo v1.9.0",
+          "summary": "LaTeX KaTeX offline, química com mhchem, callouts semânticos, toggles de estudo ativo e Mermaid.js."
+        },
+        {
+          "id": "04-notas-codigo-prototipos",
+          "title": "Notas de Código & Protótipos",
+          "icon": "code",
+          "summary": "Monaco Editor integrado, syntax highlighting para dezenas de linguagens e live preview de protótipos web."
+        }
+      ]
+    },
+    {
+      "name": "Produtividade & Foco",
+      "chapters": [
+        {
+          "id": "05-listas-e-tarefas",
+          "title": "Listas & Tarefas",
+          "icon": "check-square",
+          "badge": "v1.8.0",
+          "summary": "Hierarquia em 4 níveis, prioridades com ícones semânticos, entrada rápida e notas contextuais."
+        },
+        {
+          "id": "06-mural-stickers",
+          "title": "Mural de Stickers (Post-its)",
+          "icon": "grid",
+          "summary": "Notas autoadesivas em tela cheia, quadros dedicados, 8 cores pastel e ordenação drag & drop."
+        },
+        {
+          "id": "07-modo-foco-pip",
+          "title": "Modo Foco (Janela Independente)",
+          "icon": "maximize-2",
+          "badge": "Novo v1.9.0",
+          "summary": "Destaque notas em janelas nativas com fixação no topo enquanto continua navegando no app."
+        }
+      ]
+    },
+    {
+      "name": "Organização & Arquivos",
+      "chapters": [
+        {
+          "id": "08-pastas-tags-lixeira",
+          "title": "Pastas, Etiquetas & Lixeira",
+          "icon": "folder",
+          "summary": "Árvore de subpastas coloridas, tags inteligentes e lixeira fixa com restauração rápida."
+        },
+        {
+          "id": "09-exportacao-abnt-pdf",
+          "title": "Exportação ABNT (.docx) & PDF",
+          "icon": "file-text",
+          "badge": "Novo v1.9.0",
+          "summary": "Emissão de artigos acadêmicos normatizados no Word, impressão em papel branco puro e Markdown."
+        }
+      ]
+    },
+    {
+      "name": "Nuvem & Referência",
+      "chapters": [
+        {
+          "id": "10-nuvem-backup-compliance",
+          "title": "Nuvem, Backup & Integridade",
+          "icon": "shield",
+          "summary": "Sincronização Turso/libSQL opcional, resolução de conflitos, backups em 1 clique e auditoria SQLite."
+        },
+        {
+          "id": "11-atalhos-teclado",
+          "title": "Atalhos de Teclado",
+          "icon": "command",
+          "summary": "Tabela completa de atalhos de teclado para acelerar seu fluxo de estudo e escrita."
+        }
+      ]
+    }
+  ]
+}
