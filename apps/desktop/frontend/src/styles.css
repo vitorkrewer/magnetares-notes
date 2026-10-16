@@ -2759,17 +2759,29 @@ textarea:focus-visible {
    ========================================================================== */
 @page {
   size: A4 portrait;
-  margin: 18mm 15mm 20mm 15mm;
+  margin: 14mm 16mm 16mm 16mm;
+}
+
+@media screen {
+  .print-footer,
+  .print-title {
+    display: none !important;
+  }
 }
 
 @media print {
-  /* 1. Reset estrutural de layout e rolagem */
+  /* 1. Reset estrutural de layout, papel e fundo 100% branco sem molduras coloridas */
+  :root,
+  :root[data-theme],
+  [data-theme="dark"],
+  [data-theme="light"],
   html,
   body {
     background: #ffffff !important;
+    background-color: #ffffff !important;
     color: #111111 !important;
-    font-size: 11pt !important;
-    line-height: 1.5 !important;
+    font-size: 10.5pt !important;
+    line-height: 1.55 !important;
     height: auto !important;
     min-height: 0 !important;
     overflow: visible !important;
@@ -2800,17 +2812,25 @@ textarea:focus-visible {
   .dialog-backdrop,
   .modal-overlay,
   .status-footer,
-  footer {
+  .focus-window-titlebar,
+  .focus-window-footer,
+  .focus-tags-bar,
+  footer:not(.print-footer) {
     display: none !important;
   }
 
-  /* 3. Permitir fluxo contínuo de páginas sem corte no editor */
+  /* 3. Permitir fluxo contínuo de páginas sem corte no editor e remover caixas/sombras */
   .app-container,
   .shell,
   .editor,
   .editor-scroll-area,
   .editor-page,
-  .structured-editor {
+  .structured-editor,
+  .focus-standalone-window,
+  .focus-standalone-body,
+  .focus-main-content,
+  .focus-editor-page,
+  .focus-editor-content-wrapper {
     display: block !important;
     position: static !important;
     float: none !important;
@@ -2824,56 +2844,104 @@ textarea:focus-visible {
     box-shadow: none !important;
     border: none !important;
     background: transparent !important;
+    background-color: transparent !important;
   }
 
   /* 4. Cabeçalho da Nota (Título e Data de Edição) */
   .edited-at {
     display: block !important;
-    color: #666666 !important;
-    font-size: 9pt !important;
-    margin-bottom: 8pt !important;
+    color: #777670 !important;
+    font-size: 8.5pt !important;
+    margin-bottom: 6pt !important;
     text-align: left !important;
   }
 
   .title,
   input.title {
+    display: none !important;
+  }
+
+  .print-title {
     display: block !important;
-    font-size: 22pt !important;
+    font-family: "Aptos", "Segoe UI Variable", -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-size: 20pt !important;
     font-weight: 700 !important;
     line-height: 1.25 !important;
-    color: #000000 !important;
-    margin: 0 0 16pt 0 !important;
+    color: #111111 !important;
+    margin: 0 0 12pt 0 !important;
     padding: 0 !important;
     border: none !important;
-    outline: none !important;
     background: transparent !important;
-    width: 100% !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  /* 5. Hierarquia Tipográfica e Editor TipTap */
+  .structured-editor .tiptap {
+    font-family: "Charter", "Georgia", "Times New Roman", serif !important;
+    font-size: 10.5pt !important;
+    line-height: 1.55 !important;
+    color: #1a1a17 !important;
+    padding: 0 0 10mm 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
     box-shadow: none !important;
   }
 
-  /* 5. Hierarquia Tipográfica e Evitar Quebras Órfãs */
-  h1, h2, h3, h4, h5, h6 {
-    page-break-after: avoid !important;
-    break-after: avoid !important;
-    color: #000000 !important;
-  }
-
-  h1 { font-size: 18pt !important; margin-top: 16pt !important; margin-bottom: 8pt !important; }
-  h2 { font-size: 15pt !important; margin-top: 14pt !important; margin-bottom: 6pt !important; }
-  h3 { font-size: 13pt !important; margin-top: 12pt !important; margin-bottom: 4pt !important; }
-
+  .structured-editor .tiptap p,
   p {
-    margin: 6pt 0 !important;
+    margin: 5pt 0 !important;
+    font-size: 10.5pt !important;
+    line-height: 1.55 !important;
     orphans: 3 !important;
     widows: 3 !important;
+    color: #1a1a17 !important;
   }
 
-  /* Reset completo de tema escuro nos textos e seletores */
+  h1, h2, h3, h4, h5, h6,
+  .structured-editor .tiptap h1,
+  .structured-editor .tiptap h2,
+  .structured-editor .tiptap h3 {
+    font-family: "Aptos", "Segoe UI Variable", -apple-system, BlinkMacSystemFont, sans-serif !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    color: #111111 !important;
+  }
+
+  .structured-editor .tiptap h1,
+  h1 {
+    font-size: 16pt !important;
+    font-weight: 700 !important;
+    margin-top: 14pt !important;
+    margin-bottom: 6pt !important;
+    border-bottom: 0.75pt solid #d8d6ce !important;
+    padding-bottom: 3pt !important;
+  }
+
+  .structured-editor .tiptap h2,
+  h2 {
+    font-size: 13pt !important;
+    font-weight: 650 !important;
+    margin-top: 12pt !important;
+    margin-bottom: 4pt !important;
+  }
+
+  .structured-editor .tiptap h3,
+  h3 {
+    font-size: 11.5pt !important;
+    font-weight: 600 !important;
+    margin-top: 10pt !important;
+    margin-bottom: 3pt !important;
+  }
+
+  /* Reset completo de tema escuro nos textos */
   [data-theme="dark"] body,
   [data-theme="dark"] .editor-page,
   [data-theme="dark"] .structured-editor,
   [data-theme="dark"] .structured-editor .tiptap,
   [data-theme="dark"] .title,
+  [data-theme="dark"] .print-title,
   [data-theme="dark"] h1,
   [data-theme="dark"] h2,
   [data-theme="dark"] h3,
@@ -2884,15 +2952,106 @@ textarea:focus-visible {
     background-color: transparent !important;
   }
 
-  /* 6. Fórmulas Matemáticas & Químicas KaTeX */
+  /* 6. Tabelas Profissionais e Ajustadas */
+  .structured-editor .tableWrapper {
+    margin: 10pt 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .structured-editor table,
+  table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+    margin: 8pt 0 !important;
+    font-size: 9pt !important;
+    font-family: "Aptos", "Segoe UI Variable", -apple-system, BlinkMacSystemFont, sans-serif !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  .structured-editor thead,
+  thead {
+    display: table-header-group !important;
+  }
+
+  .structured-editor tr,
+  tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .structured-editor th,
+  .structured-editor td,
+  th,
+  td {
+    border: 0.75pt solid #c8c5bc !important;
+    padding: 5pt 7pt !important;
+    font-size: 9pt !important;
+    line-height: 1.35 !important;
+    min-width: 0 !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    color: #111111 !important;
+    background: #ffffff !important;
+    vertical-align: top !important;
+  }
+
+  .structured-editor th,
+  th {
+    background: #f4f3ee !important;
+    font-weight: 650 !important;
+    color: #1a1917 !important;
+    text-align: left !important;
+    border-bottom: 1.5pt solid #b8b5ab !important;
+  }
+
+  .structured-editor .selectedCell::after,
+  .structured-editor .column-resize-handle {
+    display: none !important;
+  }
+
+  /* 7. Rodapé de Impressão Profissional (Magnetares Notes) */
+  .print-footer {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 16px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    font-family: "Aptos", "Segoe UI Variable", -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-size: 8pt !important;
+    color: #797871 !important;
+    border-top: 0.5pt solid #d9d8d3 !important;
+    padding-top: 3px !important;
+    background: #ffffff !important;
+    z-index: 9999 !important;
+  }
+
+  .print-footer-brand {
+    font-weight: 600 !important;
+    color: #44423d !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  .print-footer-meta {
+    color: #88867f !important;
+    font-style: italic !important;
+  }
+
+  /* 8. Fórmulas Matemáticas & Químicas KaTeX */
   .math-block-wrapper,
   .math-block {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    margin: 12pt 0 !important;
-    padding: 10pt !important;
-    border: 1px solid #d5d0c5 !important;
-    border-radius: 6px !important;
+    margin: 10pt 0 !important;
+    padding: 8pt !important;
+    border: 0.75pt solid #d5d0c5 !important;
+    border-radius: 4px !important;
     background: #faf9f6 !important;
     text-align: center !important;
   }
@@ -2914,13 +3073,13 @@ textarea:focus-visible {
     font-size: 1.05em !important;
   }
 
-  /* 7. Diagramas Mermaid.js */
+  /* 9. Diagramas Mermaid.js */
   .mermaid-node-wrapper {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    margin: 14pt 0 !important;
-    border: 1px solid #d5d0c5 !important;
-    border-radius: 6px !important;
+    margin: 12pt 0 !important;
+    border: 0.75pt solid #d5d0c5 !important;
+    border-radius: 4px !important;
     background: #ffffff !important;
     overflow: visible !important;
     box-shadow: none !important;
@@ -2939,7 +3098,7 @@ textarea:focus-visible {
 
   .mermaid-preview-container {
     display: flex !important;
-    padding: 10pt !important;
+    padding: 8pt !important;
     overflow: visible !important;
     background: transparent !important;
     cursor: default !important;
@@ -2962,62 +3121,58 @@ textarea:focus-visible {
 
   .mermaid-caption-rendered {
     color: #555555 !important;
-    font-size: 9.5pt !important;
+    font-size: 9pt !important;
     font-style: italic !important;
-    margin-top: 6pt !important;
+    margin-top: 4pt !important;
     text-align: center !important;
   }
 
-  /* 8. Blocos Expansíveis (Toggles de Estudo Ativo) */
+  /* 10. Blocos Expansíveis (Toggles de Estudo Ativo) */
   .study-toggle-wrapper {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    margin: 12pt 0 !important;
-    border: 1px solid #d5d0c5 !important;
-    border-radius: 6px !important;
+    margin: 10pt 0 !important;
+    border: 0.75pt solid #d5d0c5 !important;
+    border-radius: 4px !important;
     background: #ffffff !important;
     overflow: visible !important;
   }
 
   .study-toggle-header {
     background: #f4f3ef !important;
-    border-bottom: 1px solid #ded9cd !important;
-    padding: 6pt 10pt !important;
+    border-bottom: 0.75pt solid #ded9cd !important;
+    padding: 5pt 8pt !important;
   }
 
   .study-toggle-chevron-btn,
   .study-toggle-actions,
   .study-toggle-peek-btn,
-  .study-toggle-delete-btn {
+  .study-toggle-delete-btn,
+  .study-toggle-help-icon {
     display: none !important;
   }
 
   .study-toggle-title-rendered {
     color: #000000 !important;
     font-weight: 700 !important;
-    font-size: 11pt !important;
+    font-size: 10.5pt !important;
     cursor: default !important;
   }
 
-  .study-toggle-help-icon {
-    display: none !important;
-  }
-
-  /* Sempre expande e imprime o conteúdo da resposta na impressão */
   .study-toggle-body {
     display: block !important;
-    padding: 8pt 10pt !important;
+    padding: 6pt 8pt !important;
     background: transparent !important;
   }
 
-  /* 9. Destaques Acadêmicos (Callouts) */
+  /* 11. Destaques Acadêmicos (Callouts) */
   .academic-callout {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    margin: 12pt 0 !important;
-    padding: 8pt 12pt !important;
-    border-radius: 6px !important;
-    border-left-width: 4px !important;
+    margin: 10pt 0 !important;
+    padding: 8pt 10pt !important;
+    border-radius: 4px !important;
+    border-left-width: 3.5pt !important;
     background: #faf9f6 !important;
     color: #111111 !important;
   }
@@ -3029,42 +3184,11 @@ textarea:focus-visible {
   }
 
   .callout-header {
-    padding-bottom: 4pt !important;
+    padding-bottom: 3pt !important;
     font-weight: 700 !important;
   }
 
-  /* 10. Tabelas */
-  table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    margin: 12pt 0 !important;
-    page-break-inside: auto !important;
-  }
-
-  thead {
-    display: table-header-group !important;
-  }
-
-  tr {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  th,
-  td {
-    border: 1px solid #cccccc !important;
-    padding: 6pt 8pt !important;
-    font-size: 10pt !important;
-    color: #111111 !important;
-    background: #ffffff !important;
-  }
-
-  th {
-    background: #f2f1ed !important;
-    font-weight: 700 !important;
-  }
-
-  /* 11. Blocos de Código & Snippets */
+  /* 12. Blocos de Código & Snippets */
   pre {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
@@ -3072,11 +3196,12 @@ textarea:focus-visible {
     word-break: break-word !important;
     background: #f8f7f4 !important;
     color: #111111 !important;
-    border: 1px solid #ded9cd !important;
-    border-radius: 6px !important;
-    padding: 10pt !important;
-    font-size: 9.5pt !important;
-    line-height: 1.45 !important;
+    border: 0.75pt solid #ded9cd !important;
+    border-radius: 4px !important;
+    padding: 8pt 10pt !important;
+    font-size: 8.5pt !important;
+    line-height: 1.4 !important;
+    margin: 8pt 0 !important;
   }
 
   code {
@@ -3093,17 +3218,17 @@ textarea:focus-visible {
     white-space: pre-wrap !important;
     word-break: break-word !important;
     font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
-    font-size: 9.5pt !important;
-    line-height: 1.45 !important;
+    font-size: 8.5pt !important;
+    line-height: 1.4 !important;
     background: #f8f7f4 !important;
     color: #111111 !important;
-    border: 1px solid #ded9cd !important;
-    border-radius: 6px !important;
-    padding: 12pt !important;
-    margin-top: 10pt !important;
+    border: 0.75pt solid #ded9cd !important;
+    border-radius: 4px !important;
+    padding: 8pt 10pt !important;
+    margin-top: 8pt !important;
   }
 
-  /* 12. Checklists */
+  /* 13. Checklists */
   ul[data-type="taskList"] {
     list-style: none !important;
     padding-left: 0 !important;
@@ -3122,12 +3247,12 @@ textarea:focus-visible {
     margin-top: 3px !important;
   }
 
-  /* 13. Cálculos Inline */
+  /* 14. Cálculos Inline */
   .calculation {
     background: #f4f3ef !important;
-    border: 1px solid #ded9cd !important;
-    border-radius: 4px !important;
-    padding: 1px 5px !important;
+    border: 0.75pt solid #ded9cd !important;
+    border-radius: 3px !important;
+    padding: 1px 4px !important;
     color: #000000 !important;
   }
 
@@ -3135,7 +3260,7 @@ textarea:focus-visible {
     display: none !important;
   }
 
-  /* 14. Remoção de placeholders vazios */
+  /* 15. Remoção de placeholders vazios */
   .structured-editor .is-editor-empty:first-child::before {
     display: none !important;
   }

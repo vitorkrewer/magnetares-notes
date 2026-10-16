@@ -22,6 +22,21 @@ type FocusStandaloneWindowProps = {
 
 type SaveState = "saved" | "saving" | "error";
 
+const fullDateLabel = (value: string) => {
+  if (!value) return "";
+  try {
+    return new Intl.DateTimeFormat("pt-BR", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(value));
+  } catch {
+    return value;
+  }
+};
+
 export function FocusStandaloneWindow({ noteId }: FocusStandaloneWindowProps) {
   const [note, setNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
@@ -365,6 +380,7 @@ export function FocusStandaloneWindow({ noteId }: FocusStandaloneWindowProps) {
       {/* Área de edição da nota */}
       <main className="focus-standalone-body">
         <div className="focus-standalone-editor-inner">
+          <time className="edited-at">{fullDateLabel(note.updatedAt)}</time>
           <input
             className="focus-note-title"
             value={note.title}
@@ -373,6 +389,7 @@ export function FocusStandaloneWindow({ noteId }: FocusStandaloneWindowProps) {
             placeholder="Título da nota"
             aria-label="Título da nota em foco"
           />
+          <h1 className="print-title" aria-hidden="true">{note.title || "Sem título"}</h1>
 
           {note.tags && note.tags.length > 0 && (
             <div className="focus-tags-bar">
@@ -406,6 +423,13 @@ export function FocusStandaloneWindow({ noteId }: FocusStandaloneWindowProps) {
               />
             )}
           </div>
+
+          <footer className="print-footer" aria-hidden="true">
+            <span className="print-footer-brand">Gerado via Magnetares Notes</span>
+            <span className="print-footer-meta">
+              {note.title ? note.title.trim() : "Nota"} • {fullDateLabel(note.updatedAt)}
+            </span>
+          </footer>
         </div>
       </main>
     </div>

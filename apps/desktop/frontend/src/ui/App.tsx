@@ -1960,6 +1960,7 @@ export function App() {
               <div className="editor-page">
                 <time className="edited-at">{fullDateLabel(active.updatedAt)}</time>
                 <input ref={titleRef} className="title" value={active.title} onChange={(event) => save({ title: event.target.value })} onBlur={() => void flushNote(active.id)} placeholder="Título" aria-label="Título da nota" readOnly={view === "deleted"} />
+                <h1 className="print-title" aria-hidden="true">{active.title || "Sem título"}</h1>
 
                 {view !== "deleted" && (
                   <div className="note-location-row">
@@ -2053,6 +2054,13 @@ export function App() {
                     onBlur={() => void flushNote(active.id)} 
                   />
                 )}
+
+                <footer className="print-footer" aria-hidden="true">
+                  <span className="print-footer-brand">Gerado via Magnetares Notes</span>
+                  <span className="print-footer-meta">
+                    {active.title ? active.title.trim() : "Nota"} • {fullDateLabel(active.updatedAt)}
+                  </span>
+                </footer>
               </div>
             </div>
             )}
