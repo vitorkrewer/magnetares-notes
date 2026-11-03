@@ -2,9 +2,15 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
-## [v1.9.0] - Em desenvolvimento
+## [v1.9.0] - 2026-11-03
 
 ### Added
+
+- **Exportação Nativa em Documento PDF (`.pdf`):**
+  - **Emissão Vetorial 100% Offline e Local-First (`pdfExport.ts`):** Geração direta de documentos PDF 1.4 (`A4 Portrait`) em memória com texto vetorial selecionável e pesquisável (`WinAnsiEncoding`), sem depender de internet ou do diálogo de impressão do navegador.
+  - **Suporte Integral aos Blocos do Magnetares:** Renderização vetorial de títulos, parágrafos formatados (negrito, itálico, tachado, código inline, grifo e cores), listas, checklists com caixas de seleção vetoriais âmbar e linha de tachado em itens concluídos, citações, tabelas com repetição de cabeçalho entre páginas, *callouts* acadêmicos coloridos, *toggles* de estudo ativo, fórmulas matemáticas/químicas, diagramas Mermaid.js e notas de código.
+  - **Rodapé Institucional e Paginação Automática:** Todas as páginas recebem rodapé padronizado (*"Gerado via Magnetares Notes"*), título da nota, data/hora de edição e numeração de páginas (`1/N`).
+  - **Diálogo Nativo do Sistema Operacional:** Nova opção **Documento PDF (.pdf)** no menu dropdown de exportação acionando `bridge.ExportNoteFile` com filtro `*.pdf` e fallback de download em navegadores.
 
 - **Exportação de Artigos Acadêmicos no Padrão ABNT (.docx):**
   - **Emissão 100% Offline e Local-First:** Geração direta de documentos Microsoft Word (`.docx`) em memória sem dependência de internet ou processamento externo na nuvem.
@@ -103,7 +109,7 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
   - Desacoplamento do botão **"Apagadas recentemente"** da área de rolagem interna (`.sidebar-content`).
   - Posicionamento fixo na base da barra lateral (`.sidebar-footer-group`), ancorado logo acima do status da nuvem e preferências, facilitando o scroll contínuo e a expansão de dezenas de etiquetas.
 - **Motor de Impressão e Exportação em PDF de Alta Fidelidade (@media print):**
-  - **Eliminação de Molduras Coloridas e Fundo 100% Branco:** Reset integral de `:root`, `:root[data-theme]`, `html`, `body` e de todos os contêineres do editor para fundo branco puro (`#ffffff !important`), eliminando completamente a moldura cinza/colorida que aparecia nas margens externas da folha A4 no Edge/WebView2.
+  - **Eliminação de Molduras Coloridas, Fundo 100% Branco e Supressão de `wails.localhost`:** Configuração de `@page { size: A4 portrait; margin: 0mm !important; background: #ffffff !important; }` combinada com `box-decoration-break: clone` no contêiner de página (`.editor-page`), reset integral de variáveis CSS (`--bg`, `--paper`, `--panel`, `--list`, `--sidebar`) e `BackgroundColour` branco puro (`#ffffff`) no WebView2 (`main.go`), eliminando definitivamente a moldura colorida nas bordas da folha A4 e o cabeçalho/rodapé técnico do navegador (`wails.localhost:port`).
   - **Rodapé Institucional Padronizado ("Gerado via Magnetares Notes"):** Inclusão de rodapé estruturado (`.print-footer`) com linha divisória sutil, renderizado de forma fixa na base de todas as páginas impressas, contendo a marca oficial *"Gerado via Magnetares Notes"*, o título da nota e a data/hora da última edição.
   - **Calibração Tipográfica e Título Semântico (`<h1>`):** Substituição do campo `<input className="title">` por elemento `<h1 className="print-title">` nativo na impressão, garantindo quebra de linha suave sem truncamento para títulos extensos. Redimensionamento da tipografia do TipTap de `17px` (~13pt) para `10.5pt` com entrelinha `1.55`, gerando documentos compactos, harmônicos e profissionais.
   - **Tabelas com Layout Automático e Prevenção de Hifenação Quebrada:** Remoção do `table-layout: fixed` e `min-width: 90px` que causavam quebras desordenadas em palavras compridas (ex: *"Inconsistências"*), aplicando `table-layout: auto !important`, bordas refinadas (`0.75pt solid #c8c5bc`), cabeçalhos em tom neutro suave (`#f4f3ee`) e repetição automática de `thead` no topo de cada página.

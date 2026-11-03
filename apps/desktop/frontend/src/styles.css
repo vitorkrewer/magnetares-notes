@@ -2759,7 +2759,8 @@ textarea:focus-visible {
    ========================================================================== */
 @page {
   size: A4 portrait;
-  margin: 14mm 16mm 16mm 16mm;
+  margin: 0mm !important;
+  background: #ffffff !important;
 }
 
 @media screen {
@@ -2773,6 +2774,7 @@ textarea:focus-visible {
   /* 1. Reset estrutural de layout, papel e fundo 100% branco sem molduras coloridas */
   :root,
   :root[data-theme],
+  #root,
   [data-theme="dark"],
   [data-theme="light"],
   html,
@@ -2786,6 +2788,13 @@ textarea:focus-visible {
     min-height: 0 !important;
     overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
+    --bg: #ffffff !important;
+    --paper: #ffffff !important;
+    --panel: #ffffff !important;
+    --list: #ffffff !important;
+    --sidebar: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
     print-color-adjust: exact !important;
   }
 
@@ -2813,6 +2822,10 @@ textarea:focus-visible {
   .modal-overlay,
   .status-footer,
   .focus-window-titlebar,
+  .focus-standalone-titlebar,
+  .focus-action-banner,
+  .focus-note-title,
+  .app-toast,
   .focus-window-footer,
   .focus-tags-bar,
   footer:not(.print-footer) {
@@ -2830,6 +2843,7 @@ textarea:focus-visible {
   .focus-standalone-body,
   .focus-main-content,
   .focus-editor-page,
+  .focus-standalone-container,
   .focus-editor-content-wrapper {
     display: block !important;
     position: static !important;
@@ -2848,6 +2862,22 @@ textarea:focus-visible {
   }
 
   /* 4. Cabeçalho da Nota (Título e Data de Edição) */
+  .editor-page,
+  .shell.sidebar-closed .editor-page,
+  .focus-standalone-editor-inner {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 15mm 16mm 20mm 16mm !important;
+    box-sizing: border-box !important;
+    -webkit-box-decoration-break: clone !important;
+    box-decoration-break: clone !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
   .edited-at {
     display: block !important;
     color: #777670 !important;
@@ -3027,7 +3057,11 @@ textarea:focus-visible {
     font-size: 8pt !important;
     color: #797871 !important;
     border-top: 0.5pt solid #d9d8d3 !important;
-    padding-top: 3px !important;
+    padding: 4pt 0 0 0 !important;
+    left: 16mm !important;
+    right: 16mm !important;
+    height: 12mm !important;
+    align-items: flex-start !important;
     background: #ffffff !important;
     z-index: 9999 !important;
   }

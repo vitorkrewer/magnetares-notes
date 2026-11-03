@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { Archive, ArchiveRestore, Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FileCode2, FilePenLine, FileText, Folder, Globe, List, Minimize2, PictureInPicture2, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Trash2, Upload, X } from "lucide-react";
+import { Archive, ArchiveRestore, Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FileCode2, FileDown, FilePenLine, FileText, Folder, Globe, List, Minimize2, PictureInPicture2, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Trash2, Upload, X } from "lucide-react";
 import { StructuredEditor } from "./StructuredEditor";
 import { CodeEditor } from "./CodeEditor";
 import { TitleBar } from "./TitleBar";
@@ -13,6 +13,7 @@ import { TaskListView } from "./TaskListView";
 import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord, TaskListRecord } from "./types";
 import { downloadBlob, downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
 import { exportToAbntDocxBase64, exportToAbntDocxBlob } from "./abntExport";
+import { exportToPdfBase64, exportToPdfBlob } from "./pdfExport";
 
 type SaveState = "saved" | "saving" | "error";
 type LibraryView = "notes" | "deleted" | "stickers" | "tasks";
@@ -479,15 +480,22 @@ export function App() {
     }, 1500);
   };
 
-  const handleExport = async (format: "md" | "html" | "txt" | "code" | "docx") => {
+  const handleExport = async (format: "md" | "html" | "txt" | "code" | "docx" | "pdf") => {
     if (!active) return;
     const cleanTitle = active.title.replace(/[\\/:*?"<>|]/g, "_").trim() || "Nota";
     let filename = "";
     let content = "";
     let mimeType = "";
     let isDocx = false;
+    let isPdf = false;
 
-    if (active.type === "code" || format === "code") {
+    if (format === "pdf") {
+      isPdf = true;
+      filename = `${cleanTitle}.pdf`;
+      mimeType = "application/pdf";
+      const base64Pdf = await exportToPdfBase64(active);
+      content = `base64:${base64Pdf}`;
+    } else if (format === "code" || (active.type === "code" && format !== "txt")) {
       let ext = ".txt";
       switch (active.language) {
         case "javascript": ext = ".js"; break;
@@ -548,7 +556,10 @@ export function App() {
         setTimeout(() => setSyncNotification(null), 7000);
       }
     } else {
-      if (isDocx) {
+      if (isPdf) {
+        const blob = await exportToPdfBlob(active);
+        downloadBlob(filename, blob);
+      } else if (isDocx) {
         const blob = await exportToAbntDocxBlob(active.title, active.body);
         downloadBlob(filename, blob);
       } else {
@@ -1911,9 +1922,17 @@ export function App() {
                       {exportMenuOpen && (
                         <div className="export-menu" role="menu">
                           {active.type === "code" ? (
-                            <button type="button" onClick={() => handleExport("code")}><FileCode aria-hidden="true" /> Exportar Código</button>
+                            <>
+                              <button type="button" onClick={() => handleExport("code")}><FileCode aria-hidden="true" /> Exportar Código</button>
+                              <button type="button" onClick={() => handleExport("pdf")} title="Exportar código em documento PDF nativo">
+                                <FileDown aria-hidden="true" /> Documento PDF (.pdf)
+                              </button>
+                            </>
                           ) : (
                             <>
+                              <button type="button" onClick={() => handleExport("pdf")} title="Exportar nota em documento PDF nativo">
+                                <FileDown aria-hidden="true" /> Documento PDF (.pdf)
+                              </button>
                               <button type="button" onClick={() => handleExport("docx")} title="Exportar artigo formatado no padrão normativo ABNT (NBR 14724 / NBR 6022)">
                                 <FileText aria-hidden="true" /> Artigo ABNT (.docx)
                               </button>

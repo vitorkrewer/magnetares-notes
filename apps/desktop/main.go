@@ -72,7 +72,7 @@ func main() {
 		MinWidth:         minWidth,
 		MinHeight:        minHeight,
 		AssetServer:      &assetserver.Options{Assets: assets},
-		BackgroundColour: &options.RGBA{R: 246, G: 246, B: 242, A: 255},
+		BackgroundColour: &options.RGBA{R: 255, G: 255, B: 255, A: 255},
 		OnStartup:        app.startup,
 		Bind:             []interface{}{app},
 		Windows:          winOpts,

@@ -416,6 +416,11 @@ func (a *App) ExportNoteFile(defaultFilename, content string) (string, error) {
 			{DisplayName: "Arquivo de Texto (*.txt)", Pattern: "*.txt"},
 			{DisplayName: "Todos os Arquivos (*.*)", Pattern: "*.*"},
 		}
+	case ".pdf":
+		filters = []runtime.FileFilter{
+			{DisplayName: "Documento PDF (*.pdf)", Pattern: "*.pdf"},
+			{DisplayName: "Todos os Arquivos (*.*)", Pattern: "*.*"},
+		}
 	case ".docx":
 		filters = []runtime.FileFilter{
 			{DisplayName: "Documento Word ABNT (*.docx)", Pattern: "*.docx"},
