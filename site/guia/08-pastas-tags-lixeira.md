@@ -49,7 +49,7 @@ Para evitar exclusões acidentais e manter a experiência sempre previsível:
 
 ![Lixeira Fixa e Diálogo de Restauração](assets/screenshots/trash.png)
 
-- **Lixeira Ancorada:** A partir da versão 1.9.0, o botão **"Apagadas recentemente"** foi desacoplado da rolagem interna de pastas e etiquetas, ficando **fixo na base da barra lateral**, logo acima do status da nuvem e das preferências. Você pode expandir dezenas de pastas e tags sem nunca perder a lixeira de vista!
+- **Lixeira Ancorada:** A partir da versão 1.9.0, a **Lixeira** (anteriormente *"Apagadas recentemente"*) foi desacoplada da rolagem interna de pastas e etiquetas, ficando **fixa na base da barra lateral**, logo acima do status da nuvem e das preferências. Você pode expandir dezenas de pastas e tags sem nunca perder a lixeira de vista!
 - **Modo Somente-Leitura de Segurança:** Ao mover uma nota para a lixeira, ela sai das listas ativas e pode ser inspecionada em modo de segurança somente-leitura.
 - **Restauração em 1 Clique:** Basta clicar no botão **Restaurar Nota** no topo da lixeira para devolver a nota à sua pasta de origem na mesma hora.
 - **Exclusão Definitiva Segura:** Para liberar espaço no disco local e propagar lápides (*tombstones*) para a nuvem, clique em **Excluir Definitivamente**.

@@ -79,3 +79,16 @@ O Magnetares Notes foi desenvolvido para permitir que você realize quase todas 
 | **Mover Linha para Cima/Baixo** | `<kbd>Alt+Seta Cima/Baixo` | `<kbd>Option+Seta Cima/Baixo` |
 | **Comentar Linha de Código** | `<kbd>Ctrl+/` | `<kbd>Cmd+/` |
 | **Fechar Live Preview de Protótipo** | `<kbd>Esc` | `<kbd>Esc` |
+
+---
+
+## 7. Fluxo de Ideias (Canvas Vetorial)
+
+| Ação | Windows / Linux | macOS |
+| :--- | :--- | :--- |
+| **Desfazer Ação no Canvas** | `<kbd>Ctrl+Z` | `<kbd>Cmd+Z` |
+| **Refazer Ação no Canvas** | `<kbd>Ctrl+Y` | `<kbd>Cmd+Shift+Z` |
+| **Duplicar Nó Selecionado** | `<kbd>Ctrl+D` | `<kbd>Cmd+D` |
+| **Editar Conteúdo do Nó** | `Duplo clique` no nó | `Duplo clique` no nó |
+| **Excluir Nó ou Conexão** | `<kbd>Delete` ou `<kbd>Backspace` | `<kbd>Delete` ou `<kbd>Backspace` |
+| **Ajustar Zoom (15% a 350%)** | `Scroll` ou botões `+` / `-` | `Scroll` ou botões `+` / `-` |

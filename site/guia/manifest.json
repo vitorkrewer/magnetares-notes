@@ -93,9 +93,10 @@
       "chapters": [
         {
           "id": "10-nuvem-backup-compliance",
-          "title": "Nuvem, Backup & Integridade",
+          "title": "Configurações, Nuvem & Backup",
           "icon": "shield",
-          "summary": "Sincronização Turso/libSQL opcional, resolução de conflitos, backups em 1 clique e auditoria SQLite."
+          "badge": "Atualizado v2.0.0",
+          "summary": "Tema claro/escuro, troca segura do local do banco SQLite, sincronização Turso, backups, auditoria e atualizações."
         },
         {
           "id": "11-atalhos-teclado",

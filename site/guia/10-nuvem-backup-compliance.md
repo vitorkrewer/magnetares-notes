@@ -11,7 +11,7 @@ O Magnetares Notes foi projetado sob o lema: **"Seus dados são seus, e ficam no
 O Magnetares utiliza a tecnologia **libSQL / Turso**, um banco de dados distribuído SQLite em nuvem de baixíssima latência:
 
 1. Clique no ícone de engrenagem no rodapé da barra lateral (**Preferências**).
-2. Selecione a aba **Sincronização em Nuvem**.
+2. Selecione a aba **Sincronização**.
 3. Insira a **URL do banco de dados na nuvem** (ex: `libsql://meu-banco-usuario.turso.io`).
 4. Cole o seu **Token de Autenticação** fornecido pelo Turso.
 5. Clique em **Testar Conexão** para validar a comunicação e a latência.
@@ -50,15 +50,21 @@ Quando você edita a mesma nota em dois computadores diferentes enquanto estava 
 
 ---
 
-## 4. Backup Local e Restauração em 1 Clique
+## 4. Aparência, Banco de Dados Local & Backup (v2.0.0)
 
-Para quem não utiliza nuvem ou deseja manter cópias de segurança em mídias externas:
+Na versão **2.0.0**, o painel **Preferências & Configurações** foi reorganizado em quatro abas diretas (**Geral**, **Armazenamento**, **Sincronização** e **Sobre**):
 
+### Tema Claro & Escuro (Aba Geral)
+![Preferências Gerais e Alternância de Tema](assets/screenshots/settings-general.png)
+
+- Escolha entre **Claro** (aparência limpa e clara) e **Escuro** (modo noturno para conforto visual).
+- **Alternância Rápida na Barra Lateral:** Você também pode alternar o tema instantaneamente pelo botão dedicado (**Sol / Lua**) no rodapé da barra lateral, ao lado do ícone de configurações.
+
+### Troca Segura do Local do Banco, Backup & Restauração (Aba Armazenamento)
 ![Painel de Armazenamento, Backup e Auditoria de Compliance](assets/screenshots/settings.png)
 
-1. Em **Preferências > Armazenamento**, localize a seção **Backup & Restauração**.
-2. Clique no botão **Fazer Backup Local**: o aplicativo gera uma cópia íntegra do seu banco SQLite com data e hora no nome do arquivo.
-3. Se você trocar de computador ou desejar restaurar uma versão anterior, clique em **Restaurar de Backup** e selecione o arquivo `.db` desejado. O aplicativo recarrega todo o ecossistema de notas automaticamente!
+1. **Alterar Local do Banco (.db):** Clique em **Procurar...** para escolher outra pasta ou unidade. Antes de aplicar, o sistema inspeciona o destino e abre um modal guiado para você escolher entre **Copiar dados atuais** (com verificação de integridade), **Usar banco existente no destino** ou **Iniciar banco limpo**, gerando sempre um backup automático de segurança. Caso deseje voltar ao padrão do sistema, clique em **Restaurar local padrão**.
+2. **Backup & Restauração:** Clique em **Fazer Backup Local** para gerar uma cópia íntegra do seu banco SQLite com data e hora no nome do arquivo. Para restaurar uma versão anterior, clique em **Restaurar de Backup** e selecione o arquivo `.db` desejado.
 
 ---
 
@@ -73,3 +79,13 @@ Se você utiliza o Magnetares há várias versões ou importou milhares de notas
    - Recalcula contadores de checklists e metadados de busca em texto puro (`bodyText`);
    - Normaliza marcas temporais e limpa conflitos resolvidos.
 3. Um relatório detalhado com a lista de correções executadas é apresentado na tela.
+
+---
+
+## 6. Aba Sobre & Verificação de Atualizações
+
+![Aba Sobre e Verificação de Atualizações](assets/screenshots/settings-about.png)
+
+1. Na aba **Sobre**, você visualiza a versão instalada, a data da compilação e os links oficiais do projeto.
+2. O aplicativo verifica silenciosamente na inicialização se há uma nova versão publicada no GitHub (exibindo um aviso discreto no canto inferior direito quando houver novidade).
+3. Você também pode checar manualmente a qualquer momento clicando em **Verificar atualizações**.
