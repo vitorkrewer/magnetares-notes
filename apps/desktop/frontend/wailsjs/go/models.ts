@@ -1,5 +1,33 @@
 export namespace main {
 	
+	export class AppInfo {
+	    appName: string;
+	    version: string;
+	    buildDate: string;
+	    description: string;
+	    author: string;
+	    authorUrl: string;
+	    repository: string;
+	    website: string;
+	    license: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new AppInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.appName = source["appName"];
+	        this.version = source["version"];
+	        this.buildDate = source["buildDate"];
+	        this.description = source["description"];
+	        this.author = source["author"];
+	        this.authorUrl = source["authorUrl"];
+	        this.repository = source["repository"];
+	        this.website = source["website"];
+	        this.license = source["license"];
+	    }
+	}
 	export class ComplianceReport {
 	    passed: boolean;
 	    repairedNotes: number;
@@ -32,6 +60,34 @@ export namespace main {
 	        this.orphanIdeaEdgesFixed = source["orphanIdeaEdgesFixed"];
 	        this.details = source["details"];
 	        this.auditedAt = source["auditedAt"];
+	    }
+	}
+	export class DatabaseTargetInfo {
+	    currentPath: string;
+	    resolvedPath: string;
+	    defaultPath: string;
+	    sameLocation: boolean;
+	    targetExists: boolean;
+	    targetNotes: number;
+	    currentNotes: number;
+	    isCustom: boolean;
+	    isPortable: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new DatabaseTargetInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.currentPath = source["currentPath"];
+	        this.resolvedPath = source["resolvedPath"];
+	        this.defaultPath = source["defaultPath"];
+	        this.sameLocation = source["sameLocation"];
+	        this.targetExists = source["targetExists"];
+	        this.targetNotes = source["targetNotes"];
+	        this.currentNotes = source["currentNotes"];
+	        this.isCustom = source["isCustom"];
+	        this.isPortable = source["isPortable"];
 	    }
 	}
 	export class Folder {
@@ -862,6 +918,33 @@ export namespace main {
 		    }
 		    return a;
 		}
+	}
+	
+	export class UpdateCheckResult {
+	    currentVersion: string;
+	    latestVersion: string;
+	    hasUpdate: boolean;
+	    releaseName: string;
+	    releaseNotes: string;
+	    publishedAt: string;
+	    downloadUrl: string;
+	    websiteUrl: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateCheckResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.currentVersion = source["currentVersion"];
+	        this.latestVersion = source["latestVersion"];
+	        this.hasUpdate = source["hasUpdate"];
+	        this.releaseName = source["releaseName"];
+	        this.releaseNotes = source["releaseNotes"];
+	        this.publishedAt = source["publishedAt"];
+	        this.downloadUrl = source["downloadUrl"];
+	        this.websiteUrl = source["websiteUrl"];
+	    }
 	}
 
 }

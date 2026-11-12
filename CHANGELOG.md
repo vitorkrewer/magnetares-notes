@@ -7,14 +7,33 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 ### Added
 
 - **Novo Módulo "Fluxo de Ideias" (Mapas Mentais, Diagramas e Fluxogramas Interativos):**
-  - **Navegação Dedicada na Barra Lateral:** Nova seção **Fluxo de Ideias** posicionada logo abaixo de **Stickers**, com botão de acesso rápido e atalho de criação instantânea.
-  - **Hub de Gerenciamento com Visualização Dupla e CRUD Completo:** Alternância entre visualização em **Cards** e **Listas** (com preferência salva), busca em tempo real, criação, edição de metadados (título, descrição, paleta de 10 cores e 8 ícones), duplicação de fluxos e exclusão segura com confirmação.
+  - **Navegação Dedicada na Barra Lateral:** Nova seção **Fluxo de Ideias** posicionada logo abaixo de **Stickers**, com item **Meus Fluxos** e atalho `+` de criação instantânea.
+  - **Hub de Gerenciamento com Visualização Dupla e CRUD Completo:** Alternância entre visualização em **Cards** e **Lista** (com preferência salva), busca em tempo real, criação, edição de metadados (título, descrição, paleta de 10 cores e 8 ícones), duplicação de fluxos e exclusão segura com confirmação.
   - **Canvas Vetorial Interativo de Alta Definição:** Ao selecionar um fluxo, o mapa mental abre na mesma tela com grade pontilhada escalável em alta definição, pan fluido, minimapa interativo, controle de **zoom de alta precisão (15% a 350%)**, opção **Ajustar à Tela** e Snap-to-Grid opcional.
   - **Múltiplos Tipos de Nós & Edição Rica:** Suporte a nós de **Tópico Central**, **Ideia / Conceito**, **Decisão / Condição**, **Anotação Rápida**, **Grupo / Contêiner** redimensionável e **Referência Magnetares**, com edição inline por duplo clique, redimensionamento, seleção, histórico de **Desfazer / Refazer (`Ctrl+Z` / `Ctrl+Y`)**, duplicação (`Ctrl+D`) e painel inspetor lateral.
   - **Conexões Inteligentes:** 4 pontos de conexão por nó (*top, right, bottom, left*) com pré-visualização ao vivo durante o arraste, curvas **Bezier**, **Degrau Ortogonal** e **Linha Reta**, setas direcionais, modo animado/tracejado, cores personalizadas e rótulos editáveis.
-  - **Referências Cruzadas com Hyperlink Direto:** O **Nó de Referência Magnetares** permite buscar e vincular qualquer **Nota**, **Lista de Tarefas** ou **Quadro de Stickers** cadastrado no projeto, gerando um hyperlink interativo (`Abrir ↗`) que navega e abre diretamente o item correspondente no aplicativo.
+  - **Referências Cruzadas Granulares com Hyperlink Direto & Sincronização de Nomes:** O **Nó de Referência Magnetares** permite buscar e vincular **Notas**, **Listas de Tarefas**, **Tarefas individuais**, **Quadros de Stickers** ou **Stickers individuais**, gerando um hyperlink interativo (`Abrir ↗`) que navega diretamente para o item (selecionando a tarefa no inspetor ou destacando o sticker no mural) e atualiza automaticamente seu rótulo no mapa caso o item original seja renomeado.
   - **Exportação em PNG de Alta Qualidade:** Renderização vetorial offscreen em alta resolução (escala 2.5x) respeitando o tema ativo (Claro ou Escuro), com salvamento nativo via diálogo do sistema operacional (`ExportIdeaFlowPNG`).
   - **Persistência Local-First, Sincronização Turso & Compliance:** Novas tabelas `idea_flows`, `idea_nodes` e `idea_edges` (`0015_idea_flows.sql`), sincronização bidirecional LWW com Turso (`sync_idea_flows`, `sync_idea_nodes`, `sync_idea_edges`) e auditoria automática de integridade (`ensureIdeaFlowCompliance`).
+
+- **Sistema de Notificação de Atualizações & Aba "Sobre" em Configurações:**
+  - **Metadados Embutidos de Versão (`version.go`):** Versão atual (`AppVersion`) e data de compilação (`AppBuildDate`) injetadas automaticamente nos builds multiplataforma via GitHub Actions (`release.yml`), expostas ao frontend por `GetAppInfo()`.
+  - **Verificação Automática e Manual de Updates (`CheckForUpdates`):** Checagem silenciosa em segundo plano na inicialização do app e notificação discreta no canto inferior direito quando uma nova release é publicada, com opção de baixar diretamente no navegador padrão (`OpenExternalURL`), abrir a aba Sobre ou dispensar o aviso.
+  - **Nova Aba "Sobre" em Preferências & Configurações:** Exibe a versão atual com data, breve descrição da aplicação, botão para verificar atualizações em tempo real e informações do desenvolvedor com links oficiais.
+
+- **Fluxo Seguro de Troca do Local do Banco de Dados (`database_location.go`):**
+  - **Seletor Nativo & Inspeção Prévia:** Novo botão **Procurar...** (`BrowseDatabaseDirectory`) e inspeção automática de permissão de escrita e existência de banco `.db` no destino (`InspectDatabasePathTarget`) antes de qualquer alteração.
+  - **Modal de Confirmação Guiada & Backup Atômico:** Permite escolher explicitamente entre **Copiar dados atuais** (via `VACUUM INTO` + `PRAGMA integrity_check`), **Usar banco existente no destino** ou **Iniciar banco limpo**, gerando sempre um backup automático de segurança em `recovery/pre-move-*.db` com rollback em caso de falha e opção **Restaurar local padrão** (`ResetDatabasePathToDefault`).
+
+- **Alternância Rápida de Tema na Barra Lateral:**
+  - Adicionado botão dedicado (ícone **Sol / Lua**) ao lado de Configurações no rodapé da barra lateral para alternar instantaneamente entre os temas **Claro** e **Escuro**.
+
+### Changed
+
+- **Seletores Dropdown Estilizados (`CustomSelect`):** Substituição de todos os 13 `<select>` nativos da aplicação (editor, tarefas, organização, configurações e canvas) por um componente customizado via portal com animação suave, detecção automática de espaço (cima/baixo), navegação por teclado e suporte aos temas Claro e Escuro.
+- **Barra de Título Mais Enxuta:** Altura da `.titlebar` reduzida de `36px` para `28px` (com `.shell` ajustado para `calc(100vh - 28px)`), ampliando a área útil de leitura e criação.
+- **Abas de Configurações Simplificadas:** Rótulos ajustados para uma única linha limpa (**Geral**, **Armazenamento**, **Sincronização**, **Sobre**).
+- **Documentação & Portal Web:** Atualização do `README.md`, adição do capítulo `12-fluxo-de-ideias.md` no Guia de Uso (GitBook), inclusão da `v2.0.0` em `site/release.html` e publicação do artigo da v2.0.0 no blog com capturas de tela reais.
 
 ## [v1.9.0] - 2026-11-03
 

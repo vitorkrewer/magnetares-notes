@@ -1,21 +1,40 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { CheckCircle2, Cloud, Eye, EyeOff, HardDrive, Info, Moon, RefreshCw, Settings, ShieldCheck, Sun, Trash2, X, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowRight, Calendar, CheckCircle2, Cloud, Code2, Database, Download, ExternalLink, Eye, EyeOff, FolderOpen, Globe, HardDrive, Info, Moon, RefreshCw, RotateCcw, Scale, Settings, ShieldCheck, Sparkles, Sun, Trash2, User, X, XCircle } from "lucide-react";
 import { SyncProfilePanel } from "./SyncProfilePanel";
 import { CustomSelect } from "./CustomSelect";
+import type { AppInfoRecord, DatabaseMigrationMode, DatabaseTargetInfoRecord, UpdateCheckResultRecord } from "./types";
 
 export type ThemeOption = "light" | "dark" | "system";
+export type SettingsTab = "general" | "storage" | "cloud" | "about";
+
+function formatBuildDate(raw?: string): string {
+  if (!raw) return "—";
+  const trimmed = raw.trim();
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(trimmed);
+  if (match) {
+    return `${match[3]}/${match[2]}/${match[1]}`;
+  }
+  return trimmed;
+}
 
 type SettingsDialogProps = {
   theme: ThemeOption;
   onThemeChange: (theme: ThemeOption) => void;
   dbPath?: string;
-  onDbPathChange?: (newPath: string) => Promise<void>;
+  onDbPathChange?: (newPath: string, mode?: DatabaseMigrationMode, isReset?: boolean) => Promise<void>;
   tursoDatabaseURL?: string;
   autoSyncIntervalMinutes?: number;
   syncConfigured?: boolean;
   onSaveSyncConfiguration?: (databaseURL: string, authToken: string) => Promise<void>;
   onAutoSyncIntervalChange?: (minutes: number) => Promise<void>;
   onSyncNow?: () => Promise<any>;
+  initialTab?: SettingsTab;
+  appInfo?: AppInfoRecord | null;
+  updateInfo?: UpdateCheckResultRecord | null;
+  checkingUpdates?: boolean;
+  updateCheckError?: string;
+  onCheckForUpdates?: () => Promise<void>;
+  onOpenExternalURL?: (url: string) => void;
   onClose: () => void;
 };
 
@@ -30,11 +49,27 @@ export function SettingsDialog({
   onSaveSyncConfiguration,
   onAutoSyncIntervalChange,
   onSyncNow,
+  initialTab = "general",
+  appInfo,
+  updateInfo,
+  checkingUpdates = false,
+  updateCheckError = "",
+  onCheckForUpdates,
+  onOpenExternalURL,
   onClose
 }: SettingsDialogProps) {
-  const [activeTab, setActiveTab] = useState<"general" | "storage" | "cloud">("general");
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
   const [currentDbPath, setCurrentDbPath] = useState(dbPath);
   const [dbPathMessage, setDbPathMessage] = useState("");
+  const [dbPathError, setDbPathError] = useState(false);
+  const [browsingDbDir, setBrowsingDbDir] = useState(false);
+  const [inspectingDbPath, setInspectingDbPath] = useState(false);
+  const [migratingDbPath, setMigratingDbPath] = useState(false);
+  const [dbMigrationDialog, setDbMigrationDialog] = useState<{
+    info: DatabaseTargetInfoRecord;
+    isReset: boolean;
+  } | null>(null);
+  const [selectedMigrationMode, setSelectedMigrationMode] = useState<DatabaseMigrationMode>("copy");
   const [currentTursoURL, setCurrentTursoURL] = useState(tursoDatabaseURL);
   const [currentTursoToken, setCurrentTursoToken] = useState("");
   const [currentAutoSyncInterval, setCurrentAutoSyncInterval] = useState(autoSyncIntervalMinutes);
@@ -53,8 +88,26 @@ export function SettingsDialog({
   const [complianceReport, setComplianceReport] = useState<any>(null);
 
   useEffect(() => {
+    setCurrentDbPath(dbPath);
+  }, [dbPath]);
+
+  useEffect(() => {
     setCurrentAutoSyncInterval(autoSyncIntervalMinutes);
   }, [autoSyncIntervalMinutes]);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
+  const openExternal = (url: string) => {
+    if (onOpenExternalURL) {
+      onOpenExternalURL(url);
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   const handleRunCompliance = async () => {
     const bridge = window.go?.main?.App;
@@ -131,14 +184,132 @@ export function SettingsDialog({
     }
   };
 
+  const handleBrowseDbDirectory = async () => {
+    const bridge = window.go?.main?.App;
+    if (!bridge?.BrowseDatabaseDirectory) {
+      setDbPathError(true);
+      setDbPathMessage("Seleção nativa de pasta disponível apenas no aplicativo desktop.");
+      return;
+    }
+    setBrowsingDbDir(true);
+    setDbPathMessage("");
+    setDbPathError(false);
+    try {
+      const selected = await bridge.BrowseDatabaseDirectory();
+      if (selected) {
+        setCurrentDbPath(selected);
+      }
+    } catch (err: any) {
+      setDbPathError(true);
+      setDbPathMessage(`Erro ao selecionar pasta: ${err?.message || err}`);
+    } finally {
+      setBrowsingDbDir(false);
+    }
+  };
+
+  const openDbMigrationDialog = (info: DatabaseTargetInfoRecord, isReset: boolean) => {
+    if (info.sameLocation) {
+      setDbPathError(false);
+      setDbPathMessage(
+        isReset
+          ? "O banco de dados já está utilizando o local padrão."
+          : "O banco de dados já está utilizando esse local."
+      );
+      return;
+    }
+    setSelectedMigrationMode(info.targetExists ? "use_existing" : "copy");
+    setDbMigrationDialog({ info, isReset });
+  };
+
   const handleSaveDbPath = async (e: FormEvent) => {
     e.preventDefault();
-    if (!currentDbPath.trim()) return;
+    const trimmed = currentDbPath.trim();
+    if (!trimmed) {
+      setDbPathError(true);
+      setDbPathMessage("Informe um caminho válido para o banco de dados.");
+      return;
+    }
+    const bridge = window.go?.main?.App;
+    setDbPathMessage("");
+    setDbPathError(false);
+
+    if (!bridge?.InspectDatabasePathTarget) {
+      try {
+        await onDbPathChange?.(trimmed, "copy", false);
+        setDbPathMessage("Caminho do banco de dados atualizado com sucesso!");
+      } catch (err: any) {
+        setDbPathError(true);
+        setDbPathMessage(`Erro ao alterar o caminho do banco: ${err?.message || err}`);
+      }
+      return;
+    }
+
+    setInspectingDbPath(true);
     try {
-      await onDbPathChange?.(currentDbPath.trim());
-      setDbPathMessage("Caminho do banco de dados atualizado com sucesso!");
-    } catch {
-      setDbPathMessage("Erro ao alterar o caminho do banco.");
+      const info = await bridge.InspectDatabasePathTarget(trimmed);
+      openDbMigrationDialog(info, false);
+    } catch (err: any) {
+      setDbPathError(true);
+      setDbPathMessage(`Não foi possível validar o destino: ${err?.message || err}`);
+    } finally {
+      setInspectingDbPath(false);
+    }
+  };
+
+  const handleInspectDefaultDbPath = async () => {
+    const bridge = window.go?.main?.App;
+    setDbPathMessage("");
+    setDbPathError(false);
+
+    if (!bridge?.InspectDatabasePathTarget) {
+      try {
+        await onDbPathChange?.("", "copy", true);
+        setDbPathMessage("Local padrão restaurado com sucesso!");
+      } catch (err: any) {
+        setDbPathError(true);
+        setDbPathMessage(`Erro ao restaurar local padrão: ${err?.message || err}`);
+      }
+      return;
+    }
+
+    setInspectingDbPath(true);
+    try {
+      const probe = await bridge.InspectDatabasePathTarget(currentDbPath.trim() || dbPath);
+      const targetDefault = probe.defaultPath || dbPath;
+      const defaultInfo =
+        probe.resolvedPath === targetDefault
+          ? probe
+          : await bridge.InspectDatabasePathTarget(targetDefault);
+      openDbMigrationDialog(defaultInfo, true);
+    } catch (err: any) {
+      setDbPathError(true);
+      setDbPathMessage(`Não foi possível inspecionar o local padrão: ${err?.message || err}`);
+    } finally {
+      setInspectingDbPath(false);
+    }
+  };
+
+  const handleConfirmDbMigration = async () => {
+    if (!dbMigrationDialog) return;
+    setMigratingDbPath(true);
+    setDbPathMessage("");
+    setDbPathError(false);
+    try {
+      const targetPath = dbMigrationDialog.info.resolvedPath;
+      await onDbPathChange?.(targetPath, selectedMigrationMode, dbMigrationDialog.isReset);
+      setCurrentDbPath(targetPath);
+      setDbMigrationDialog(null);
+      setDbPathError(false);
+      setDbPathMessage(
+        dbMigrationDialog.isReset
+          ? "Banco restaurado para o local padrão com sucesso!"
+          : "Local do banco de dados atualizado com sucesso!"
+      );
+    } catch (err: any) {
+      setDbPathError(true);
+      setDbPathMessage(`Erro ao migrar banco de dados: ${err?.message || err}`);
+    } finally {
+      setMigratingDbPath(false);
     }
   };
 
@@ -252,7 +423,7 @@ export function SettingsDialog({
             className={`settings-tab ${activeTab === "general" ? "active" : ""}`}
             onClick={() => setActiveTab("general")}
           >
-            <Sun aria-hidden="true" /> Geral & Aparência
+            <Sun aria-hidden="true" /> Geral
           </button>
           <button
             type="button"
@@ -266,7 +437,14 @@ export function SettingsDialog({
             className={`settings-tab ${activeTab === "cloud" ? "active" : ""}`}
             onClick={() => setActiveTab("cloud")}
           >
-            <Cloud aria-hidden="true" /> Sincronização em Nuvem
+            <Cloud aria-hidden="true" /> Sincronização
+          </button>
+          <button
+            type="button"
+            className={`settings-tab ${activeTab === "about" ? "active" : ""}`}
+            onClick={() => setActiveTab("about")}
+          >
+            <Info aria-hidden="true" /> Sobre
           </button>
         </div>
 
@@ -304,15 +482,46 @@ export function SettingsDialog({
               <p className="settings-desc">O Magnetares armazena suas notas localmente em um banco de dados SQLite de alta performance. Todas as suas notas, pastas e edições são gravadas instantaneamente no seu disco de forma 100% offline.</p>
               <form onSubmit={(e) => void handleSaveDbPath(e)} className="storage-path-box">
                 <label htmlFor="db-path-input">Caminho do banco de dados local (.db):</label>
-                <div className="cloud-input-group">
+                <div className="cloud-input-group db-path-input-group">
                   <input
                     id="db-path-input"
                     value={currentDbPath}
                     onChange={(e) => setCurrentDbPath(e.target.value)}
                   />
-                  <button type="submit" className="test-connection-btn" style={{ height: 38, padding: "0 16px" }}>Salvar Local</button>
+                  <button
+                    type="button"
+                    className="test-connection-btn db-browse-btn"
+                    onClick={() => void handleBrowseDbDirectory()}
+                    disabled={browsingDbDir || inspectingDbPath || migratingDbPath}
+                  >
+                    <FolderOpen size={15} aria-hidden="true" />
+                    {browsingDbDir ? "Abrindo..." : "Procurar..."}
+                  </button>
+                  <button
+                    type="submit"
+                    className="test-connection-btn"
+                    style={{ height: 38, padding: "0 16px" }}
+                    disabled={inspectingDbPath || migratingDbPath}
+                  >
+                    {inspectingDbPath ? "Verificando..." : "Salvar Local"}
+                  </button>
                 </div>
-                {dbPathMessage && <p className="sync-status-msg success">{dbPathMessage}</p>}
+                <div className="db-path-actions-row">
+                  <button
+                    type="button"
+                    className="db-reset-link-btn"
+                    onClick={() => void handleInspectDefaultDbPath()}
+                    disabled={inspectingDbPath || migratingDbPath}
+                  >
+                    <RotateCcw size={13} aria-hidden="true" />
+                    Restaurar local padrão
+                  </button>
+                </div>
+                {dbPathMessage && (
+                  <p className={`sync-status-msg ${dbPathError ? "error" : "success"}`}>
+                    {dbPathMessage}
+                  </p>
+                )}
                 <small>As alterações no banco são salvas em tempo real com journal WAL e integridade transacional.</small>
               </form>
 
@@ -499,8 +708,345 @@ export function SettingsDialog({
               )}
             </div>
           )}
+
+          {activeTab === "about" && (() => {
+            const appName = appInfo?.appName || "Magnetares Notes";
+            const version = appInfo?.version || "2.0.0";
+            const buildDateLabel = formatBuildDate(appInfo?.buildDate || "2026-11-12");
+            const description =
+              appInfo?.description ||
+              "Caderno de anotações local-first, rápido e privado com suporte a Markdown rico, fórmulas científicas, tarefas, stickers e mapas mentais.";
+            const author = appInfo?.author || "Vitor Krewer";
+            const authorUrl = appInfo?.authorUrl || "https://www.linkedin.com/in/vitorkrewer/";
+            const repository = appInfo?.repository || "https://github.com/vitorkrewer/magnetares-notes";
+            const website = appInfo?.website || "https://vitorkrewer.github.io/magnetares-notes/";
+            const license = appInfo?.license || "Source-Available (Uso Pessoal Não-Comercial)";
+            const changelogUrl = `${repository.replace(/\/+$/, "")}/releases`;
+
+            return (
+              <div className="settings-section about-settings">
+                <div className="about-hero-card">
+                  <div className="about-hero-top">
+                    <div>
+                      <h3>{appName}</h3>
+                      <p className="about-slogan">Onde pensamentos ganham gravidade própria.</p>
+                    </div>
+                    <div className="about-badges">
+                      <span className="about-version-badge">v{version}</span>
+                      <span className="about-date-badge">
+                        <Calendar aria-hidden="true" /> {buildDateLabel}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="about-description">{description}</p>
+                </div>
+
+                <div className="about-update-box">
+                  <div className="about-update-header">
+                    <div>
+                      <h4>Atualizações</h4>
+                      <p className="settings-desc" style={{ margin: 0 }}>
+                        Verifique se há uma versão mais recente disponível para download.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="about-check-btn"
+                      onClick={() => void onCheckForUpdates?.()}
+                      disabled={checkingUpdates || !onCheckForUpdates}
+                    >
+                      <RefreshCw className={checkingUpdates ? "spinning" : ""} aria-hidden="true" />
+                      {checkingUpdates ? "Verificando..." : "Verificar atualizações"}
+                    </button>
+                  </div>
+
+                  {updateCheckError ? (
+                    <div className="status-feedback-box error">
+                      <XCircle aria-hidden="true" />
+                      <span>{updateCheckError}</span>
+                    </div>
+                  ) : updateInfo?.hasUpdate ? (
+                    <div className="about-update-available">
+                      <div className="about-update-available-info">
+                        <Sparkles aria-hidden="true" />
+                        <div>
+                          <strong>Nova versão disponível: v{updateInfo.latestVersion}</strong>
+                          <span>
+                            Versão atual: v{updateInfo.currentVersion}
+                            {updateInfo.releaseName ? ` · ${updateInfo.releaseName}` : ""}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="about-download-btn"
+                        onClick={() => openExternal(updateInfo.websiteUrl || updateInfo.downloadUrl || website)}
+                      >
+                        <Download aria-hidden="true" /> Baixar atualização
+                      </button>
+                    </div>
+                  ) : updateInfo ? (
+                    <div className="status-feedback-box success">
+                      <CheckCircle2 aria-hidden="true" />
+                      <span>Você está na versão mais recente (v{updateInfo.currentVersion}).</span>
+                    </div>
+                  ) : (
+                    <p className="about-update-hint">
+                      Clique em &ldquo;Verificar atualizações&rdquo; para consultar a versão mais recente.
+                    </p>
+                  )}
+                </div>
+
+                <div className="about-dev-section">
+                  <h4>Desenvolvedor &amp; Informações</h4>
+                  <div className="about-meta-grid">
+                    <div className="about-meta-item">
+                      <span className="about-meta-label">
+                        <User aria-hidden="true" /> Desenvolvedor
+                      </span>
+                      <strong>{author}</strong>
+                    </div>
+                    <div className="about-meta-item">
+                      <span className="about-meta-label">
+                        <Scale aria-hidden="true" /> Licença
+                      </span>
+                      <strong>{license}</strong>
+                    </div>
+                  </div>
+
+                  <div className="about-links-row">
+                    <button type="button" className="about-link-btn" onClick={() => openExternal(website)}>
+                      <Globe aria-hidden="true" /> Site Oficial
+                    </button>
+                    <button type="button" className="about-link-btn" onClick={() => openExternal(repository)}>
+                      <Code2 aria-hidden="true" /> GitHub
+                    </button>
+                    <button type="button" className="about-link-btn" onClick={() => openExternal(authorUrl)}>
+                      <ExternalLink aria-hidden="true" /> LinkedIn
+                    </button>
+                    <button type="button" className="about-link-btn" onClick={() => openExternal(changelogUrl)}>
+                      <Sparkles aria-hidden="true" /> Changelog / Releases
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
+
+      {dbMigrationDialog && (
+        <div
+          className="dialog-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !migratingDbPath) {
+              setDbMigrationDialog(null);
+            }
+          }}
+        >
+          <div
+            className="organization-dialog db-migration-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="db-migration-dialog-title"
+          >
+            <header>
+              <Database aria-hidden="true" />
+              <h2 id="db-migration-dialog-title">
+                {dbMigrationDialog.isReset
+                  ? "Restaurar local padrão do banco"
+                  : "Confirmar troca de local do banco"}
+              </h2>
+              <button
+                type="button"
+                onClick={() => !migratingDbPath && setDbMigrationDialog(null)}
+                disabled={migratingDbPath}
+                aria-label="Fechar"
+                title="Fechar"
+              >
+                <X aria-hidden="true" />
+              </button>
+            </header>
+
+            <div className="db-migration-summary">
+              <div className="db-migration-path-block">
+                <span className="db-migration-path-label">
+                  Origem atual ({dbMigrationDialog.info.currentNotes}{" "}
+                  {dbMigrationDialog.info.currentNotes === 1 ? "nota" : "notas"})
+                </span>
+                <code className="db-migration-path-value" title={dbMigrationDialog.info.currentPath}>
+                  {dbMigrationDialog.info.currentPath}
+                </code>
+              </div>
+
+              <div className="db-migration-arrow" aria-hidden="true">
+                <ArrowRight size={16} />
+              </div>
+
+              <div className="db-migration-path-block">
+                <span className="db-migration-path-label">Novo destino</span>
+                <code className="db-migration-path-value" title={dbMigrationDialog.info.resolvedPath}>
+                  {dbMigrationDialog.info.resolvedPath}
+                </code>
+              </div>
+            </div>
+
+            <div className="db-migration-safety-note">
+              <ShieldCheck size={16} aria-hidden="true" />
+              <span>
+                Um backup automático de segurança do banco atual será criado antes de qualquer alteração.
+              </span>
+            </div>
+
+            {dbMigrationDialog.info.targetExists && (
+              <div className="db-migration-target-alert">
+                <AlertTriangle size={16} aria-hidden="true" />
+                <span>
+                  Já existe um arquivo <code>.db</code> no destino com{" "}
+                  <strong>
+                    {dbMigrationDialog.info.targetNotes}{" "}
+                    {dbMigrationDialog.info.targetNotes === 1 ? "nota" : "notas"}
+                  </strong>
+                  . Escolha como deseja prosseguir:
+                </span>
+              </div>
+            )}
+
+            <div className="db-migration-options" role="radiogroup" aria-label="Modo de migração do banco de dados">
+              {dbMigrationDialog.info.targetExists ? (
+                <>
+                  <label
+                    className={`db-migration-option${
+                      selectedMigrationMode === "use_existing" ? " is-selected" : ""
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="db-migration-mode"
+                      value="use_existing"
+                      checked={selectedMigrationMode === "use_existing"}
+                      onChange={() => setSelectedMigrationMode("use_existing")}
+                      disabled={migratingDbPath}
+                    />
+                    <div className="db-migration-option-content">
+                      <div className="db-migration-option-title">
+                        <strong>Usar banco existente no destino</strong>
+                        <span className="db-migration-badge">Preserva destino</span>
+                      </div>
+                      <p>
+                        Abre imediatamente o banco já existente no destino ({dbMigrationDialog.info.targetNotes}{" "}
+                        {dbMigrationDialog.info.targetNotes === 1 ? "nota" : "notas"}). Seus dados atuais
+                        continuam salvos na pasta anterior.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label
+                    className={`db-migration-option${
+                      selectedMigrationMode === "copy" ? " is-selected" : ""
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="db-migration-mode"
+                      value="copy"
+                      checked={selectedMigrationMode === "copy"}
+                      onChange={() => setSelectedMigrationMode("copy")}
+                      disabled={migratingDbPath}
+                    />
+                    <div className="db-migration-option-content">
+                      <div className="db-migration-option-title">
+                        <strong>Substituir pelos meus dados atuais</strong>
+                      </div>
+                      <p>
+                        Copia todas as suas notas atuais para o destino e preserva automaticamente uma cópia{" "}
+                        <code>.bak</code> do arquivo anterior encontrado lá.
+                      </p>
+                    </div>
+                  </label>
+                </>
+              ) : (
+                <>
+                  <label
+                    className={`db-migration-option${
+                      selectedMigrationMode === "copy" ? " is-selected" : ""
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="db-migration-mode"
+                      value="copy"
+                      checked={selectedMigrationMode === "copy"}
+                      onChange={() => setSelectedMigrationMode("copy")}
+                      disabled={migratingDbPath}
+                    />
+                    <div className="db-migration-option-content">
+                      <div className="db-migration-option-title">
+                        <strong>Copiar todos os meus dados atuais para o novo local</strong>
+                        <span className="db-migration-badge recommended">Recomendado</span>
+                      </div>
+                      <p>
+                        Cria uma cópia íntegra das suas notas, pastas, tarefas, stickers e fluxos no novo
+                        caminho selecionado.
+                      </p>
+                    </div>
+                  </label>
+
+                  <label
+                    className={`db-migration-option${
+                      selectedMigrationMode === "fresh" ? " is-selected" : ""
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="db-migration-mode"
+                      value="fresh"
+                      checked={selectedMigrationMode === "fresh"}
+                      onChange={() => setSelectedMigrationMode("fresh")}
+                      disabled={migratingDbPath}
+                    />
+                    <div className="db-migration-option-content">
+                      <div className="db-migration-option-title">
+                        <strong>Iniciar um banco limpo no novo local</strong>
+                      </div>
+                      <p>
+                        Cria um novo banco vazio no destino, mantendo o banco anterior intacto no local
+                        original.
+                      </p>
+                    </div>
+                  </label>
+                </>
+              )}
+            </div>
+
+            {dbPathMessage && dbPathError && (
+              <p className="sync-status-msg error" style={{ marginTop: 10 }}>
+                {dbPathMessage}
+              </p>
+            )}
+
+            <footer>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => setDbMigrationDialog(null)}
+                disabled={migratingDbPath}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="db-migration-confirm-btn"
+                onClick={() => void handleConfirmDbMigration()}
+                disabled={migratingDbPath}
+              >
+                {migratingDbPath ? "Migrando dados..." : "Confirmar Troca"}
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
 
       {confirmRestoreOpen && (
         <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setConfirmRestoreOpen(false)}>

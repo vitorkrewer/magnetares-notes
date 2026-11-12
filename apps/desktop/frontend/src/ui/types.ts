@@ -263,6 +263,43 @@ export type ComplianceReport = {
   auditedAt: string;
 };
 
+export type DatabaseMigrationMode = "copy" | "use_existing" | "fresh";
+
+export type DatabaseTargetInfoRecord = {
+  currentPath: string;
+  resolvedPath: string;
+  defaultPath: string;
+  sameLocation: boolean;
+  targetExists: boolean;
+  targetNotes: number;
+  currentNotes: number;
+  isCustom: boolean;
+  isPortable: boolean;
+};
+
+export type AppInfoRecord = {
+  appName: string;
+  version: string;
+  buildDate: string;
+  description: string;
+  author: string;
+  authorUrl: string;
+  repository: string;
+  website: string;
+  license: string;
+};
+
+export type UpdateCheckResultRecord = {
+  currentVersion: string;
+  latestVersion: string;
+  hasUpdate: boolean;
+  releaseName: string;
+  releaseNotes: string;
+  publishedAt: string;
+  downloadUrl: string;
+  websiteUrl: string;
+};
+
 export type DesktopBridge = {
   ListNotes?: () => Promise<Note[]>;
   ListDeletedNotes?: () => Promise<Note[]>;
@@ -308,6 +345,10 @@ export type DesktopBridge = {
   DeleteSubtask?: (id: string) => Promise<void>;
   GetDatabasePath?: () => Promise<string>;
   SetCustomDatabasePath?: (newPath: string) => Promise<string>;
+  BrowseDatabaseDirectory?: () => Promise<string>;
+  InspectDatabasePathTarget?: (targetPath: string) => Promise<DatabaseTargetInfoRecord>;
+  MigrateDatabasePath?: (newPath: string, mode: DatabaseMigrationMode) => Promise<string>;
+  ResetDatabasePathToDefault?: (mode: DatabaseMigrationMode) => Promise<string>;
   SyncNow?: (apiURL: string) => Promise<SyncResult>;
   RunComplianceAudit?: () => Promise<ComplianceReport>;
   TestTursoConnection?: (databaseURL: string, authToken: string) => Promise<string>;
@@ -340,6 +381,9 @@ export type DesktopBridge = {
   GetIdeaFlowGraph?: (flowId: string) => Promise<IdeaFlowGraphRecord>;
   SaveIdeaFlowGraph?: (input: SaveIdeaFlowGraphInput) => Promise<IdeaFlowGraphRecord>;
   ExportIdeaFlowPNG?: (suggestedName: string, base64PNG: string) => Promise<string>;
+  GetAppInfo?: () => Promise<AppInfoRecord>;
+  CheckForUpdates?: () => Promise<UpdateCheckResultRecord>;
+  OpenExternalURL?: (url: string) => Promise<void>;
 };
 
 declare global {

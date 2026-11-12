@@ -4,6 +4,10 @@ import {main} from '../models';
 
 export function ArchiveTaskList(arg1:string):Promise<main.TaskList>;
 
+export function BrowseDatabaseDirectory():Promise<string>;
+
+export function CheckForUpdates():Promise<main.UpdateCheckResult>;
+
 export function Close():Promise<void>;
 
 export function CloseFocusWindow(arg1:string):Promise<void>;
@@ -40,6 +44,8 @@ export function ExportIdeaFlowPNG(arg1:string,arg2:string):Promise<string>;
 
 export function ExportNoteFile(arg1:string,arg2:string):Promise<string>;
 
+export function GetAppInfo():Promise<main.AppInfo>;
+
 export function GetDatabasePath():Promise<string>;
 
 export function GetFocusNoteID():Promise<string>;
@@ -57,6 +63,8 @@ export function GetSyncProfileID():Promise<string>;
 export function GetSyncProfileInfo():Promise<main.SyncProfileInfo>;
 
 export function GetTaskWithSubtasks(arg1:string):Promise<main.Task>;
+
+export function InspectDatabasePathTarget(arg1:string):Promise<main.DatabaseTargetInfo>;
 
 export function IsWindowMaximized():Promise<boolean>;
 
@@ -82,17 +90,23 @@ export function ListTaskLists():Promise<Array<main.TaskList>>;
 
 export function ListTasks(arg1:string,arg2:boolean):Promise<Array<main.Task>>;
 
+export function MigrateDatabasePath(arg1:string,arg2:string):Promise<string>;
+
 export function MinimizeWindow():Promise<void>;
 
 export function MoveNote(arg1:string,arg2:string):Promise<void>;
 
 export function MoveSticker(arg1:string,arg2:string,arg3:string):Promise<main.Sticker>;
 
+export function OpenExternalURL(arg1:string):Promise<void>;
+
 export function PermanentlyDeleteNote(arg1:string):Promise<void>;
 
 export function PurgeRemoteSyncProfile(arg1:string):Promise<string>;
 
 export function QueryNotes(arg1:main.NoteQuery):Promise<Array<main.Note>>;
+
+export function ResetDatabasePathToDefault(arg1:string):Promise<string>;
 
 export function ResolveNoteConflict(arg1:string,arg2:string):Promise<void>;
 

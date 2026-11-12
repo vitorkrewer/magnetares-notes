@@ -6,6 +6,14 @@ export function ArchiveTaskList(arg1) {
   return window['go']['main']['App']['ArchiveTaskList'](arg1);
 }
 
+export function BrowseDatabaseDirectory() {
+  return window['go']['main']['App']['BrowseDatabaseDirectory']();
+}
+
+export function CheckForUpdates() {
+  return window['go']['main']['App']['CheckForUpdates']();
+}
+
 export function Close() {
   return window['go']['main']['App']['Close']();
 }
@@ -78,6 +86,10 @@ export function ExportNoteFile(arg1, arg2) {
   return window['go']['main']['App']['ExportNoteFile'](arg1, arg2);
 }
 
+export function GetAppInfo() {
+  return window['go']['main']['App']['GetAppInfo']();
+}
+
 export function GetDatabasePath() {
   return window['go']['main']['App']['GetDatabasePath']();
 }
@@ -112,6 +124,10 @@ export function GetSyncProfileInfo() {
 
 export function GetTaskWithSubtasks(arg1) {
   return window['go']['main']['App']['GetTaskWithSubtasks'](arg1);
+}
+
+export function InspectDatabasePathTarget(arg1) {
+  return window['go']['main']['App']['InspectDatabasePathTarget'](arg1);
 }
 
 export function IsWindowMaximized() {
@@ -162,6 +178,10 @@ export function ListTasks(arg1, arg2) {
   return window['go']['main']['App']['ListTasks'](arg1, arg2);
 }
 
+export function MigrateDatabasePath(arg1, arg2) {
+  return window['go']['main']['App']['MigrateDatabasePath'](arg1, arg2);
+}
+
 export function MinimizeWindow() {
   return window['go']['main']['App']['MinimizeWindow']();
 }
@@ -174,6 +194,10 @@ export function MoveSticker(arg1, arg2, arg3) {
   return window['go']['main']['App']['MoveSticker'](arg1, arg2, arg3);
 }
 
+export function OpenExternalURL(arg1) {
+  return window['go']['main']['App']['OpenExternalURL'](arg1);
+}
+
 export function PermanentlyDeleteNote(arg1) {
   return window['go']['main']['App']['PermanentlyDeleteNote'](arg1);
 }
@@ -184,6 +208,10 @@ export function PurgeRemoteSyncProfile(arg1) {
 
 export function QueryNotes(arg1) {
   return window['go']['main']['App']['QueryNotes'](arg1);
+}
+
+export function ResetDatabasePathToDefault(arg1) {
+  return window['go']['main']['App']['ResetDatabasePathToDefault'](arg1);
 }
 
 export function ResolveNoteConflict(arg1, arg2) {

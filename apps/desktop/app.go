@@ -336,27 +336,55 @@ func (a *App) DeleteSubtask(id string) error {
 }
 
 func (a *App) GetDatabasePath() (string, error) {
+	if a.store != nil && strings.TrimSpace(a.store.path) != "" {
+		return a.store.path, nil
+	}
 	return defaultDatabasePath()
 }
 
-func (a *App) SetCustomDatabasePath(newPath string) (string, error) {
-	newPath = strings.TrimSpace(newPath)
-	if newPath == "" {
-		return "", errors.New("caminho do banco de dados inválido")
+// BrowseDatabaseDirectory abre o seletor nativo de pastas do sistema operacional e retorna o caminho sugerido do arquivo .db.
+func (a *App) BrowseDatabaseDirectory() (string, error) {
+	if a.ctx == nil {
+		return "", errors.New("janela da aplicação não inicializada")
 	}
-
-	_ = a.store.close()
-
-	newStore, err := openNoteStore(newPath)
+	defaultDir := ""
+	if a.store != nil && strings.TrimSpace(a.store.path) != "" {
+		defaultDir = filepath.Dir(a.store.path)
+	}
+	dir, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
+		Title:            "Selecionar pasta de armazenamento do Magnetares Notes",
+		DefaultDirectory: defaultDir,
+	})
 	if err != nil {
-		oldPath, _ := defaultDatabasePath()
-		a.store, _ = openNoteStore(oldPath)
-		return "", fmt.Errorf("não foi possível abrir o banco no novo local: %w", err)
+		return "", err
 	}
+	if strings.TrimSpace(dir) == "" {
+		return "", nil
+	}
+	return filepath.Join(dir, "magnetares.db"), nil
+}
 
-	a.store = newStore
-	_ = saveConfiguredDatabasePath(newPath)
-	return newPath, nil
+// InspectDatabasePathTarget analisa o caminho de destino antes de realizar a troca de armazenamento.
+func (a *App) InspectDatabasePathTarget(targetPath string) (DatabaseTargetInfo, error) {
+	return a.inspectDatabaseTarget(targetPath)
+}
+
+// MigrateDatabasePath executa a troca segura e atômica do local do banco SQLite ("copy", "use_existing" ou "fresh").
+func (a *App) MigrateDatabasePath(newPath string, mode string) (string, error) {
+	return a.migrateDatabaseLocation(newPath, mode, false)
+}
+
+// ResetDatabasePathToDefault restaura o local de armazenamento para o caminho padrão do sistema operacional.
+func (a *App) ResetDatabasePathToDefault(mode string) (string, error) {
+	defaultPath, err := resolveSystemDefaultDatabasePath()
+	if err != nil {
+		return "", err
+	}
+	return a.migrateDatabaseLocation(defaultPath, mode, true)
+}
+
+func (a *App) SetCustomDatabasePath(newPath string) (string, error) {
+	return a.migrateDatabaseLocation(newPath, "copy", false)
 }
 
 // SyncNow sincroniza com a nuvem. apiURL só é usada quando informada
@@ -680,4 +708,30 @@ func (a *App) RestoreFromCloud() (SyncResult, error) {
 	}
 	res.Message = fmt.Sprintf("Restauração da nuvem concluída. Backup prévio salvo em: %s\n\n%s", backupPath, res.Message)
 	return res, nil
+}
+
+// GetAppInfo retorna os metadados da versão atual e informações do desenvolvedor.
+func (a *App) GetAppInfo() AppInfo {
+	return currentAppInfo()
+}
+
+// CheckForUpdates consulta a última release publicada no GitHub e compara com a versão local.
+func (a *App) CheckForUpdates() (UpdateCheckResult, error) {
+	return fetchLatestReleaseFromURL(appLatestAPIURL)
+}
+
+// OpenExternalURL abre uma URL externa segura no navegador padrão do sistema operacional.
+func (a *App) OpenExternalURL(rawURL string) error {
+	trimmed := strings.TrimSpace(rawURL)
+	if trimmed == "" {
+		return errors.New("URL inválida")
+	}
+	if !strings.HasPrefix(trimmed, "https://") && !strings.HasPrefix(trimmed, "http://") {
+		return errors.New("apenas URLs http/https são suportadas")
+	}
+	if a.ctx == nil {
+		return errors.New("janela da aplicação não inicializada")
+	}
+	runtime.BrowserOpenURL(a.ctx, trimmed)
+	return nil
 }

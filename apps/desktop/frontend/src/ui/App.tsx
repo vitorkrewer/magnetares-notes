@@ -4,7 +4,7 @@ import { StructuredEditor } from "./StructuredEditor";
 import { CodeEditor } from "./CodeEditor";
 import { TitleBar } from "./TitleBar";
 import { OrganizationDialog, getFolderIconComponent, getTagIconComponent } from "./OrganizationDialog";
-import { SettingsDialog, type ThemeOption } from "./SettingsDialog";
+import { SettingsDialog, type SettingsTab, type ThemeOption } from "./SettingsDialog";
 import { ConflictDialog } from "./ConflictDialog";
 import { StickerBoardDialog, STICKER_PALETTE, DelicateStickerIcon } from "./StickerBoardDialog";
 import { StickerBoardView } from "./StickerBoardView";
@@ -13,13 +13,25 @@ import { TaskListView } from "./TaskListView";
 import { IdeaFlowDialog } from "./IdeaFlowDialog";
 import { IdeaFlowsView } from "./IdeaFlowsView";
 import type { IdeaReferenceKind } from "./IdeaNodeLinkModal";
-import { FolderRecord, IdeaFlowGraphRecord, IdeaFlowRecord, NavigationRecord, Note, NoteQuery, SaveIdeaFlowGraphInput, SaveIdeaFlowInput, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord, TaskListRecord } from "./types";
+import { AppInfoRecord, DatabaseMigrationMode, FolderRecord, IdeaFlowGraphRecord, IdeaFlowRecord, NavigationRecord, Note, NoteQuery, SaveIdeaFlowGraphInput, SaveIdeaFlowInput, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord, TaskListRecord, UpdateCheckResultRecord } from "./types";
 import { downloadBlob, downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
 import { exportToAbntDocxBase64, exportToAbntDocxBlob } from "./abntExport";
 import { exportToPdfBase64, exportToPdfBlob } from "./pdfExport";
 
 type SaveState = "saved" | "saving" | "error";
 type LibraryView = "notes" | "deleted" | "stickers" | "tasks" | "ideas";
+
+const DEFAULT_APP_INFO: AppInfoRecord = {
+  appName: "Magnetares Notes",
+  version: "2.0.0",
+  buildDate: "2026-11-12",
+  description: "Caderno de anotações local-first, rápido e privado com suporte a Markdown rico, fórmulas científicas, tarefas, stickers e mapas mentais.",
+  author: "Vitor Krewer",
+  authorUrl: "https://www.linkedin.com/in/vitorkrewer/",
+  repository: "https://github.com/vitorkrewer/magnetares-notes",
+  website: "https://vitorkrewer.github.io/magnetares-notes/",
+  license: "Source-Available (Uso Pessoal Não-Comercial)"
+};
 
 const demo: Note[] = [
   { id: "welcome", title: "Bem-vindo ao Magnetares", body: "Um lugar tranquilo para pensar, planejar e guardar o que importa.", bodyText: "Um lugar tranquilo para pensar, planejar e guardar o que importa.", folder: "Notas", updatedAt: new Date().toISOString() },
@@ -124,6 +136,12 @@ export function App() {
   });
   const [detachedFocusNoteIds, setDetachedFocusNoteIds] = useState<Set<string>>(new Set());
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>("general");
+  const [appInfo, setAppInfo] = useState<AppInfoRecord>(DEFAULT_APP_INFO);
+  const [updateInfo, setUpdateInfo] = useState<UpdateCheckResultRecord | null>(null);
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
+  const [updateCheckError, setUpdateCheckError] = useState("");
+  const [updateBannerDismissed, setUpdateBannerDismissed] = useState(false);
   const [dbPath, setDbPath] = useState("%LOCALAPPDATA%\\Magnetares Notes\\magnetares.db");
   // Vazio = o backend usa o pipeline direto do Turso (ou syncApiUrl do config.json).
   const [syncServiceURL] = useState(() => import.meta.env.VITE_API_BASE_URL || "");
@@ -178,6 +196,48 @@ export function App() {
     localStorage.removeItem("magnetares_turso_db_url");
   }, []);
 
+  const openExternalURL = (url: string) => {
+    const bridge = window.go?.main?.App;
+    if (bridge?.OpenExternalURL) {
+      void bridge.OpenExternalURL(url).catch(() => {
+        window.open(url, "_blank", "noopener,noreferrer");
+      });
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleCheckForUpdates = async (silent = false) => {
+    const bridge = window.go?.main?.App;
+    if (!bridge?.CheckForUpdates) {
+      if (!silent) {
+        setUpdateCheckError("Verificação de atualizações disponível apenas no aplicativo desktop.");
+      }
+      return;
+    }
+    setCheckingUpdates(true);
+    if (!silent) {
+      setUpdateCheckError("");
+    }
+    try {
+      const result = await bridge.CheckForUpdates();
+      setUpdateInfo(result);
+      setUpdateCheckError("");
+      if (result.hasUpdate) {
+        const dismissedVersion = localStorage.getItem("magnetares_dismissed_update");
+        if (dismissedVersion !== result.latestVersion) {
+          setUpdateBannerDismissed(false);
+        }
+      }
+    } catch (error) {
+      if (!silent) {
+        setUpdateCheckError(error instanceof Error ? error.message : "Não foi possível verificar atualizações.");
+      }
+    } finally {
+      setCheckingUpdates(false);
+    }
+  };
+
   useEffect(() => {
     const bridge = window.go?.main?.App;
     if (bridge?.GetDatabasePath) {
@@ -189,6 +249,15 @@ export function App() {
     if (bridge?.ListNoteConflicts) {
       void bridge.ListNoteConflicts().then(setConflicts);
     }
+    if (bridge?.GetAppInfo) {
+      void bridge.GetAppInfo().then((info) => {
+        if (info) setAppInfo(info);
+      }).catch(() => undefined);
+    }
+    const timer = window.setTimeout(() => {
+      void handleCheckForUpdates(true);
+    }, 2500);
+    return () => window.clearTimeout(timer);
   }, []);
 
   // Sincroniza estado de Modo Foco e notas entre janelas via Eventos nativos e BroadcastChannel
@@ -633,23 +702,47 @@ export function App() {
     void reloadNavigation();
   };
 
-  const handleDbPathChange = async (newPath: string) => {
+  const handleDbPathChange = async (
+    newPath: string,
+    mode: DatabaseMigrationMode = "copy",
+    isReset = false
+  ) => {
     const bridge = window.go?.main?.App;
-    if (bridge?.SetCustomDatabasePath) {
-      const updatedPath = await bridge.SetCustomDatabasePath(newPath);
-      setDbPath(updatedPath);
-      void Promise.all([
+    await flushAllPendingNotes();
+
+    let updatedPath = newPath;
+    if (isReset && bridge?.ResetDatabasePathToDefault) {
+      updatedPath = await bridge.ResetDatabasePathToDefault(mode);
+    } else if (bridge?.MigrateDatabasePath) {
+      updatedPath = await bridge.MigrateDatabasePath(newPath, mode);
+    } else if (bridge?.SetCustomDatabasePath) {
+      updatedPath = await bridge.SetCustomDatabasePath(newPath);
+    }
+
+    setDbPath(updatedPath);
+
+    if (bridge) {
+      const [loadedNotes, loadedDeletedNotes] = await Promise.all([
         bridge.ListNotes?.() ?? Promise.resolve([]),
         bridge.ListDeletedNotes?.() ?? Promise.resolve([]),
-        bridge.ListNavigation?.() ?? Promise.resolve({ folders: [], tags: [], smartFolders: [], stickerBoards: [] })
-      ]).then(([loadedNotes, loadedDeletedNotes, loadedNav]) => {
-        setNotes(loadedNotes);
-        setDeletedNotes(loadedDeletedNotes);
-        setNavigation(loadedNav);
-        setActiveId(loadedNotes[0]?.id ?? "");
-      });
-    } else {
-      setDbPath(newPath);
+        reloadNavigation(),
+      ]);
+      setNotes(loadedNotes);
+      setDeletedNotes(loadedDeletedNotes);
+      setActiveId(loadedNotes[0]?.id ?? "");
+
+      if (
+        selectedQuery.kind !== "all" &&
+        selectedQuery.kind !== "deleted" &&
+        selectedQuery.kind !== "stickerBoard" &&
+        selectedQuery.kind !== "taskList" &&
+        selectedQuery.kind !== "ideaFlows" &&
+        selectedQuery.kind !== "ideaFlow"
+      ) {
+        await loadQueryNotes(selectedQuery);
+      }
+
+      setTaskSyncNonce((n) => n + 1);
     }
   };
 
@@ -2023,7 +2116,10 @@ export function App() {
           <footer>
             <div
               className={`footer-status ${syncing ? "syncing" : ""} ${syncConfiguration.configured ? "connected" : "local"}`}
-              onClick={() => setSettingsOpen(true)}
+              onClick={() => {
+                setSettingsInitialTab("general");
+                setSettingsOpen(true);
+              }}
               style={{ cursor: "pointer" }}
               title={
                 syncing
@@ -2064,7 +2160,10 @@ export function App() {
               <button
                 type="button"
                 className="icon-button settings-btn"
-                onClick={() => setSettingsOpen(true)}
+                onClick={() => {
+                  setSettingsInitialTab("general");
+                  setSettingsOpen(true);
+                }}
                 title="Preferências & Configurações"
                 aria-label="Preferências"
               >
@@ -2077,6 +2176,7 @@ export function App() {
 
       {view === "stickers" ? (
         <StickerBoardView
+          key={`stickers-${selectedQuery.id ?? "default"}-${taskSyncNonce}`}
           board={
             (navigation.stickerBoards || []).find((b) => b.id === selectedQuery.id) ||
             (navigation.stickerBoards || [])[0] || {
@@ -2440,6 +2540,13 @@ export function App() {
           onSaveSyncConfiguration={handleSaveSyncConfiguration}
           onAutoSyncIntervalChange={handleSaveAutoSyncInterval}
           onSyncNow={handleSyncWithCloud}
+          initialTab={settingsInitialTab}
+          appInfo={appInfo}
+          updateInfo={updateInfo}
+          checkingUpdates={checkingUpdates}
+          updateCheckError={updateCheckError}
+          onCheckForUpdates={() => handleCheckForUpdates(false)}
+          onOpenExternalURL={openExternalURL}
           onClose={() => setSettingsOpen(false)}
         />
       )}
@@ -2643,6 +2750,55 @@ export function App() {
           onSave={handleSaveIdeaFlow}
         />
       )}
+
+      {updateInfo?.hasUpdate &&
+        !updateBannerDismissed &&
+        updateInfo.latestVersion !== localStorage.getItem("magnetares_dismissed_update") && (
+          <aside className="update-notification-banner" role="status" aria-live="polite">
+            <div className="update-notification-icon" aria-hidden="true">
+              <Sparkles />
+            </div>
+            <div className="update-notification-body">
+              <div className="update-notification-header">
+                <div>
+                  <strong>Nova versão disponível: v{updateInfo.latestVersion}</strong>
+                  <span>Versão atual: v{updateInfo.currentVersion}</span>
+                </div>
+                <button
+                  type="button"
+                  className="update-notification-close"
+                  aria-label="Dispensar notificação de atualização"
+                  title="Dispensar"
+                  onClick={() => {
+                    localStorage.setItem("magnetares_dismissed_update", updateInfo.latestVersion);
+                    setUpdateBannerDismissed(true);
+                  }}
+                >
+                  <X aria-hidden="true" />
+                </button>
+              </div>
+              <div className="update-notification-actions">
+                <button
+                  type="button"
+                  className="update-notification-download"
+                  onClick={() => openExternalURL(updateInfo.websiteUrl || updateInfo.downloadUrl)}
+                >
+                  <Download aria-hidden="true" /> Baixar atualização
+                </button>
+                <button
+                  type="button"
+                  className="update-notification-about"
+                  onClick={() => {
+                    setSettingsInitialTab("about");
+                    setSettingsOpen(true);
+                  }}
+                >
+                  Sobre
+                </button>
+              </div>
+            </div>
+          </aside>
+        )}
     </main>
     </div>
   );
