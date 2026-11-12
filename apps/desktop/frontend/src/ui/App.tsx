@@ -2109,8 +2109,8 @@ export function App() {
         </div>
 
         <div className="sidebar-footer-group">
-          <button className={`nav-item trash-item ${view === "deleted" ? "selected" : ""}`} onClick={() => selectQuery({ kind: "deleted" })} title="Apagadas recentemente">
-            <span><Trash2 aria-hidden="true" /><span className="nav-item-title">Apagadas recentemente</span></span>
+          <button className={`nav-item trash-item ${view === "deleted" ? "selected" : ""}`} onClick={() => selectQuery({ kind: "deleted" })} title="Lixeira">
+            <span><Trash2 aria-hidden="true" /><span className="nav-item-title">Lixeira</span></span>
             <small>{deletedNotes.length}</small>
           </button>
           <footer>
@@ -2269,7 +2269,7 @@ export function App() {
         </div>
         <div className="list-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1>{view === "deleted" ? "Apagadas recentemente" : "Notas"}</h1>
+            <h1>{view === "deleted" ? "Lixeira" : "Notas"}</h1>
             <p>{visible.length} {visible.length === 1 ? "nota" : "notas"}</p>
           </div>
           {view === "deleted" && deletedNotes.length > 0 && (
@@ -2322,7 +2322,7 @@ export function App() {
         {active ? (
           <>
             <header className="editor-toolbar">
-              <span className="breadcrumb">{view === "deleted" ? "Apagadas recentemente" : "Notas"} <ChevronRight aria-hidden="true" /></span>
+              <span className="breadcrumb">{view === "deleted" ? "Lixeira" : "Notas"} <ChevronRight aria-hidden="true" /></span>
               <div className="editor-actions">
                 <span className={`save-state ${saveState}`} role="status">
                   {view === "deleted" && "Na lixeira"}
@@ -2368,7 +2368,7 @@ export function App() {
                     </div>
                     <button className={`icon-button ${active.pinnedAt ? "active-pin" : ""}`} onClick={() => void togglePinActiveNote()} title={active.pinnedAt ? "Desafixar nota" : "Fixar nota"} aria-label={active.pinnedAt ? "Desafixar nota" : "Fixar nota"}><Pin aria-hidden="true" /></button>
                     <button className={`icon-button focus-trigger-button ${detachedFocusNoteIds.has(active.id) ? "active-pin" : ""}`} onClick={() => void handleLaunchFocusMode(active)} title={detachedFocusNoteIds.has(active.id) ? "Nota aberta em janela independente de foco" : "Destacar nota no Modo Foco (Janela independente)"} aria-label="Destacar nota no Modo Foco"><PictureInPicture2 aria-hidden="true" size={17} /></button>
-                    <button className="icon-button danger-button" onClick={() => void deleteNote(active)} title="Mover para Apagadas recentemente" aria-label="Apagar nota"><Trash2 aria-hidden="true" /></button>
+                    <button className="icon-button danger-button" onClick={() => void deleteNote(active)} title="Mover para a Lixeira" aria-label="Apagar nota"><Trash2 aria-hidden="true" /></button>
                     <button className="icon-button" onClick={() => createNote("rtf")} title="Nova nota (Ctrl+N)" aria-label="Nova nota"><FilePenLine aria-hidden="true" /></button>
                   </>
                 )}
