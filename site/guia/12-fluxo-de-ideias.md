@@ -6,11 +6,15 @@ A partir da **versão 2.0.0**, o Magnetares Notes traz o módulo **Fluxo de Idei
 
 ## 1. Acessando o Hub de Fluxos de Ideias
 
-Na barra lateral esquerda, logo abaixo da seção **Stickers**, clique em **Fluxo de Ideias** para abrir o painel de gerenciamento dos seus mapas.
+Na barra lateral esquerda, logo abaixo da seção **Stickers**, clique em **Meus Fluxos** dentro de **Fluxo de Ideias** para abrir o painel de gerenciamento dos seus mapas.
 
 Você conta com duas formas de visualização, alternáveis a qualquer momento no canto superior direito:
 - **Cards:** Grade visual com faixa de cor personalizada, ícone temático, descrição e contagem de nós e conexões.
 - **Lista:** Visão tabular compacta ideal para localizar rapidamente dezenas de fluxos.
+
+![Visualização em Cards do módulo Fluxo de Ideias](assets/screenshots/fluxo-ideias-cards.jpg)
+
+![Visualização em Lista do módulo Fluxo de Ideias](assets/screenshots/fluxo-ideias-lista.jpg)
 
 > [!TIP]
 > A sua preferência de visualização (**Cards** ou **Lista**) é salva automaticamente para as próximas sessões.
@@ -35,6 +39,8 @@ O Canvas do Fluxo de Ideias foi projetado para oferecer fluidez máxima e nitide
 - **Panning & Navegação:** Ative a ferramenta **Mover (Mão)**, arraste o fundo vazio, use o botão do meio do mouse ou segure a tecla `Espaço` enquanto arrasta.
 - **Minimapa Interativo:** Localizado no canto inferior direito para visualizar o mapa inteiro e navegar instantaneamente.
 - **Grade de Precisão (Snap):** Ative ou desative o **Snap Grade** na barra superior para alinhar os nós automaticamente em incrementos de `16px`.
+
+![Canvas interativo do Fluxo de Ideias com zoom, minimapa e nós conectados](assets/screenshots/fluxo-ideias-canvas.jpg)
 
 ---
 
@@ -65,7 +71,10 @@ O grande diferencial do Fluxo de Ideias é conectar o pensamento visual aos seus
 3. Pesquise e clique no item que deseja incluir no mapa.
 4. O nó exibirá um badge semântico com o tipo e o título do item selecionado, além do botão **Abrir ↗**.
 
-Ao clicar em **Abrir ↗**, o Magnetares navega imediatamente para a tela da Nota, Lista de Tarefas ou Quadro de Stickers correspondente!
+Ao clicar em **Abrir ↗**, o Magnetares navega imediatamente para a tela da Nota, Lista de Tarefas (já selecionando a tarefa), ou Quadro de Stickers (destacando o sticker correspondente)!
+
+> [!TIP]
+> Se você renomear uma Nota, Tarefa, Lista ou Sticker posteriormente, o rótulo exibido no nó do Fluxo de Ideias é atualizado automaticamente.
 
 ---
 
