@@ -1,0 +1,34 @@
+app-id: io.github.vitorkrewer.MagnetaresNotes
+runtime: org.gnome.Platform
+runtime-version: '47'
+sdk: org.gnome.Sdk
+command: magnetares-notes
+
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+  - --filesystem=home
+  - --talk-name=org.freedesktop.secrets
+
+modules:
+  - name: magnetares-notes
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 magnetares-notes /app/bin/magnetares-notes
+      - install -Dm644 io.github.vitorkrewer.MagnetaresNotes.desktop /app/share/applications/io.github.vitorkrewer.MagnetaresNotes.desktop
+      - install -Dm644 io.github.vitorkrewer.MagnetaresNotes.metainfo.xml /app/share/metainfo/io.github.vitorkrewer.MagnetaresNotes.metainfo.xml
+      - install -Dm644 io.github.vitorkrewer.MagnetaresNotes.png /app/share/icons/hicolor/512x512/apps/io.github.vitorkrewer.MagnetaresNotes.png
+    sources:
+      - type: file
+        path: dist/magnetares-notes
+      - type: file
+        path: ../linux/io.github.vitorkrewer.MagnetaresNotes.desktop
+      - type: file
+        path: ../linux/io.github.vitorkrewer.MagnetaresNotes.metainfo.xml
+      - type: file
+        path: ../../apps/desktop/build/appicon.png
+        dest-filename: io.github.vitorkrewer.MagnetaresNotes.png
+

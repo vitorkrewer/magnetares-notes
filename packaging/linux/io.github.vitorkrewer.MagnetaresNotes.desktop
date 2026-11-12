@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Magnetares Notes
+GenericName=Caderno de Anotações Local-First
+Comment=Onde pensamentos ganham gravidade própria. Notas, fórmulas, tarefas e mapas mentais.
+Exec=magnetares-notes %u
+Icon=io.github.vitorkrewer.MagnetaresNotes
+Terminal=false
+Type=Application
+Categories=Office;Utility;TextEditor;
+Keywords=notes;markdown;sqlite;mindmap;tasks;stickers;
+StartupWMClass=Magnetares Notes
+StartupNotify=true
+

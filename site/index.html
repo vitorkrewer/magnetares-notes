@@ -697,11 +697,17 @@
 
         <div class="download-details">
           <div class="download-formats" id="windows-formats" role="tablist" aria-label="Formatos Windows">
-            <button class="format-pill active" type="button" data-platform-target="windows" data-format="exe">
-              <span class="pill-spark">✦</span> Executável Direto <span class="pill-tag">Recomendado</span>
+            <button class="format-pill active" type="button" data-platform-target="windows" data-format="setup">
+              <span class="pill-spark">✦</span> Instalador Windows <span class="pill-tag">Setup .exe</span>
+            </button>
+            <button class="format-pill" type="button" data-platform-target="windows" data-format="msi">
+              Instalador Corporativo <span class="pill-tag">.msi</span>
+            </button>
+            <button class="format-pill" type="button" data-platform-target="windows" data-format="exe">
+              Executável Direto <span class="pill-tag">.exe</span>
             </button>
             <button class="format-pill" type="button" data-platform-target="windows" data-format="portable">
-              🧳 Versão Portátil (Pendrive) <span class="pill-tag">.zip</span>
+              🧳 Versão Portátil <span class="pill-tag">.zip</span>
             </button>
           </div>
 
@@ -710,6 +716,14 @@
             <button class="format-pill active" type="button" data-platform-target="linux" data-format="appimage">
               <span class="pill-spark">✦</span> AppImage <span class="pill-tag">Recomendado</span>
             </button>
+            <!-- Descomentar após aprovação oficial nas lojas (Flathub / Snap Store):
+            <button class="format-pill" type="button" data-platform-target="linux" data-format="flatpak">
+              Flatpak <span class="pill-tag">Mint / elementary / Lojas</span>
+            </button>
+            <button class="format-pill" type="button" data-platform-target="linux" data-format="snap">
+              Snap <span class="pill-tag">Ubuntu App Center</span>
+            </button>
+            -->
             <button class="format-pill" type="button" data-platform-target="linux" data-format="deb">
               .deb <span class="pill-tag">Debian / Ubuntu</span>
             </button>

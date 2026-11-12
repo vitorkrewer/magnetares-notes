@@ -11,7 +11,7 @@ import (
 
 // AppVersion e AppBuildDate podem ser sobrescritas em tempo de compilação via -ldflags.
 var (
-	AppVersion   = "2.0.0"
+	AppVersion   = "2.1.0"
 	AppBuildDate = "2026-11-12"
 )
 

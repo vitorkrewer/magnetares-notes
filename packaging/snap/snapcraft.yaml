@@ -1,0 +1,43 @@
+name: magnetares-notes
+base: core22
+version: '2.1.0'
+summary: Caderno local-first para notas, fórmulas, tarefas e mapas mentais
+description: |
+  Magnetares Notes é um aplicativo desktop local-first projetado para quem leva anotações,
+  estudos e projetos a sério. Seus dados ficam em SQLite local funcionando 100% offline,
+  com sincronização opcional em nuvem, editor científico (KaTeX, mhchem, Mermaid.js),
+  Fluxo de Ideias (mapas mentais), Listas de Tarefas, Stickers e exportação ABNT/PDF.
+
+grade: stable
+confinement: strict
+compression: lzo
+
+architectures:
+  - build-on: amd64
+
+apps:
+  magnetares-notes:
+    command: usr/bin/magnetares-notes
+    extensions: [gnome]
+    plugs:
+      - home
+      - network
+      - network-bind
+      - opengl
+      - gsettings
+      - password-manager-service
+    desktop: usr/share/applications/magnetares-notes.desktop
+
+parts:
+  magnetares-notes:
+    plugin: dump
+    source: staging/
+    stage-packages:
+      - libwebkit2gtk-4.1-0
+      - libgtk-3-0
+    organize:
+      magnetares-notes: usr/bin/magnetares-notes
+      magnetares-notes.desktop: usr/share/applications/magnetares-notes.desktop
+      magnetares-notes.png: usr/share/icons/hicolor/512x512/apps/magnetares-notes.png
+      io.github.vitorkrewer.MagnetaresNotes.metainfo.xml: usr/share/metainfo/io.github.vitorkrewer.MagnetaresNotes.metainfo.xml
+

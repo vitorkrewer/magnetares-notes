@@ -6,16 +6,30 @@ const LATEST_RELEASE_PAGE = `https://github.com/${REPO_OWNER}/${REPO_NAME}/relea
 // Configurações padrão com fallback para a página de releases
 const DOWNLOADS = {
   windows: {
-    label: "Baixar para Windows (x64)",
+    label: "Baixar Instalador Windows (x64)",
     heroLabel: "Baixar para Windows",
-    note: "Windows 10 ou superior · Executável nativo (.exe)",
+    note: "Windows 10 ou superior · Instalador oficial NSIS (.exe)",
     meta: "Versão mais recente · 64-bit",
     url: LATEST_RELEASE_PAGE,
-    selectedFormat: "exe",
+    selectedFormat: "setup",
     formats: {
-      exe: {
-        label: "Baixar Executável Windows (x64)",
+      setup: {
+        label: "Baixar Instalador Windows (Setup .exe)",
         heroLabel: "Baixar para Windows",
+        note: "Instalador NSIS completo com atalhos no Menu Iniciar, Área de Trabalho e desinstalador oficial",
+        meta: "Versão mais recente · 64-bit (Setup .exe)",
+        url: LATEST_RELEASE_PAGE
+      },
+      msi: {
+        label: "Baixar Instalador Corporativo (.msi)",
+        heroLabel: "Baixar MSI (.msi)",
+        note: "Pacote Windows Installer (.msi) ideal para implantação corporativa, GPO ou instalação padrão",
+        meta: "Versão mais recente · 64-bit (.msi)",
+        url: LATEST_RELEASE_PAGE
+      },
+      exe: {
+        label: "Baixar Executável Direto (.exe)",
+        heroLabel: "Baixar Executável (.exe)",
         note: "Executável standalone direto, sem instalador · Dados salvos no perfil do usuário",
         meta: "Versão mais recente · 64-bit (.exe)",
         url: LATEST_RELEASE_PAGE
@@ -49,6 +63,20 @@ const DOWNLOADS = {
         heroLabel: "Baixar AppImage",
         note: "Universal para Ubuntu, Fedora, Arch, Debian · Executável sem instalação (.AppImage)",
         meta: "Versão mais recente · 64-bit (.AppImage)",
+        url: LATEST_RELEASE_PAGE
+      },
+      flatpak: {
+        label: "Baixar Pacote Flatpak (.flatpak)",
+        heroLabel: "Baixar Flatpak",
+        note: "Pacote universal Linux (.flatpak)",
+        meta: "Versão mais recente · 64-bit (.flatpak)",
+        url: LATEST_RELEASE_PAGE
+      },
+      snap: {
+        label: "Baixar Pacote Snap (.snap)",
+        heroLabel: "Baixar Snap",
+        note: "Pacote Snap Linux (.snap)",
+        meta: "Versão mais recente · 64-bit (.snap)",
         url: LATEST_RELEASE_PAGE
       },
       deb: {
@@ -228,19 +256,31 @@ async function fetchLatestRelease() {
       const name = asset.name.toLowerCase();
       const downloadUrl = asset.browser_download_url;
 
-      if (name.includes("portable") && name.endsWith(".zip")) {
+      if (name.includes("portable") && name.endsWith(".zip") && name.includes("windows")) {
         DOWNLOADS.windows.formats.portable.url = downloadUrl;
         DOWNLOADS.windows.formats.portable.meta = `Versão ${version} · Portátil (.zip)`;
+      } else if (name.includes("setup") && name.endsWith(".exe")) {
+        DOWNLOADS.windows.formats.setup.url = downloadUrl;
+        DOWNLOADS.windows.formats.setup.meta = `Versão ${version} · Setup NSIS (.exe)`;
+        DOWNLOADS.windows.url = downloadUrl;
+      } else if (name.endsWith(".msi")) {
+        DOWNLOADS.windows.formats.msi.url = downloadUrl;
+        DOWNLOADS.windows.formats.msi.meta = `Versão ${version} · Windows Installer (.msi)`;
       } else if (name.includes("windows") && name.endsWith(".exe")) {
         DOWNLOADS.windows.formats.exe.url = downloadUrl;
         DOWNLOADS.windows.formats.exe.meta = `Versão ${version} · x64 (.exe)`;
-        DOWNLOADS.windows.url = downloadUrl;
       } else if (name.includes("macos") || name.includes("darwin") || (name.endsWith(".zip") && !name.includes("portable"))) {
         DOWNLOADS.macos.url = downloadUrl;
         DOWNLOADS.macos.meta = `Versão ${version} · Universal (.zip)`;
       } else if (name.endsWith(".appimage")) {
         DOWNLOADS.linux.formats.appimage.url = downloadUrl;
         DOWNLOADS.linux.formats.appimage.meta = `Versão ${version} · x64 (.AppImage)`;
+      } else if (name.endsWith(".flatpak")) {
+        DOWNLOADS.linux.formats.flatpak.url = downloadUrl;
+        DOWNLOADS.linux.formats.flatpak.meta = `Versão ${version} · x64 (.flatpak)`;
+      } else if (name.endsWith(".snap")) {
+        DOWNLOADS.linux.formats.snap.url = downloadUrl;
+        DOWNLOADS.linux.formats.snap.meta = `Versão ${version} · x64 (.snap)`;
       } else if (name.endsWith(".deb")) {
         DOWNLOADS.linux.formats.deb.url = downloadUrl;
         DOWNLOADS.linux.formats.deb.meta = `Versão ${version} · x64 (.deb)`;

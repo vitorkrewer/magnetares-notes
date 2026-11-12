@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.vitorkrewer.MagnetaresNotes</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+
+  <name>Magnetares Notes</name>
+  <summary>Caderno local-first para notas, fórmulas, tarefas e mapas mentais</summary>
+  <summary xml:lang="en">Local-first notebook for rich notes, formulas, tasks and mind maps</summary>
+
+  <description>
+    <p>
+      Magnetares Notes é um aplicativo desktop local-first projetado para quem leva anotações, estudos e projetos a sério.
+      Seus dados ficam armazenados em um banco SQLite local de alta performance, funcionando 100% offline, com sincronização opcional em nuvem (Turso/libSQL).
+    </p>
+    <p xml:lang="en">
+      Magnetares Notes is a local-first desktop application designed for focused writing, studying and project planning.
+      Your data is stored locally in a fast SQLite database, working 100% offline with optional cloud synchronization.
+    </p>
+    <ul>
+      <li>Editor de texto rico com fórmulas matemáticas e químicas offline (KaTeX + mhchem), diagramas Mermaid.js, callouts e blocos de estudo ativo.</li>
+      <li>Notas de código com realce de sintaxe e pré-visualização interativa de protótipos HTML.</li>
+      <li>Fluxo de Ideias: mapas mentais e fluxogramas em canvas vetorial de alta definição com links diretos para notas, tarefas e stickers e exportação PNG.</li>
+      <li>Módulo completo de Listas de Tarefas (4 níveis) e Mural de Stickers (post-its coloridos).</li>
+      <li>Exportação nativa em PDF vetorial, Artigo ABNT (.docx), Markdown e HTML.</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">io.github.vitorkrewer.MagnetaresNotes.desktop</launchable>
+
+  <url type="homepage">https://vitorkrewer.github.io/magnetares-notes/</url>
+  <url type="bugtracker">https://github.com/vitorkrewer/magnetares-notes/issues</url>
+  <url type="vcs-browser">https://github.com/vitorkrewer/magnetares-notes</url>
+
+  <developer id="io.github.vitorkrewer">
+    <name>Vitor Krewer</name>
+  </developer>
+
+  <categories>
+    <category>Office</category>
+    <category>Utility</category>
+  </categories>
+
+  <keywords>
+    <keyword>notes</keyword>
+    <keyword>markdown</keyword>
+    <keyword>local-first</keyword>
+    <keyword>sqlite</keyword>
+    <keyword>mindmap</keyword>
+    <keyword>tasks</keyword>
+  </keywords>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Editor principal de texto rico e organização em pastas</caption>
+      <image>https://raw.githubusercontent.com/vitorkrewer/magnetares-notes/main/site/assets/screenshots/editor.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Fluxo de Ideias: mapas mentais e diagramas conectados às suas notas</caption>
+      <image>https://raw.githubusercontent.com/vitorkrewer/magnetares-notes/main/site/assets/screenshots/fluxo-ideias-canvas.jpg</image>
+    </screenshot>
+    <screenshot>
+      <caption>Fórmulas científicas offline e diagramas técnicos</caption>
+      <image>https://raw.githubusercontent.com/vitorkrewer/magnetares-notes/main/site/assets/screenshots/formulas-katex.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Módulo de Listas, Tarefas e Prioridades</caption>
+      <image>https://raw.githubusercontent.com/vitorkrewer/magnetares-notes/main/site/assets/screenshots/tasks.png</image>
+    </screenshot>
+  </screenshots>
+
+  <content_rating type="oars-1.1" />
+
+  <releases>
+    <release version="2.1.0" date="2026-11-12">
+      <description>
+        <p>Novos instaladores Windows (.exe NSIS e .msi) e empacotamento oficial Linux para lojas de aplicativos (Flatpak e Snap) com metadados AppStream.</p>
+      </description>
+    </release>
+    <release version="2.0.0" date="2026-11-12">
+      <description>
+        <p>Lançamento do módulo Fluxo de Ideias, sistema de notificação de atualizações, aba Sobre, troca segura de local do banco de dados e refinamentos visuais.</p>
+      </description>
+    </release>
+  </releases>
+</component>
+

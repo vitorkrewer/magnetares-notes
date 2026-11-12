@@ -117,6 +117,39 @@ jobs:
           Compress-Archive -Path "$portableDir/*" -DestinationPath "release-assets/Magnetares-Notes-Windows-x64-Portable.zip" -Force
           Remove-Item -Recurse -Force $portableDir
 
+          # 3. Gerar Instalador Windows (.exe via NSIS)
+          $nsisExe = "C:\Program Files (x86)\NSIS\makensis.exe"
+          if (-not (Test-Path $nsisExe)) {
+            $nsisCmd = Get-Command makensis -ErrorAction SilentlyContinue
+            if ($nsisCmd) { $nsisExe = $nsisCmd.Source }
+          }
+          if (-not (Test-Path $nsisExe)) {
+            choco install nsis -y
+            $nsisExe = "C:\Program Files (x86)\NSIS\makensis.exe"
+          }
+          $exeFullPath = (Resolve-Path "release-assets/Magnetares-Notes-Windows-x64.exe").Path
+          $iconFullPath = (Resolve-Path "apps/desktop/build/windows/icon.ico").Path
+          $setupOutPath = Join-Path (Resolve-Path "release-assets").Path "Magnetares-Notes-Windows-x64-Setup.exe"
+          & $nsisExe `
+            "/DPRODUCT_VERSION=${{ env.APP_VERSION }}" `
+            "/DEXE_SOURCE=$exeFullPath" `
+            "/DICON_SOURCE=$iconFullPath" `
+            "/DOUT_FILE=$setupOutPath" `
+            "apps/desktop/build/windows/installer/magnetares.nsi"
+          if ($LASTEXITCODE -ne 0) { throw "Falha ao gerar instalador NSIS" }
+
+          # 4. Gerar Instalador Corporativo Windows (.msi via WiX v4)
+          dotnet tool install --global wix --version 4.0.5
+          $msiVersion = if ("${{ env.APP_VERSION }}" -match '^(\d+\.\d+\.\d+)') { $Matches[1] } else { "2.1.0" }
+          $msiOutPath = Join-Path (Resolve-Path "release-assets").Path "Magnetares-Notes-Windows-x64.msi"
+          wix build "apps/desktop/build/windows/msi/MagnetaresNotes.wxs" `
+            -arch x64 `
+            -d "ProductVersion=$msiVersion" `
+            -d "ExePath=$exeFullPath" `
+            -d "IconPath=$iconFullPath" `
+            -o "$msiOutPath"
+          if ($LASTEXITCODE -ne 0) { throw "Falha ao gerar instalador MSI" }
+
       - name: Prepare Linux artifact
         if: runner.os == 'Linux'
         shell: bash
@@ -148,6 +181,7 @@ jobs:
           mkdir -p "$DEB_ROOT/DEBIAN"
           mkdir -p "$DEB_ROOT/usr/bin"
           mkdir -p "$DEB_ROOT/usr/share/applications"
+          mkdir -p "$DEB_ROOT/usr/share/metainfo"
           mkdir -p "$DEB_ROOT/usr/share/icons/hicolor/512x512/apps"
           mkdir -p "$DEB_ROOT/usr/share/pixmaps"
 
@@ -155,6 +189,7 @@ jobs:
           chmod 755 "$DEB_ROOT/usr/bin/magnetares-notes"
           cp apps/desktop/build/appicon.png "$DEB_ROOT/usr/share/icons/hicolor/512x512/apps/magnetares-notes.png"
           cp apps/desktop/build/appicon.png "$DEB_ROOT/usr/share/pixmaps/magnetares-notes.png"
+          cp packaging/linux/io.github.vitorkrewer.MagnetaresNotes.metainfo.xml "$DEB_ROOT/usr/share/metainfo/io.github.vitorkrewer.MagnetaresNotes.metainfo.xml"
 
           printf "%s\n" \
             "Package: magnetares-notes" \
@@ -222,6 +257,19 @@ jobs:
           ./appimagetool.AppImage --appimage-extract
           ARCH=x86_64 ./squashfs-root/AppRun "$APPDIR" release-assets/Magnetares-Notes-Linux-x64.AppImage
 
+          # 4. Gerar pacote Flatpak (.flatpak) para lojas Linux (Flathub, Mint, elementary, Pop!_OS, GNOME)
+          sudo apt-get install -y flatpak flatpak-builder
+          flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y --noninteractive flathub org.gnome.Platform//47 org.gnome.Sdk//47
+
+          mkdir -p packaging/flatpak/dist
+          cp "$BIN_PATH" packaging/flatpak/dist/magnetares-notes
+          chmod 755 packaging/flatpak/dist/magnetares-notes
+
+          flatpak-builder --user --force-clean --disable-rofiles-fuse --repo=flatpak-repo flatpak-build packaging/flatpak/io.github.vitorkrewer.MagnetaresNotes.yml
+          flatpak build-bundle flatpak-repo release-assets/Magnetares-Notes-Linux-x64.flatpak io.github.vitorkrewer.MagnetaresNotes --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
+          rm -rf flatpak-build flatpak-repo packaging/flatpak/dist
+
       - name: Prepare macOS artifact
         if: runner.os == 'macOS'
         shell: bash
@@ -238,9 +286,59 @@ jobs:
           path: release-assets/*
           if-no-files-found: error
 
+  build-snap:
+    name: Build Linux Snap (.snap)
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Linux binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: magnetares-linux-x64
+          path: linux-artifact
+
+      - name: Prepare Snap staging
+        shell: bash
+        run: |
+          mkdir -p packaging/snap/staging
+          tar -xzf linux-artifact/Magnetares-Notes-Linux-x64.tar.gz -C packaging/snap/staging
+          BIN_FOUND=$(find packaging/snap/staging -maxdepth 1 -type f ! -name "*.png" ! -name "*.desktop" | head -n 1)
+          if [ "$(basename "$BIN_FOUND")" != "magnetares-notes" ]; then
+            mv "$BIN_FOUND" packaging/snap/staging/magnetares-notes
+          fi
+          chmod 755 packaging/snap/staging/magnetares-notes
+          cp packaging/snap/gui/magnetares-notes.desktop packaging/snap/staging/magnetares-notes.desktop
+          cp apps/desktop/build/appicon.png packaging/snap/staging/magnetares-notes.png
+          cp packaging/linux/io.github.vitorkrewer.MagnetaresNotes.metainfo.xml packaging/snap/staging/io.github.vitorkrewer.MagnetaresNotes.metainfo.xml
+
+          CLEAN_VER=$(grep -oE '^##\s*\[?v?[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -n 1 | sed -E 's/##\s*\[?v?//' || echo "2.1.0")
+          sed -i "s/^version:.*/version: '${CLEAN_VER}'/" packaging/snap/snapcraft.yaml
+
+      - name: Build Snap package
+        id: snapcraft
+        uses: snapcore/action-build@v1
+        with:
+          path: packaging/snap
+
+      - name: Rename and upload Snap artifact
+        shell: bash
+        run: |
+          mkdir -p release-assets
+          cp "${{ steps.snapcraft.outputs.snap }}" release-assets/Magnetares-Notes-Linux-x64.snap
+
+      - name: Upload Snap artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: magnetares-linux-snap
+          path: release-assets/Magnetares-Notes-Linux-x64.snap
+          if-no-files-found: error
+
   publish:
     name: Publish GitHub Release
-    needs: build
+    needs: [build, build-snap]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

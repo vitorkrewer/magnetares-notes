@@ -2,6 +2,23 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## [v2.1.0] - 2026-11-12
+
+### Added
+
+- **Instaladores Nativos para Windows (`.exe` NSIS e `.msi` WiX):**
+  - **Instalador Setup NSIS (`magnetares.nsi`):** Geração automatizada de `Magnetares-Notes-Windows-x64-Setup.exe` com interface em Português (BR) e Inglês, criação de atalhos no Menu Iniciar e Área de Trabalho, ícone oficial e registro oficial de desinstalador no Windows.
+  - **Instalador Corporativo MSI (`MagnetaresNotes.wxs`):** Geração automatizada de `Magnetares-Notes-Windows-x64.msi` via WiX Toolset v4 com `UpgradeCode` fixo para atualizações limpas (MajorUpgrade) e implantação corporativa.
+
+- **Empacotamento Oficial Linux (Flatpak, Snap & Metadados AppStream):**
+  - **Metadados AppStream & Desktop Entry (`packaging/linux/`):** Criação de `io.github.vitorkrewer.MagnetaresNotes.metainfo.xml` (descrição multilíngue, screenshots oficiais, categorias, classificação OARS e histórico de releases) e `io.github.vitorkrewer.MagnetaresNotes.desktop`.
+  - **Pacote Flatpak (`packaging/flatpak/`):** Manifesto `io.github.vitorkrewer.MagnetaresNotes.yml` sobre `org.gnome.Platform` 47 e geração automática do bundle `Magnetares-Notes-Linux-x64.flatpak` no pipeline de release.
+  - **Pacote Snap (`packaging/snap/`):** Manifesto `snapcraft.yaml` (`core22`, confinamento estrito, extensão `gnome` e plugs de sistema/cofre) com build automatizado (`build-snap`) gerando `Magnetares-Notes-Linux-x64.snap`.
+  - **Enriquecimento do Pacote Debian (`.deb`):** Inclusão dos metadados AppStream em `/usr/share/metainfo/` dentro do `.deb`.
+
+- **Portal de Downloads Atualizado (`site/`):**
+  - Novos seletores de formato no portal para **Windows** (`Setup .exe`, `.msi`, executável direto `.exe` e portátil `.zip`) com detecção automática dos novos artefatos na API de Releases do GitHub.
+
 ## [v2.0.0] - 2026-11-12
 
 ### Added
