@@ -568,7 +568,7 @@
     <div class="header-actions">
       <a class="header-download-btn" href="index.html#downloads">
         <span>Baixar</span>
-        <span id="header-version-badge">v1.9.0</span>
+        <span id="header-version-badge">v2.0.0</span>
       </a>
       <button class="menu-toggle-btn" id="mobile-menu-toggle" type="button" aria-label="Abrir menu de navegação"
         aria-expanded="false">
@@ -600,7 +600,7 @@
         </svg>
         <span>Baixar Magnetares</span>
       </a>
-      <span class="drawer-version-tag">Versão mais recente: v1.9.0</span>
+      <span class="drawer-version-tag">Versão mais recente: v2.0.0</span>
     </div>
   </aside>
 
@@ -649,8 +649,8 @@
         <!-- PÍLULAS DE NAVEGAÇÃO RÁPIDA -->
         <div class="release-pills-bar" aria-label="Navegação rápida de versões">
           <span class="pill-label">Versões:</span>
-          <a class="version-pill" href="#v2.0.0">v2.0.0 (Em Desenvolvimento)</a>
-          <a class="version-pill latest" href="#v1.9.0">v1.9.0 (Estável)</a>
+          <a class="version-pill latest" href="#v2.0.0">v2.0.0 (Estável)</a>
+          <a class="version-pill" href="#v1.9.0">v1.9.0</a>
           <a class="version-pill" href="#v1.8.0">v1.8.0</a>
           <a class="version-pill" href="#v1.7.0">v1.7.0</a>
           <a class="version-pill" href="#v1.6.0">v1.6.0</a>
@@ -666,32 +666,38 @@
     <div class="releases-container">
 
       <!-- =========================================================
-           RELEASE v2.0.0 (EM DESENVOLVIMENTO)
+           RELEASE v2.0.0 (ÚLTIMA ESTÁVEL)
            ========================================================= -->
-      <article class="release-card preview-card" id="v2.0.0">
+      <article class="release-card latest-card" id="v2.0.0">
         <header class="release-header">
           <div class="release-title-group">
             <div class="release-version-row">
               <span class="release-version-tag">v2.0.0</span>
-              <span class="badge-preview">🚀 Em Desenvolvimento</span>
+              <span class="badge-latest">⭐ Última Versão Estável</span>
             </div>
             <p class="release-headline">
               Novo Módulo "Fluxo de Ideias", Referências Cruzadas com Hyperlinks, Exportação PNG 2.5x,
               Notificação de Atualizações, Troca Segura do Local do Banco e Refinamentos Visuais
             </p>
-            <div class="release-date-row">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
+            <div class="release-date">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
-              <span>Iniciado em 12 de Novembro de 2026</span>
+              <span>12 de Novembro de 2026 · Versão de Produção</span>
             </div>
           </div>
-          <a class="btn-download-version" href="guia-usuario.html?cap=12-fluxo-de-ideias">
-            <span>Ler Guia do Fluxo de Ideias</span>
-          </a>
+          <div class="release-actions">
+            <a class="btn-download-version" href="https://github.com/vitorkrewer/magnetares-notes/releases/tag/v2.0.0"
+              target="_blank" rel="noreferrer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Baixar v2.0.0
+            </a>
+          </div>
         </header>
 
         <div class="highlights-grid">
@@ -729,14 +735,13 @@
       </article>
 
       <!-- =========================================================
-           RELEASE v1.9.0 (ÚLTIMA ESTÁVEL)
+           RELEASE v1.9.0
            ========================================================= -->
-      <article class="release-card latest-card" id="v1.9.0">
+      <article class="release-card" id="v1.9.0">
         <header class="release-header">
           <div class="release-title-group">
             <div class="release-version-row">
               <span class="release-version-tag">v1.9.0</span>
-              <span class="badge-latest">⭐ Última Versão Estável</span>
             </div>
             <p class="release-headline">
               Exportação Nativa em PDF (.pdf), Artigos no Padrão ABNT (.docx), Modo Foco Picture-in-Picture,
