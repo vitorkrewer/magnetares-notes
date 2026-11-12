@@ -49,7 +49,10 @@ func (s *noteStore) GetSyncDiagnosticReport() (SyncDiagnosticReport, error) {
 		(SELECT COUNT(*) FROM folders WHERE sync_state = 'pending' AND id != 'folder-default') +
 		(SELECT COUNT(*) FROM tags WHERE sync_state = 'pending') +
 		(SELECT COUNT(*) FROM sticker_boards WHERE sync_state = 'pending') +
-		(SELECT COUNT(*) FROM stickers WHERE sync_state = 'pending')`).Scan(&report.PendingLocalCount)
+		(SELECT COUNT(*) FROM stickers WHERE sync_state = 'pending') +
+		(SELECT COUNT(*) FROM idea_flows WHERE sync_state = 'dirty') +
+		(SELECT COUNT(*) FROM idea_nodes WHERE sync_state = 'dirty') +
+		(SELECT COUNT(*) FROM idea_edges WHERE sync_state = 'dirty')`).Scan(&report.PendingLocalCount)
 
 	_ = s.db.QueryRow("SELECT COUNT(*) FROM sync_outbox WHERE status = 'sent'").Scan(&report.UnconfirmedSentCount)
 	_ = s.db.QueryRow("SELECT COUNT(*) FROM note_conflicts").Scan(&report.PendingConflictsCount)
@@ -591,12 +594,13 @@ func (s *noteStore) syncViaAPI(apiURL, profileID, cursor, tursoDatabaseURL, turs
 		SyncedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	// Sincronizar pastas, etiquetas, stickers e tarefas primeiro
+	// Sincronizar pastas, etiquetas, stickers, tarefas e fluxos de ideias primeiro
 	_ = s.syncFoldersViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAuthToken)
 	_ = s.syncTagsViaAPI(apiURL, profileID, tursoDatabaseURL, tursoAuthToken)
 	tursoCli := NewTursoClient(tursoDatabaseURL, tursoAuthToken)
 	stickerWarning := s.syncStickerEntities(tursoCli, profileID)
 	tasksWarning := s.syncTaskEntities(tursoCli, profileID)
+	ideaFlowsWarning := s.syncIdeaFlowEntities(tursoCli, profileID)
 
 	pending, err := s.pendingSyncNotes()
 	if err != nil {
@@ -633,7 +637,7 @@ func (s *noteStore) syncViaAPI(apiURL, profileID, cursor, tursoDatabaseURL, turs
 			break
 		}
 	}
-	result.Message = fmt.Sprintf("Sincronização concluída via API: %d enviadas, %d recebidas, %d conflitos.", result.Uploaded, result.Downloaded, result.Conflicts) + stickerWarning + tasksWarning
+	result.Message = fmt.Sprintf("Sincronização concluída via API: %d enviadas, %d recebidas, %d conflitos.", result.Uploaded, result.Downloaded, result.Conflicts) + stickerWarning + tasksWarning + ideaFlowsWarning
 	return result, nil
 }
 
@@ -651,11 +655,12 @@ func (s *noteStore) syncDirectTurso(profileID, cursor, tursoDatabaseURL, tursoAu
 		SyncedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 
-	// Sincronizar pastas, etiquetas, stickers e tarefas primeiro
+	// Sincronizar pastas, etiquetas, stickers, tarefas e fluxos de ideias primeiro
 	_ = s.syncFoldersDirect(turso, profileID)
 	_ = s.syncTagsDirect(turso, profileID)
 	stickerWarning := s.syncStickerEntities(turso, profileID)
 	tasksWarning := s.syncTaskEntities(turso, profileID)
+	ideaFlowsWarning := s.syncIdeaFlowEntities(turso, profileID)
 
 	pending, err := s.pendingSyncNotes()
 	if err != nil {
@@ -715,7 +720,7 @@ func (s *noteStore) syncDirectTurso(profileID, cursor, tursoDatabaseURL, tursoAu
 		}
 	}
 
-	result.Message = fmt.Sprintf("Sincronização concluída com Turso: %d enviadas, %d recebidas, %d conflitos.", result.Uploaded, result.Downloaded, result.Conflicts) + stickerWarning + tasksWarning
+	result.Message = fmt.Sprintf("Sincronização concluída com Turso: %d enviadas, %d recebidas, %d conflitos.", result.Uploaded, result.Downloaded, result.Conflicts) + stickerWarning + tasksWarning + ideaFlowsWarning
 	return result, nil
 }
 

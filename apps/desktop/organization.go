@@ -29,6 +29,7 @@ type Navigation struct {
 	StickerBoards     []StickerBoard `json:"stickerBoards"`
 	TaskLists         []TaskList     `json:"taskLists"`
 	ArchivedTaskLists []TaskList     `json:"archivedTaskLists"`
+	IdeaFlows         []IdeaFlow     `json:"ideaFlows"`
 }
 
 type Tag struct {
@@ -144,6 +145,12 @@ func (s *noteStore) listNavigation() (Navigation, error) {
 		return Navigation{}, err
 	}
 	navigation.ArchivedTaskLists = archivedLists
+
+	ideaFlows, err := s.ListIdeaFlows()
+	if err != nil {
+		return Navigation{}, err
+	}
+	navigation.IdeaFlows = ideaFlows
 	return navigation, nil
 }
 

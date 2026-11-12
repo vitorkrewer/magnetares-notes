@@ -5,6 +5,7 @@ import { calculateExpression } from "./CalculationNode";
 import { MATH_SNIPPETS, renderKaTeXToString } from "./MathNodes";
 import { MERMAID_TEMPLATES } from "./MermaidNode";
 import { editorExtensions } from "./editorExtensions";
+import { CustomSelect } from "./CustomSelect";
 
 const PRESET_COLORS = [
   "#000000", "#434343", "#666666", "#999999", "#b7b7b7", "#cccccc", "#d9d9d9", "#efefef", "#f3f3f3", "#ffffff",
@@ -239,11 +240,19 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
   return (
     <>
       <div className="format-toolbar" role="toolbar" aria-label="Formatação da nota">
-      <select value={headingLevel} onChange={(event) => setBlockStyle(event.target.value)} aria-label="Estilo do texto" title="Estilo do texto">
-        <option value="paragraph">Corpo</option>
-        <option value="1">Título</option>
-        <option value="2">Subtítulo</option>
-      </select>
+      <CustomSelect
+        compact
+        className="toolbar-style-select"
+        value={headingLevel}
+        options={[
+          { value: "paragraph", label: "Corpo" },
+          { value: "1", label: "Título" },
+          { value: "2", label: "Subtítulo" },
+        ]}
+        onChange={setBlockStyle}
+        ariaLabel="Estilo do texto"
+        title="Estilo do texto"
+      />
       <span className="toolbar-separator" />
       <ToolButton label="Desfazer" disabled={!editor.can().chain().focus().undo().run()} onClick={() => editor.chain().focus().undo().run()}><Undo2 aria-hidden="true" /></ToolButton>
       <ToolButton label="Refazer" disabled={!editor.can().chain().focus().redo().run()} onClick={() => editor.chain().focus().redo().run()}><Redo2 aria-hidden="true" /></ToolButton>
@@ -309,15 +318,15 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
       <span className="toolbar-separator" />
       <ToolButton label="Bloco de código" active={editor.isActive("codeBlock")} onClick={() => editor.chain().focus().toggleCodeBlock().run()}><Code2 aria-hidden="true" /></ToolButton>
       {insideCodeBlock && (
-        <select
+        <CustomSelect
+          compact
           className="code-language-select"
-          aria-label="Linguagem do bloco de código"
+          ariaLabel="Linguagem do bloco de código"
           title="Linguagem do bloco de código"
           value={codeLanguage}
-          onChange={(event) => editor.chain().focus().updateAttributes("codeBlock", { language: event.target.value }).run()}
-        >
-          {codeLanguages.map((language) => <option key={language.id} value={language.id}>{language.label}</option>)}
-        </select>
+          options={codeLanguages.map((language) => ({ value: language.id, label: language.label }))}
+          onChange={(val) => editor.chain().focus().updateAttributes("codeBlock", { language: val }).run()}
+        />
       )}
       <ToolButton label="Inserir ou editar link" active={editor.isActive("link") || linkOpen} onClick={openLinkEditor}><Link2 aria-hidden="true" /></ToolButton>
       {editor.isActive("link") && <ToolButton label="Remover link" onClick={() => editor.chain().focus().unsetLink().run()}><Unlink aria-hidden="true" /></ToolButton>}

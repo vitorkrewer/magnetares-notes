@@ -26,6 +26,10 @@ export function DeleteFolder(arg1) {
   return window['go']['main']['App']['DeleteFolder'](arg1);
 }
 
+export function DeleteIdeaFlow(arg1) {
+  return window['go']['main']['App']['DeleteIdeaFlow'](arg1);
+}
+
 export function DeleteNote(arg1) {
   return window['go']['main']['App']['DeleteNote'](arg1);
 }
@@ -58,8 +62,16 @@ export function DeleteTaskList(arg1) {
   return window['go']['main']['App']['DeleteTaskList'](arg1);
 }
 
+export function DuplicateIdeaFlow(arg1) {
+  return window['go']['main']['App']['DuplicateIdeaFlow'](arg1);
+}
+
 export function EmptyDeletedNotes() {
   return window['go']['main']['App']['EmptyDeletedNotes']();
+}
+
+export function ExportIdeaFlowPNG(arg1, arg2) {
+  return window['go']['main']['App']['ExportIdeaFlowPNG'](arg1, arg2);
 }
 
 export function ExportNoteFile(arg1, arg2) {
@@ -72,6 +84,10 @@ export function GetDatabasePath() {
 
 export function GetFocusNoteID() {
   return window['go']['main']['App']['GetFocusNoteID']();
+}
+
+export function GetIdeaFlowGraph(arg1) {
+  return window['go']['main']['App']['GetIdeaFlowGraph'](arg1);
 }
 
 export function GetNote(arg1) {
@@ -112,6 +128,10 @@ export function ListArchivedTaskLists() {
 
 export function ListDeletedNotes() {
   return window['go']['main']['App']['ListDeletedNotes']();
+}
+
+export function ListIdeaFlows() {
+  return window['go']['main']['App']['ListIdeaFlows']();
 }
 
 export function ListNavigation() {
@@ -196,6 +216,14 @@ export function SaveAutoSyncInterval(arg1) {
 
 export function SaveFolder(arg1) {
   return window['go']['main']['App']['SaveFolder'](arg1);
+}
+
+export function SaveIdeaFlow(arg1) {
+  return window['go']['main']['App']['SaveIdeaFlow'](arg1);
+}
+
+export function SaveIdeaFlowGraph(arg1) {
+  return window['go']['main']['App']['SaveIdeaFlowGraph'](arg1);
 }
 
 export function SaveNote(arg1) {

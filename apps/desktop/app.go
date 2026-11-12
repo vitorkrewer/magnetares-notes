@@ -164,6 +164,82 @@ func (a *App) MoveSticker(id, boardID, beforeID string) (Sticker, error) {
 }
 
 // ===============================
+// FLUXO DE IDEIAS
+// ===============================
+
+func (a *App) ListIdeaFlows() ([]IdeaFlow, error) {
+	return a.store.ListIdeaFlows()
+}
+
+func (a *App) SaveIdeaFlow(input SaveIdeaFlowInput) (IdeaFlow, error) {
+	return a.store.SaveIdeaFlow(input)
+}
+
+func (a *App) DeleteIdeaFlow(flowID string) error {
+	return a.store.DeleteIdeaFlow(flowID)
+}
+
+func (a *App) DuplicateIdeaFlow(flowID string) (IdeaFlow, error) {
+	return a.store.DuplicateIdeaFlow(flowID)
+}
+
+func (a *App) GetIdeaFlowGraph(flowID string) (IdeaFlowGraph, error) {
+	return a.store.GetIdeaFlowGraph(flowID)
+}
+
+func (a *App) SaveIdeaFlowGraph(input SaveIdeaFlowGraphInput) (IdeaFlowGraph, error) {
+	return a.store.SaveIdeaFlowGraph(input)
+}
+
+func (a *App) ExportIdeaFlowPNG(suggestedName string, base64PNG string) (string, error) {
+	if a.ctx == nil {
+		return "", errors.New("janela da aplicação não inicializada")
+	}
+
+	name := strings.TrimSpace(suggestedName)
+	if name == "" {
+		name = "fluxo-de-ideias.png"
+	}
+	if !strings.HasSuffix(strings.ToLower(name), ".png") {
+		name += ".png"
+	}
+	defaultFilename := sanitizeFilename(name)
+
+	selectedPath, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:           "Exportar Fluxo de Ideias como PNG",
+		DefaultFilename: defaultFilename,
+		Filters: []runtime.FileFilter{
+			{DisplayName: "Imagem PNG (*.png)", Pattern: "*.png"},
+			{DisplayName: "Todos os Arquivos (*.*)", Pattern: "*.*"},
+		},
+	})
+	if err != nil {
+		return "", fmt.Errorf("abrir diálogo de salvamento: %w", err)
+	}
+	if strings.TrimSpace(selectedPath) == "" {
+		return "", nil
+	}
+
+	payload := strings.TrimSpace(base64PNG)
+	if idx := strings.Index(payload, ";base64,"); strings.HasPrefix(payload, "data:") && idx != -1 {
+		payload = payload[idx+len(";base64,"):]
+	} else {
+		payload = strings.TrimPrefix(payload, "data:image/png;base64,")
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(payload)
+	if err != nil {
+		return "", fmt.Errorf("decodificar imagem PNG base64: %w", err)
+	}
+
+	if err := os.WriteFile(selectedPath, decoded, 0644); err != nil {
+		return "", fmt.Errorf("salvar imagem PNG: %w", err)
+	}
+
+	return selectedPath, nil
+}
+
+// ===============================
 // LISTAS DE TAREFAS & SUBTAREFAS
 // ===============================
 

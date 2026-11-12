@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { FolderPlus, Sparkles, X, Folder, Briefcase, Code, BookOpen, Star, Heart, Archive, User, Check, Edit2, Tag as TagIcon, Hash, Bookmark, Flag, Zap, CircleDot } from "lucide-react";
 import { FolderRecord, NavigationRecord, SmartFolderRecord, TagRecord } from "./types";
+import { CustomSelect } from "./CustomSelect";
 
 export type { FolderRecord, NavigationRecord, SmartFolderRecord, TagRecord };
 
@@ -149,12 +150,17 @@ export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, on
           <>
             <label>
               Pasta superior
-              <select value={parentId} onChange={(event) => setParentId(event.target.value)}>
-                <option value="">Nenhuma (Pasta Raiz)</option>
-                {navigation.folders
-                  .filter((f) => !folderToEdit || f.id !== folderToEdit.id)
-                  .map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
-              </select>
+              <CustomSelect
+                value={parentId}
+                options={[
+                  { value: "", label: "Nenhuma (Pasta Raiz)" },
+                  ...navigation.folders
+                    .filter((f) => !folderToEdit || f.id !== folderToEdit.id)
+                    .map((folder) => ({ value: folder.id, label: folder.name })),
+                ]}
+                onChange={setParentId}
+                ariaLabel="Pasta superior"
+              />
             </label>
 
             <div className="picker-section">
@@ -228,20 +234,73 @@ export function OrganizationDialog({ mode, navigation, onClose, onSaveFolder, on
           <>
             <label>
               Agrupar por
-              <select value={ruleKind} onChange={(event) => setRuleKind(event.target.value as SmartFolderRecord["ruleKind"])}>
-                <option value="tag">Etiqueta</option>
-                <option value="date">Data</option>
-                <option value="checklist">Checklist</option>
-              </select>
+              <CustomSelect
+                value={ruleKind}
+                options={[
+                  { value: "tag", label: "Etiqueta" },
+                  { value: "date", label: "Data" },
+                  { value: "checklist", label: "Checklist" },
+                ]}
+                onChange={(val) => setRuleKind(val as SmartFolderRecord["ruleKind"])}
+                ariaLabel="Agrupar por"
+              />
             </label>
-            {ruleKind === "tag" && <label>Etiqueta<select value={tagId} onChange={(event) => setTagId(event.target.value)}>{navigation.tags.map((tag) => <option key={tag.id} value={tag.id}>#{tag.name}</option>)}</select></label>}
+            {ruleKind === "tag" && (
+              <label>
+                Etiqueta
+                <CustomSelect
+                  value={tagId}
+                  options={navigation.tags.map((tag) => ({ value: tag.id, label: `#${tag.name}` }))}
+                  onChange={setTagId}
+                  placeholder="Nenhuma etiqueta"
+                  ariaLabel="Etiqueta"
+                />
+              </label>
+            )}
             {ruleKind === "date" && (
               <div className="dialog-fields-row">
-                <label>Data<select value={dateField} onChange={(event) => setDateField(event.target.value as typeof dateField)}><option value="updated_at">Modificação</option><option value="created_at">Criação</option></select></label>
-                <label>Período<select value={dateRange} onChange={(event) => setDateRange(event.target.value as typeof dateRange)}><option value="today">Hoje</option><option value="last_7_days">Últimos 7 dias</option><option value="last_30_days">Últimos 30 dias</option></select></label>
+                <label>
+                  Data
+                  <CustomSelect
+                    value={dateField}
+                    options={[
+                      { value: "updated_at", label: "Modificação" },
+                      { value: "created_at", label: "Criação" },
+                    ]}
+                    onChange={(val) => setDateField(val as typeof dateField)}
+                    ariaLabel="Data"
+                  />
+                </label>
+                <label>
+                  Período
+                  <CustomSelect
+                    value={dateRange}
+                    options={[
+                      { value: "today", label: "Hoje" },
+                      { value: "last_7_days", label: "Últimos 7 dias" },
+                      { value: "last_30_days", label: "Últimos 30 dias" },
+                    ]}
+                    onChange={(val) => setDateRange(val as typeof dateRange)}
+                    ariaLabel="Período"
+                  />
+                </label>
               </div>
             )}
-            {ruleKind === "checklist" && <label>Estado<select value={checklistState} onChange={(event) => setChecklistState(event.target.value as typeof checklistState)}><option value="open">Com itens pendentes</option><option value="completed">Todos concluídos</option><option value="any">Qualquer checklist</option></select></label>}
+            {ruleKind === "checklist" && (
+              <label>
+                Estado
+                <CustomSelect
+                  value={checklistState}
+                  options={[
+                    { value: "open", label: "Com itens pendentes" },
+                    { value: "completed", label: "Todos concluídos" },
+                    { value: "any", label: "Qualquer checklist" },
+                  ]}
+                  onChange={(val) => setChecklistState(val as typeof checklistState)}
+                  ariaLabel="Estado"
+                />
+              </label>
+            )}
           </>
         )}
 

@@ -110,6 +110,84 @@ export type TaskRecord = {
   updatedAt: string;
 };
 
+export type IdeaFlowRecord = {
+  id: string;
+  title: string;
+  description: string;
+  color: string;
+  icon: string;
+  viewportX: number;
+  viewportY: number;
+  viewportZoom: number;
+  position: number;
+  nodeCount: number;
+  edgeCount: number;
+  deletedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type IdeaNodeRecord = {
+  id: string;
+  flowId: string;
+  nodeType: string;
+  label: string;
+  content: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color: string;
+  linkedKind: string;
+  linkedId: string;
+  linkedLabel: string;
+  styleJson: string;
+  deletedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type IdeaEdgeRecord = {
+  id: string;
+  flowId: string;
+  sourceNodeId: string;
+  targetNodeId: string;
+  sourceHandle: string;
+  targetHandle: string;
+  label: string;
+  edgeType: string;
+  color: string;
+  animated: boolean;
+  styleJson: string;
+  deletedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type IdeaFlowGraphRecord = {
+  flow: IdeaFlowRecord;
+  nodes: IdeaNodeRecord[];
+  edges: IdeaEdgeRecord[];
+};
+
+export type SaveIdeaFlowInput = {
+  id?: string;
+  title: string;
+  description: string;
+  color: string;
+  icon: string;
+  position?: number;
+};
+
+export type SaveIdeaFlowGraphInput = {
+  flowId: string;
+  viewportX: number;
+  viewportY: number;
+  viewportZoom: number;
+  nodes: IdeaNodeRecord[];
+  edges: IdeaEdgeRecord[];
+};
+
 export type NavigationRecord = {
   folders: FolderRecord[];
   tags: TagRecord[];
@@ -117,10 +195,11 @@ export type NavigationRecord = {
   stickerBoards: StickerBoardRecord[];
   taskLists?: TaskListRecord[];
   archivedTaskLists?: TaskListRecord[];
+  ideaFlows?: IdeaFlowRecord[];
 };
 
 export type NoteQuery = {
-  kind: "all" | "deleted" | "pinned" | "tag" | "folder" | "smart" | "stickerBoard" | "taskList";
+  kind: "all" | "deleted" | "pinned" | "tag" | "folder" | "smart" | "stickerBoard" | "taskList" | "ideaFlows" | "ideaFlow";
   id?: string;
 };
 
@@ -254,6 +333,13 @@ export type DesktopBridge = {
   CreateDatabaseBackup?: () => Promise<string>;
   RestoreDatabaseBackup?: () => Promise<string>;
   RestoreFromCloud?: () => Promise<SyncResult>;
+  ListIdeaFlows?: () => Promise<IdeaFlowRecord[]>;
+  SaveIdeaFlow?: (input: SaveIdeaFlowInput) => Promise<IdeaFlowRecord>;
+  DeleteIdeaFlow?: (flowId: string) => Promise<void>;
+  DuplicateIdeaFlow?: (flowId: string) => Promise<IdeaFlowRecord>;
+  GetIdeaFlowGraph?: (flowId: string) => Promise<IdeaFlowGraphRecord>;
+  SaveIdeaFlowGraph?: (input: SaveIdeaFlowGraphInput) => Promise<IdeaFlowGraphRecord>;
+  ExportIdeaFlowPNG?: (suggestedName: string, base64PNG: string) => Promise<string>;
 };
 
 declare global {

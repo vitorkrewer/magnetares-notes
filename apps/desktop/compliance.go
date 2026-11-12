@@ -14,9 +14,11 @@ type ComplianceReport struct {
 	OrphanNotesFixed    int      `json:"orphanNotesFixed"`
 	ChecklistsCorrected int      `json:"checklistsCorrected"`
 	OrphanTagsCleaned   int      `json:"orphanTagsCleaned"`
-	OrphanStickersFixed int      `json:"orphanStickersFixed"`
-	OrphanTasksFixed    int      `json:"orphanTasksFixed"`
-	Details             []string `json:"details"`
+	OrphanStickersFixed  int      `json:"orphanStickersFixed"`
+	OrphanTasksFixed     int      `json:"orphanTasksFixed"`
+	OrphanIdeaNodesFixed int      `json:"orphanIdeaNodesFixed"`
+	OrphanIdeaEdgesFixed int      `json:"orphanIdeaEdgesFixed"`
+	Details              []string `json:"details"`
 	AuditedAt           string   `json:"auditedAt"`
 }
 
@@ -208,6 +210,9 @@ func (s *noteStore) EnsureDataCompliance() (ComplianceReport, error) {
 	// 13. Task Lists: lista padrão, tarefas órfãs, subtarefas e metadados de sync
 	s.ensureTaskListCompliance(tx, now, &report)
 
+	// 14. Fluxo de Ideias: nós/arestas órfãos, zoom/cores/dimensões e metadados de sync
+	s.ensureIdeaFlowCompliance(tx, nowIdeaFlowTimestamp(), &report)
+
 	if err := tx.Commit(); err != nil {
 		return report, fmt.Errorf("commit compliance: %w", err)
 	}
@@ -304,4 +309,78 @@ func (s *noteStore) ensureTaskListCompliance(tx *sql.Tx, now int64, report *Comp
 		updated_at = CASE WHEN updated_at <= 0 THEN ? ELSE updated_at END,
 		sync_state = CASE WHEN sync_state IS NULL OR sync_state NOT IN ('clean', 'pending') THEN 'pending' ELSE sync_state END
 		WHERE created_at <= 0 OR updated_at <= 0 OR sync_state IS NULL OR sync_state NOT IN ('clean', 'pending')`, now, now)
+}
+
+func (s *noteStore) ensureIdeaFlowCompliance(tx *sql.Tx, nowISO string, report *ComplianceReport) {
+	// 14a. Normalizar zoom, cor e ícone padrão em fluxos de ideias
+	_, _ = tx.Exec(`UPDATE idea_flows SET
+		viewport_zoom = CASE WHEN viewport_zoom IS NULL OR viewport_zoom <= 0 THEN 1 ELSE viewport_zoom END,
+		color = CASE WHEN color IS NULL OR trim(color) = '' THEN ? ELSE color END,
+		icon = CASE WHEN icon IS NULL OR trim(icon) = '' THEN ? ELSE icon END,
+		updated_at = ?, sync_state = 'dirty'
+		WHERE viewport_zoom IS NULL OR viewport_zoom <= 0
+		   OR color IS NULL OR trim(color) = ''
+		   OR icon IS NULL OR trim(icon) = ''`,
+		defaultIdeaFlowColor, defaultIdeaFlowIcon, nowISO)
+
+	// 14b. Corrigir nós órfãos (fluxo inexistente ou excluído)
+	res, err := tx.Exec(`UPDATE idea_nodes SET deleted_at = ?, updated_at = ?, sync_state = 'dirty'
+		WHERE deleted_at IS NULL AND (flow_id IS NULL OR flow_id = ''
+		   OR flow_id NOT IN (SELECT id FROM idea_flows WHERE deleted_at IS NULL))`, nowISO, nowISO)
+	if err == nil {
+		if affected, _ := res.RowsAffected(); affected > 0 {
+			report.OrphanIdeaNodesFixed += int(affected)
+			report.Details = append(report.Details, fmt.Sprintf("Removidos %d nós órfãos em fluxos de ideias", affected))
+		}
+	}
+
+	// 14c. Corrigir arestas órfãs (fluxo ou nós de origem/destino inexistentes ou excluídos)
+	res, err = tx.Exec(`UPDATE idea_edges SET deleted_at = ?, updated_at = ?, sync_state = 'dirty'
+		WHERE deleted_at IS NULL AND (
+			flow_id IS NULL OR flow_id = ''
+			OR flow_id NOT IN (SELECT id FROM idea_flows WHERE deleted_at IS NULL)
+			OR source_node_id NOT IN (SELECT id FROM idea_nodes WHERE deleted_at IS NULL)
+			OR target_node_id NOT IN (SELECT id FROM idea_nodes WHERE deleted_at IS NULL)
+		)`, nowISO, nowISO)
+	if err == nil {
+		if affected, _ := res.RowsAffected(); affected > 0 {
+			report.OrphanIdeaEdgesFixed += int(affected)
+			report.Details = append(report.Details, fmt.Sprintf("Removidas %d arestas órfãs em fluxos de ideias", affected))
+		}
+	}
+
+	// 14d. Normalizar dimensões e style_json em nós
+	_, _ = tx.Exec(`UPDATE idea_nodes SET
+		node_type = CASE WHEN node_type IS NULL OR trim(node_type) = '' THEN ? ELSE node_type END,
+		width = CASE WHEN width IS NULL OR width <= 0 THEN ? ELSE width END,
+		height = CASE WHEN height IS NULL OR height <= 0 THEN ? ELSE height END,
+		style_json = CASE WHEN style_json IS NULL OR trim(style_json) = '' THEN ? ELSE style_json END
+		WHERE node_type IS NULL OR trim(node_type) = ''
+		   OR width IS NULL OR width <= 0
+		   OR height IS NULL OR height <= 0
+		   OR style_json IS NULL OR trim(style_json) = ''`,
+		defaultIdeaNodeType, defaultIdeaNodeWidth, defaultIdeaNodeHeight, defaultIdeaStyleJSON)
+
+	// 14e. Normalizar handles, tipo e style_json em arestas
+	_, _ = tx.Exec(`UPDATE idea_edges SET
+		source_handle = CASE WHEN source_handle IS NULL OR trim(source_handle) = '' THEN ? ELSE source_handle END,
+		target_handle = CASE WHEN target_handle IS NULL OR trim(target_handle) = '' THEN ? ELSE target_handle END,
+		edge_type = CASE WHEN edge_type IS NULL OR trim(edge_type) = '' THEN ? ELSE edge_type END,
+		style_json = CASE WHEN style_json IS NULL OR trim(style_json) = '' THEN ? ELSE style_json END
+		WHERE source_handle IS NULL OR trim(source_handle) = ''
+		   OR target_handle IS NULL OR trim(target_handle) = ''
+		   OR edge_type IS NULL OR trim(edge_type) = ''
+		   OR style_json IS NULL OR trim(style_json) = ''`,
+		defaultIdeaSourceHandle, defaultIdeaTargetHandle, defaultIdeaEdgeType, defaultIdeaStyleJSON)
+
+	// 14f. Corrigir timestamps e sync_state inválidos nas três tabelas
+	for _, table := range []string{"idea_flows", "idea_nodes", "idea_edges"} {
+		_, _ = tx.Exec(fmt.Sprintf(`UPDATE %s SET
+			created_at = CASE WHEN created_at IS NULL OR trim(created_at) = '' THEN ? ELSE created_at END,
+			updated_at = CASE WHEN updated_at IS NULL OR trim(updated_at) = '' THEN ? ELSE updated_at END,
+			sync_state = CASE WHEN sync_state IS NULL OR sync_state NOT IN ('clean', 'dirty') THEN 'dirty' ELSE sync_state END
+			WHERE created_at IS NULL OR trim(created_at) = ''
+			   OR updated_at IS NULL OR trim(updated_at) = ''
+			   OR sync_state IS NULL OR sync_state NOT IN ('clean', 'dirty')`, table), nowISO, nowISO)
+	}
 }

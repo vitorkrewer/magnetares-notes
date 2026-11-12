@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { CheckCircle2, Cloud, Eye, EyeOff, HardDrive, Info, Moon, RefreshCw, Settings, ShieldCheck, Sun, Trash2, X, XCircle } from "lucide-react";
 import { SyncProfilePanel } from "./SyncProfilePanel";
+import { CustomSelect } from "./CustomSelect";
 
 export type ThemeOption = "light" | "dark" | "system";
 
@@ -445,18 +446,21 @@ export function SettingsDialog({
                   <small>Quando a nuvem estiver conectada, verifica alterações em segundo plano.</small>
                 </div>
                 <label htmlFor="auto-sync-interval">Frequência</label>
-                <select
+                <CustomSelect
                   id="auto-sync-interval"
-                  value={currentAutoSyncInterval}
+                  className="auto-sync-select"
+                  value={String(currentAutoSyncInterval)}
                   disabled={!syncConfigured || !onAutoSyncIntervalChange}
-                  onChange={(event) => void handleAutoSyncIntervalChange(Number(event.target.value))}
-                >
-                  <option value={0}>Desativada</option>
-                  <option value={5}>A cada 5 minutos</option>
-                  <option value={15}>A cada 15 minutos</option>
-                  <option value={30}>A cada 30 minutos</option>
-                  <option value={60}>A cada hora</option>
-                </select>
+                  ariaLabel="Frequência de sincronização automática"
+                  options={[
+                    { value: "0", label: "Desativada" },
+                    { value: "5", label: "A cada 5 minutos" },
+                    { value: "15", label: "A cada 15 minutos" },
+                    { value: "30", label: "A cada 30 minutos" },
+                    { value: "60", label: "A cada hora" },
+                  ]}
+                  onChange={(val) => void handleAutoSyncIntervalChange(Number(val))}
+                />
                 {autoSyncMessage && <small className="auto-sync-message">{autoSyncMessage}</small>}
               </div>
 

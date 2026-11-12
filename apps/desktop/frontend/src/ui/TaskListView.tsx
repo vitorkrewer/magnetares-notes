@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { TaskListRecord, TaskRecord, SubtaskRecord, TaskNoteRecord } from "./types";
 import { getTaskListIconComponent, TASK_LIST_PALETTE } from "./TaskListDialog";
+import { CustomSelect } from "./CustomSelect";
 
 export type TaskListViewProps = {
   list: TaskListRecord;
@@ -38,6 +39,7 @@ export type TaskListViewProps = {
   onUnarchiveList?: (list: TaskListRecord) => void;
   onTaskCountChange: (listId: string, count: number) => void;
   refreshKey?: string | number;
+  focusTaskId?: string | null;
 };
 
 export type PriorityItem = {
@@ -130,6 +132,7 @@ export function TaskListView({
   onUnarchiveList,
   onTaskCountChange,
   refreshKey,
+  focusTaskId,
 }: TaskListViewProps) {
   const [tasks, setTasks] = useState<TaskRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -166,6 +169,7 @@ export function TaskListView({
   } | null>(null);
 
   const quickInputRef = useRef<HTMLInputElement>(null);
+  const lastAppliedFocusRef = useRef<string | null>(null);
 
   const IconComponent = getTaskListIconComponent(list.icon);
   const listColorHex = TASK_LIST_PALETTE.find((c) => c.id === list.color)?.hex ?? "#3b82f6";
@@ -207,6 +211,19 @@ export function TaskListView({
     void loadTasks();
     setSelectedTask(null);
   }, [list.id, refreshKey]);
+
+  useEffect(() => {
+    if (!focusTaskId) {
+      lastAppliedFocusRef.current = null;
+      return;
+    }
+    if (isLoading || lastAppliedFocusRef.current === focusTaskId) return;
+    const target = tasks.find((t) => t.id === focusTaskId);
+    if (target) {
+      lastAppliedFocusRef.current = focusTaskId;
+      void handleSelectTask(target);
+    }
+  }, [focusTaskId, tasks, isLoading]);
 
   // Sincroniza campos do inspector sempre que a tarefa selecionada mudar
   useEffect(() => {
@@ -1012,21 +1029,16 @@ export function TaskListView({
                 <span className="inspector-prop-label">
                   <ListTodo size={14} /> Lista
                 </span>
-                <select
+                <CustomSelect
                   value={editListId}
-                  onChange={(e) => {
-                    const nextListId = e.target.value;
+                  options={allLists.map((l) => ({ value: l.id, label: l.name }))}
+                  onChange={(nextListId) => {
                     setEditListId(nextListId);
                     void saveTaskDetails({ listId: nextListId });
                   }}
                   className="inspector-select"
-                >
-                  {allLists.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.name}
-                    </option>
-                  ))}
-                </select>
+                  ariaLabel="Lista da tarefa"
+                />
               </div>
 
               {/* Prioridade */}
@@ -1039,20 +1051,22 @@ export function TaskListView({
                   })()}
                   <span>Prioridade</span>
                 </span>
-                <select
-                  value={editPriority}
-                  onChange={(e) => {
-                    const pVal = Number(e.target.value);
+                <CustomSelect
+                  value={String(editPriority)}
+                  options={[
+                    { value: "0", label: "— Nenhuma" },
+                    { value: "1", label: "🔥 Alta (Vermelho)" },
+                    { value: "2", label: "⚠️ Média (Laranja)" },
+                    { value: "3", label: "⬇️ Baixa (Azul)" },
+                  ]}
+                  onChange={(val) => {
+                    const pVal = Number(val);
                     setEditPriority(pVal);
                     void saveTaskDetails({ priority: pVal });
                   }}
                   className="inspector-select"
-                >
-                  <option value={0}>— Nenhuma</option>
-                  <option value={1}>🔥 Alta (Vermelho)</option>
-                  <option value={2}>⚠️ Média (Laranja)</option>
-                  <option value={3}>⬇️ Baixa (Azul)</option>
-                </select>
+                  ariaLabel="Prioridade da tarefa"
+                />
               </div>
 
               {/* Data de Vencimento */}

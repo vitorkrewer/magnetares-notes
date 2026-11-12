@@ -9,6 +9,8 @@ export namespace main {
 	    orphanTagsCleaned: number;
 	    orphanStickersFixed: number;
 	    orphanTasksFixed: number;
+	    orphanIdeaNodesFixed: number;
+	    orphanIdeaEdgesFixed: number;
 	    details: string[];
 	    auditedAt: string;
 	
@@ -26,6 +28,8 @@ export namespace main {
 	        this.orphanTagsCleaned = source["orphanTagsCleaned"];
 	        this.orphanStickersFixed = source["orphanStickersFixed"];
 	        this.orphanTasksFixed = source["orphanTasksFixed"];
+	        this.orphanIdeaNodesFixed = source["orphanIdeaNodesFixed"];
+	        this.orphanIdeaEdgesFixed = source["orphanIdeaEdgesFixed"];
 	        this.details = source["details"];
 	        this.auditedAt = source["auditedAt"];
 	    }
@@ -52,6 +56,161 @@ export namespace main {
 	        this.noteCount = source["noteCount"];
 	    }
 	}
+	export class IdeaEdge {
+	    id: string;
+	    flowId: string;
+	    sourceNodeId: string;
+	    targetNodeId: string;
+	    sourceHandle: string;
+	    targetHandle: string;
+	    label: string;
+	    edgeType: string;
+	    color: string;
+	    animated: boolean;
+	    styleJson: string;
+	    deletedAt?: string;
+	    createdAt: string;
+	    updatedAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new IdeaEdge(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.flowId = source["flowId"];
+	        this.sourceNodeId = source["sourceNodeId"];
+	        this.targetNodeId = source["targetNodeId"];
+	        this.sourceHandle = source["sourceHandle"];
+	        this.targetHandle = source["targetHandle"];
+	        this.label = source["label"];
+	        this.edgeType = source["edgeType"];
+	        this.color = source["color"];
+	        this.animated = source["animated"];
+	        this.styleJson = source["styleJson"];
+	        this.deletedAt = source["deletedAt"];
+	        this.createdAt = source["createdAt"];
+	        this.updatedAt = source["updatedAt"];
+	    }
+	}
+	export class IdeaFlow {
+	    id: string;
+	    title: string;
+	    description: string;
+	    color: string;
+	    icon: string;
+	    viewportX: number;
+	    viewportY: number;
+	    viewportZoom: number;
+	    position: number;
+	    nodeCount: number;
+	    edgeCount: number;
+	    deletedAt?: string;
+	    createdAt: string;
+	    updatedAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new IdeaFlow(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.title = source["title"];
+	        this.description = source["description"];
+	        this.color = source["color"];
+	        this.icon = source["icon"];
+	        this.viewportX = source["viewportX"];
+	        this.viewportY = source["viewportY"];
+	        this.viewportZoom = source["viewportZoom"];
+	        this.position = source["position"];
+	        this.nodeCount = source["nodeCount"];
+	        this.edgeCount = source["edgeCount"];
+	        this.deletedAt = source["deletedAt"];
+	        this.createdAt = source["createdAt"];
+	        this.updatedAt = source["updatedAt"];
+	    }
+	}
+	export class IdeaNode {
+	    id: string;
+	    flowId: string;
+	    nodeType: string;
+	    label: string;
+	    content: string;
+	    x: number;
+	    y: number;
+	    width: number;
+	    height: number;
+	    color: string;
+	    linkedKind: string;
+	    linkedId: string;
+	    linkedLabel: string;
+	    styleJson: string;
+	    deletedAt?: string;
+	    createdAt: string;
+	    updatedAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new IdeaNode(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.flowId = source["flowId"];
+	        this.nodeType = source["nodeType"];
+	        this.label = source["label"];
+	        this.content = source["content"];
+	        this.x = source["x"];
+	        this.y = source["y"];
+	        this.width = source["width"];
+	        this.height = source["height"];
+	        this.color = source["color"];
+	        this.linkedKind = source["linkedKind"];
+	        this.linkedId = source["linkedId"];
+	        this.linkedLabel = source["linkedLabel"];
+	        this.styleJson = source["styleJson"];
+	        this.deletedAt = source["deletedAt"];
+	        this.createdAt = source["createdAt"];
+	        this.updatedAt = source["updatedAt"];
+	    }
+	}
+	export class IdeaFlowGraph {
+	    flow: IdeaFlow;
+	    nodes: IdeaNode[];
+	    edges: IdeaEdge[];
+	
+	    static createFrom(source: any = {}) {
+	        return new IdeaFlowGraph(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.flow = this.convertValues(source["flow"], IdeaFlow);
+	        this.nodes = this.convertValues(source["nodes"], IdeaNode);
+	        this.edges = this.convertValues(source["edges"], IdeaEdge);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	
 	export class TaskList {
 	    id: string;
 	    name: string;
@@ -168,6 +327,7 @@ export namespace main {
 	    stickerBoards: StickerBoard[];
 	    taskLists: TaskList[];
 	    archivedTaskLists: TaskList[];
+	    ideaFlows: IdeaFlow[];
 	
 	    static createFrom(source: any = {}) {
 	        return new Navigation(source);
@@ -181,6 +341,7 @@ export namespace main {
 	        this.stickerBoards = this.convertValues(source["stickerBoards"], StickerBoard);
 	        this.taskLists = this.convertValues(source["taskLists"], TaskList);
 	        this.archivedTaskLists = this.convertValues(source["archivedTaskLists"], TaskList);
+	        this.ideaFlows = this.convertValues(source["ideaFlows"], IdeaFlow);
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
@@ -329,6 +490,68 @@ export namespace main {
 		    }
 		    return a;
 		}
+	}
+	export class SaveIdeaFlowGraphInput {
+	    flowId: string;
+	    viewportX: number;
+	    viewportY: number;
+	    viewportZoom: number;
+	    nodes: IdeaNode[];
+	    edges: IdeaEdge[];
+	
+	    static createFrom(source: any = {}) {
+	        return new SaveIdeaFlowGraphInput(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.flowId = source["flowId"];
+	        this.viewportX = source["viewportX"];
+	        this.viewportY = source["viewportY"];
+	        this.viewportZoom = source["viewportZoom"];
+	        this.nodes = this.convertValues(source["nodes"], IdeaNode);
+	        this.edges = this.convertValues(source["edges"], IdeaEdge);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class SaveIdeaFlowInput {
+	    id: string;
+	    title: string;
+	    description: string;
+	    color: string;
+	    icon: string;
+	    position?: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new SaveIdeaFlowInput(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.title = source["title"];
+	        this.description = source["description"];
+	        this.color = source["color"];
+	        this.icon = source["icon"];
+	        this.position = source["position"];
+	    }
 	}
 	
 	export class Sticker {

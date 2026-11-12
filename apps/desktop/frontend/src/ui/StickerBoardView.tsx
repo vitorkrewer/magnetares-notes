@@ -21,6 +21,7 @@ export type StickerBoardViewProps = {
   onEditBoard: (board: StickerBoardRecord) => void;
   onDeleteBoard: (board: StickerBoardRecord) => void;
   onStickerCountChange: (boardId: string, count: number) => void;
+  focusStickerId?: string | null;
 };
 
 export function StickerBoardView({
@@ -30,6 +31,7 @@ export function StickerBoardView({
   onEditBoard,
   onDeleteBoard,
   onStickerCountChange,
+  focusStickerId,
 }: StickerBoardViewProps) {
   const [stickers, setStickers] = useState<StickerRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,10 +39,13 @@ export function StickerBoardView({
   const [colorMenuStickerId, setColorMenuStickerId] = useState<string | null>(null);
   const [draggedStickerId, setDraggedStickerId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const [highlightedStickerId, setHighlightedStickerId] = useState<string | null>(null);
 
   // Debounced auto-save timers per sticker
   const pendingUpdates = useRef<Map<string, Partial<StickerRecord>>>(new Map());
   const debounceTimers = useRef<Map<string, number>>(new Map());
+  const stickerCardRefs = useRef<Record<string, HTMLElement | null>>({});
+  const lastAppliedFocusRef = useRef<string | null>(null);
 
   // Load stickers for current board
   const loadStickers = async () => {
@@ -64,6 +69,33 @@ export function StickerBoardView({
     setFilterQuery("");
     setColorMenuStickerId(null);
   }, [board.id]);
+
+  useEffect(() => {
+    if (!focusStickerId) {
+      lastAppliedFocusRef.current = null;
+      return;
+    }
+    if (isLoading || lastAppliedFocusRef.current === focusStickerId) return;
+    if (!stickers.some((s) => s.id === focusStickerId)) return;
+
+    lastAppliedFocusRef.current = focusStickerId;
+    setHighlightedStickerId(focusStickerId);
+
+    const rafId = window.requestAnimationFrame(() => {
+      stickerCardRefs.current[focusStickerId]?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
+    const timerId = window.setTimeout(() => {
+      setHighlightedStickerId((curr) => (curr === focusStickerId ? null : curr));
+    }, 2200);
+
+    return () => {
+      window.cancelAnimationFrame(rafId);
+      window.clearTimeout(timerId);
+    };
+  }, [focusStickerId, stickers, isLoading]);
 
   // Clean up debounce timers on unmount
   useEffect(() => {
@@ -406,7 +438,10 @@ export function StickerBoardView({
               return (
                 <article
                   key={sticker.id}
-                  className={`sticker-card color-${sticker.color} ${isPinned ? "is-pinned" : ""} ${isDropTarget ? "drop-target" : ""} ${isDragging ? "is-dragging" : ""}`}
+                  ref={(el) => {
+                    stickerCardRefs.current[sticker.id] = el;
+                  }}
+                  className={`sticker-card color-${sticker.color} ${isPinned ? "is-pinned" : ""} ${isDropTarget ? "drop-target" : ""} ${isDragging ? "is-dragging" : ""} ${highlightedStickerId === sticker.id ? "focused-highlight" : ""}`}
                   draggable
                   onDragStart={(e) => handleDragStart(sticker.id, e)}
                   onDragEnd={() => {

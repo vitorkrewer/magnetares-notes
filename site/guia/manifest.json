@@ -1,6 +1,6 @@
 {
   "title": "Guia de Uso — Magnetares Notes",
-  "version": "v1.9.0",
+  "version": "v2.0.0",
   "groups": [
     {
       "name": "Começando",
@@ -60,6 +60,13 @@
           "icon": "maximize-2",
           "badge": "Novo v1.9.0",
           "summary": "Destaque notas em janelas nativas com fixação no topo enquanto continua navegando no app."
+        },
+        {
+          "id": "12-fluxo-de-ideias",
+          "title": "Fluxo de Ideias (Mapas Mentais)",
+          "icon": "git-branch",
+          "badge": "Novo v2.0.0",
+          "summary": "Canvas vetorial HD para mapas mentais e fluxogramas, links diretos para notas/listas/stickers e exportação PNG."
         }
       ]
     },

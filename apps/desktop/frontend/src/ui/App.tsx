@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { Archive, ArchiveRestore, Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FileCode2, FileDown, FilePenLine, FileText, Folder, Globe, List, Minimize2, PictureInPicture2, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Trash2, Upload, X } from "lucide-react";
+import { Archive, ArchiveRestore, Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FileCode2, FileDown, FilePenLine, FileText, Folder, GitBranch, Globe, List, Minimize2, Moon, PictureInPicture2, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Sun, Trash2, Upload, X } from "lucide-react";
 import { StructuredEditor } from "./StructuredEditor";
 import { CodeEditor } from "./CodeEditor";
 import { TitleBar } from "./TitleBar";
@@ -10,13 +10,16 @@ import { StickerBoardDialog, STICKER_PALETTE, DelicateStickerIcon } from "./Stic
 import { StickerBoardView } from "./StickerBoardView";
 import { TaskListDialog, TASK_LIST_PALETTE, getTaskListIconComponent } from "./TaskListDialog";
 import { TaskListView } from "./TaskListView";
-import { FolderRecord, NavigationRecord, Note, NoteQuery, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord, TaskListRecord } from "./types";
+import { IdeaFlowDialog } from "./IdeaFlowDialog";
+import { IdeaFlowsView } from "./IdeaFlowsView";
+import type { IdeaReferenceKind } from "./IdeaNodeLinkModal";
+import { FolderRecord, IdeaFlowGraphRecord, IdeaFlowRecord, NavigationRecord, Note, NoteQuery, SaveIdeaFlowGraphInput, SaveIdeaFlowInput, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord, TaskListRecord } from "./types";
 import { downloadBlob, downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
 import { exportToAbntDocxBase64, exportToAbntDocxBlob } from "./abntExport";
 import { exportToPdfBase64, exportToPdfBlob } from "./pdfExport";
 
 type SaveState = "saved" | "saving" | "error";
-type LibraryView = "notes" | "deleted" | "stickers" | "tasks";
+type LibraryView = "notes" | "deleted" | "stickers" | "tasks" | "ideas";
 
 const demo: Note[] = [
   { id: "welcome", title: "Bem-vindo ao Magnetares", body: "Um lugar tranquilo para pensar, planejar e guardar o que importa.", bodyText: "Um lugar tranquilo para pensar, planejar e guardar o que importa.", folder: "Notas", updatedAt: new Date().toISOString() },
@@ -108,6 +111,12 @@ export function App() {
   const [listToEdit, setListToEdit] = useState<TaskListRecord | undefined>(undefined);
   const [deleteListTarget, setDeleteListTarget] = useState<TaskListRecord | null>(null);
   const [archivedListsExpanded, setArchivedListsExpanded] = useState(false);
+  const [ideaFlows, setIdeaFlows] = useState<IdeaFlowRecord[]>([]);
+  const [selectedIdeaFlowId, setSelectedIdeaFlowId] = useState<string | null>(null);
+  const [ideaFlowDialogOpen, setIdeaFlowDialogOpen] = useState(false);
+  const [ideaFlowToEdit, setIdeaFlowToEdit] = useState<IdeaFlowRecord | undefined>(undefined);
+  const [deleteIdeaFlowTarget, setDeleteIdeaFlowTarget] = useState<IdeaFlowRecord | null>(null);
+  const [demoIdeaGraphs, setDemoIdeaGraphs] = useState<Record<string, IdeaFlowGraphRecord>>({});
   const [theme, setTheme] = useState<ThemeOption>(() => ((localStorage.getItem("magnetares_theme") || localStorage.getItem("aster_theme")) as ThemeOption) || "light");
   const [isDark, setIsDark] = useState<boolean>(() => {
     const saved = ((localStorage.getItem("magnetares_theme") || localStorage.getItem("aster_theme")) as ThemeOption) || "light";
@@ -129,6 +138,8 @@ export function App() {
   const [conflicts, setConflicts] = useState<SyncConflict[]>([]);
   const [conflictsOpen, setConflictsOpen] = useState(false);
   const [taskSyncNonce, setTaskSyncNonce] = useState(0);
+  const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
+  const [focusedStickerId, setFocusedStickerId] = useState<string | null>(null);
   const [tagsExpanded, setTagsExpanded] = useState(false);
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(new Set());
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null);
@@ -381,6 +392,8 @@ export function App() {
   };
 
   const selectQuery = (targetQuery: NoteQuery) => {
+    setFocusedTaskId(null);
+    setFocusedStickerId(null);
     setSelectedQuery(targetQuery);
     const nextView: LibraryView =
       targetQuery.kind === "deleted"
@@ -389,11 +402,23 @@ export function App() {
         ? "stickers"
         : targetQuery.kind === "taskList"
         ? "tasks"
+        : targetQuery.kind === "ideaFlows" || targetQuery.kind === "ideaFlow"
+        ? "ideas"
         : "notes";
     setView(nextView);
+    if (targetQuery.kind === "ideaFlow") {
+      setSelectedIdeaFlowId(targetQuery.id ?? null);
+    } else if (targetQuery.kind === "ideaFlows") {
+      setSelectedIdeaFlowId(null);
+    }
     setQuery("");
     setLoadError("");
-    if (targetQuery.kind !== "stickerBoard" && targetQuery.kind !== "taskList") {
+    if (
+      targetQuery.kind !== "stickerBoard" &&
+      targetQuery.kind !== "taskList" &&
+      targetQuery.kind !== "ideaFlows" &&
+      targetQuery.kind !== "ideaFlow"
+    ) {
       void loadQueryNotes(targetQuery);
     }
     setSaveState("saved");
@@ -731,7 +756,7 @@ export function App() {
     const [loadedNotes, loadedDeletedNotes, loadedNav, currentConflicts] = await Promise.all([
       bridge.ListNotes?.() ?? Promise.resolve([]),
       bridge.ListDeletedNotes?.() ?? Promise.resolve([]),
-      bridge.ListNavigation?.() ?? Promise.resolve({ folders: [], tags: [], smartFolders: [], stickerBoards: [] }),
+      bridge.ListNavigation?.() ?? Promise.resolve<NavigationRecord>({ folders: [], tags: [], smartFolders: [], stickerBoards: [], ideaFlows: [] }),
       bridge.ListNoteConflicts?.() ?? Promise.resolve([])
     ]);
     setNotes(loadedNotes);
@@ -983,8 +1008,16 @@ export function App() {
     const bridge = window.go?.main?.App;
     if (!bridge?.ListNavigation) return;
     try {
-      const nav = await bridge.ListNavigation();
+      const [nav, flows] = await Promise.all([
+        bridge.ListNavigation(),
+        bridge.ListIdeaFlows ? bridge.ListIdeaFlows() : Promise.resolve(null),
+      ]);
       setNavigation(nav);
+      if (flows) {
+        setIdeaFlows(flows);
+      } else if (nav.ideaFlows) {
+        setIdeaFlows(nav.ideaFlows);
+      }
     } catch {
       // Graceful fallback for browser
     }
@@ -1014,12 +1047,14 @@ export function App() {
     void Promise.all([
       bridge.ListNotes(),
       bridge.ListDeletedNotes?.() ?? Promise.resolve([]),
-      bridge.ListNavigation?.() ?? Promise.resolve({ folders: [], tags: [], smartFolders: [], stickerBoards: [] })
+      bridge.ListNavigation?.() ?? Promise.resolve<NavigationRecord>({ folders: [], tags: [], smartFolders: [], stickerBoards: [], ideaFlows: [] }),
+      bridge.ListIdeaFlows?.() ?? Promise.resolve(null),
     ])
-      .then(([loadedNotes, loadedDeletedNotes, loadedNav]) => {
+      .then(([loadedNotes, loadedDeletedNotes, loadedNav, loadedFlows]) => {
         setNotes(loadedNotes);
         setDeletedNotes(loadedDeletedNotes);
         setNavigation(loadedNav);
+        setIdeaFlows(loadedFlows ?? loadedNav.ideaFlows ?? []);
         setActiveId(loadedNotes[0]?.id ?? "");
       })
       .catch(() => setLoadError("Não foi possível abrir suas notas."))
@@ -1269,6 +1304,220 @@ export function App() {
     }));
   };
 
+  const handleSaveIdeaFlow = async (input: SaveIdeaFlowInput) => {
+    const bridge = window.go?.main?.App;
+    if (bridge?.SaveIdeaFlow) {
+      const saved = await bridge.SaveIdeaFlow(input);
+      setIdeaFlows((prev) =>
+        prev.some((f) => f.id === saved.id)
+          ? prev.map((f) => (f.id === saved.id ? saved : f))
+          : [...prev, saved]
+      );
+      void reloadNavigation();
+      selectQuery({ kind: "ideaFlow", id: saved.id });
+    } else {
+      const now = new Date().toISOString();
+      const existing = input.id ? ideaFlows.find((f) => f.id === input.id) : undefined;
+      const saved: IdeaFlowRecord = existing
+        ? {
+            ...existing,
+            title: input.title,
+            description: input.description,
+            color: input.color,
+            icon: input.icon,
+            position: input.position ?? existing.position,
+            updatedAt: now,
+          }
+        : {
+            id: input.id || crypto.randomUUID(),
+            title: input.title,
+            description: input.description,
+            color: input.color || "#4b75ff",
+            icon: input.icon || "git-branch",
+            viewportX: 0,
+            viewportY: 0,
+            viewportZoom: 1,
+            position: input.position ?? ideaFlows.length,
+            nodeCount: 0,
+            edgeCount: 0,
+            createdAt: now,
+            updatedAt: now,
+          };
+      setIdeaFlows((prev) =>
+        prev.some((f) => f.id === saved.id)
+          ? prev.map((f) => (f.id === saved.id ? saved : f))
+          : [...prev, saved]
+      );
+      selectQuery({ kind: "ideaFlow", id: saved.id });
+    }
+  };
+
+  const handleDuplicateIdeaFlow = async (flow: IdeaFlowRecord) => {
+    try {
+      const bridge = window.go?.main?.App;
+      if (bridge?.DuplicateIdeaFlow) {
+        const duplicated = await bridge.DuplicateIdeaFlow(flow.id);
+        setIdeaFlows((prev) => [...prev, duplicated]);
+        void reloadNavigation();
+      } else {
+        const now = new Date().toISOString();
+        const newId = crypto.randomUUID();
+        const duplicated: IdeaFlowRecord = {
+          ...flow,
+          id: newId,
+          title: `${flow.title} (cópia)`,
+          position: ideaFlows.length,
+          createdAt: now,
+          updatedAt: now,
+        };
+        const sourceGraph = demoIdeaGraphs[flow.id];
+        if (sourceGraph) {
+          const nodeMap = new Map<string, string>();
+          const clonedNodes = sourceGraph.nodes.map((n) => {
+            const clonedId = crypto.randomUUID();
+            nodeMap.set(n.id, clonedId);
+            return { ...n, id: clonedId, flowId: newId, createdAt: now, updatedAt: now };
+          });
+          const clonedEdges = sourceGraph.edges.map((e) => ({
+            ...e,
+            id: crypto.randomUUID(),
+            flowId: newId,
+            sourceNodeId: nodeMap.get(e.sourceNodeId) ?? e.sourceNodeId,
+            targetNodeId: nodeMap.get(e.targetNodeId) ?? e.targetNodeId,
+            createdAt: now,
+            updatedAt: now,
+          }));
+          setDemoIdeaGraphs((prev) => ({
+            ...prev,
+            [newId]: { flow: duplicated, nodes: clonedNodes, edges: clonedEdges },
+          }));
+        }
+        setIdeaFlows((prev) => [...prev, duplicated]);
+      }
+    } catch (err: any) {
+      setLoadError(err?.message || "Não foi possível duplicar o fluxo de ideias.");
+    }
+  };
+
+  const handleDeleteIdeaFlow = async (flow: IdeaFlowRecord) => {
+    try {
+      const bridge = window.go?.main?.App;
+      if (bridge?.DeleteIdeaFlow) {
+        await bridge.DeleteIdeaFlow(flow.id);
+        setIdeaFlows((prev) => prev.filter((f) => f.id !== flow.id));
+        void reloadNavigation();
+      } else {
+        setIdeaFlows((prev) => prev.filter((f) => f.id !== flow.id));
+        setDemoIdeaGraphs((prev) => {
+          const next = { ...prev };
+          delete next[flow.id];
+          return next;
+        });
+      }
+      if (selectedIdeaFlowId === flow.id) {
+        setSelectedIdeaFlowId(null);
+        setSelectedQuery({ kind: "ideaFlows" });
+      }
+    } catch (err: any) {
+      setLoadError(err?.message || "Não foi possível excluir o fluxo de ideias.");
+    } finally {
+      setDeleteIdeaFlowTarget(null);
+    }
+  };
+
+  const handleIdeaFlowGraphSaved = (updatedFlow: IdeaFlowRecord) => {
+    setIdeaFlows((prev) =>
+      prev.map((f) => (f.id === updatedFlow.id ? updatedFlow : f))
+    );
+  };
+
+  const handleSaveDemoIdeaGraph = (input: SaveIdeaFlowGraphInput): IdeaFlowGraphRecord => {
+    const now = new Date().toISOString();
+    const currentFlow = ideaFlows.find((f) => f.id === input.flowId);
+    const updatedFlow: IdeaFlowRecord = {
+      ...(currentFlow ?? {
+        id: input.flowId,
+        title: "Fluxo de Ideias",
+        description: "",
+        color: "#4b75ff",
+        icon: "git-branch",
+        position: 0,
+        createdAt: now,
+      }),
+      viewportX: input.viewportX,
+      viewportY: input.viewportY,
+      viewportZoom: input.viewportZoom,
+      nodeCount: input.nodes.length,
+      edgeCount: input.edges.length,
+      updatedAt: now,
+    };
+    const nextGraph: IdeaFlowGraphRecord = {
+      flow: updatedFlow,
+      nodes: input.nodes,
+      edges: input.edges,
+    };
+    setDemoIdeaGraphs((prev) => ({ ...prev, [input.flowId]: nextGraph }));
+    return nextGraph;
+  };
+
+  const handleNavigateToReference = async (
+    kind: IdeaReferenceKind,
+    id: string
+  ) => {
+    if (kind === "taskList") {
+      selectQuery({ kind: "taskList", id });
+      return;
+    }
+    if (kind === "task") {
+      const [listId, taskId] = id.split("::");
+      if (!listId) return;
+      selectQuery({ kind: "taskList", id: listId });
+      setFocusedTaskId(taskId || null);
+      return;
+    }
+    if (kind === "stickerBoard") {
+      selectQuery({ kind: "stickerBoard", id });
+      return;
+    }
+    if (kind === "sticker") {
+      const [boardId, stickerId] = id.split("::");
+      if (!boardId) return;
+      selectQuery({ kind: "stickerBoard", id: boardId });
+      setFocusedStickerId(stickerId || null);
+      return;
+    }
+    // Navigate directly to a note
+    setSelectedQuery({ kind: "all" });
+    setView("notes");
+    setQuery("");
+    setLoadError("");
+    const existing = notes.find((n) => n.id === id);
+    if (existing) {
+      setActiveId(existing.id);
+      return;
+    }
+    const bridge = window.go?.main?.App;
+    if (bridge?.GetNote) {
+      try {
+        const fetched = await bridge.GetNote(id);
+        setNotes((prev) => (prev.some((n) => n.id === fetched.id) ? prev : [fetched, ...prev]));
+        setActiveId(fetched.id);
+        return;
+      } catch {
+        // Fallback to loading all notes
+      }
+    }
+    if (bridge?.QueryNotes) {
+      try {
+        const all = await bridge.QueryNotes({ kind: "all" });
+        setNotes(all);
+        setActiveId(all.some((n) => n.id === id) ? id : all[0]?.id ?? "");
+      } catch {
+        setLoadError("Não foi possível abrir a nota referenciada.");
+      }
+    }
+  };
+
   const toggleFolderExpanded = (folderID: string) => {
     setExpandedFolderIds((current) => {
       const next = new Set(current);
@@ -1376,6 +1625,8 @@ export function App() {
             ? `${(navigation.stickerBoards || []).find((b) => b.id === selectedQuery.id)?.name ?? "Stickers"} — Magnetares`
             : view === "tasks"
             ? `${(navigation.taskLists || []).find((l) => l.id === selectedQuery.id)?.name ?? "Tarefas"} — Magnetares`
+            : view === "ideas"
+            ? `${(selectedIdeaFlowId ? ideaFlows.find((f) => f.id === selectedIdeaFlowId)?.title : null) ?? "Fluxo de Ideias"} — Magnetares`
             : active?.title
             ? `${active.title} — Magnetares`
             : "Magnetares Notes"
@@ -1389,7 +1640,7 @@ export function App() {
           </button>
         </div>
       )}
-      <main className={`shell ${sidebarOpen ? "" : "sidebar-closed"} ${view === "stickers" ? "stickers-view" : ""} ${view === "tasks" ? "tasks-view" : ""}`}>
+      <main className={`shell ${sidebarOpen ? "" : "sidebar-closed"} ${view === "stickers" ? "stickers-view" : ""} ${view === "tasks" ? "tasks-view" : ""} ${view === "ideas" ? "ideas-view" : ""}`}>
       <aside className="sidebar" aria-label="Pastas">
         <div className="sidebar-heading">
           <img
@@ -1530,6 +1781,37 @@ export function App() {
                 </button>
               );
             })}
+          </div>
+        </>
+
+        <>
+          <div className="sidebar-section-header">
+            <span className="folder-label">FLUXO DE IDEIAS</span>
+            <button
+              className="icon-button mini-add"
+              onClick={() => {
+                setIdeaFlowToEdit(undefined);
+                setIdeaFlowDialogOpen(true);
+              }}
+              title="Novo fluxo de ideias"
+              aria-label="Novo fluxo de ideias"
+            >
+              <Plus aria-hidden="true" />
+            </button>
+          </div>
+          <div className="folder-tree">
+            <button
+              type="button"
+              className={`nav-item idea-flow-nav-item ${view === "ideas" ? "selected" : ""}`}
+              onClick={() => selectQuery({ kind: "ideaFlows" })}
+              title="Abrir Meus Fluxos"
+            >
+              <span>
+                <GitBranch className="idea-flow-nav-icon" size={14} aria-hidden="true" />
+                <span className="nav-item-title">Meus Fluxos</span>
+              </span>
+              <small>{ideaFlows.length}</small>
+            </button>
           </div>
         </>
 
@@ -1769,15 +2051,26 @@ export function App() {
                 </span>
               )}
             </div>
-            <button
-              type="button"
-              className="icon-button settings-btn"
-              onClick={() => setSettingsOpen(true)}
-              title="Preferências & Configurações"
-              aria-label="Preferências"
-            >
-              <Settings aria-hidden="true" />
-            </button>
+            <div className="sidebar-footer-actions" style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+              <button
+                type="button"
+                className="icon-button theme-toggle-btn"
+                onClick={() => setTheme(isDark ? "light" : "dark")}
+                title={isDark ? "Alternar para tema claro" : "Alternar para tema escuro"}
+                aria-label={isDark ? "Alternar para tema claro" : "Alternar para tema escuro"}
+              >
+                {isDark ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+              </button>
+              <button
+                type="button"
+                className="icon-button settings-btn"
+                onClick={() => setSettingsOpen(true)}
+                title="Preferências & Configurações"
+                aria-label="Preferências"
+              >
+                <Settings aria-hidden="true" />
+              </button>
+            </div>
           </footer>
         </div>
       </aside>
@@ -1801,6 +2094,7 @@ export function App() {
           }}
           onDeleteBoard={(board) => setDeleteBoardTarget(board)}
           onStickerCountChange={handleStickerCountChange}
+          focusStickerId={focusedStickerId}
         />
       ) : view === "tasks" ? (
         <TaskListView
@@ -1829,6 +2123,34 @@ export function App() {
           onUnarchiveList={handleUnarchiveTaskList}
           onTaskCountChange={handleTaskCountChange}
           refreshKey={taskSyncNonce}
+          focusTaskId={focusedTaskId}
+        />
+      ) : view === "ideas" ? (
+        <IdeaFlowsView
+          flows={ideaFlows}
+          selectedFlowId={selectedIdeaFlowId}
+          onSelectFlow={(flowId) => {
+            setSelectedIdeaFlowId(flowId);
+            setSelectedQuery(flowId ? { kind: "ideaFlow", id: flowId } : { kind: "ideaFlows" });
+          }}
+          sidebarOpen={sidebarOpen}
+          onOpenSidebar={() => setSidebarOpen(true)}
+          onNewFlow={() => {
+            setIdeaFlowToEdit(undefined);
+            setIdeaFlowDialogOpen(true);
+          }}
+          onEditFlow={(flow) => {
+            setIdeaFlowToEdit(flow);
+            setIdeaFlowDialogOpen(true);
+          }}
+          onDuplicateFlow={handleDuplicateIdeaFlow}
+          onDeleteFlow={(flow) => setDeleteIdeaFlowTarget(flow)}
+          onGraphSaved={handleIdeaFlowGraphSaved}
+          onNavigateToReference={(kind, id) => void handleNavigateToReference(kind, id)}
+          navigation={navigation}
+          theme={isDark ? "dark" : "light"}
+          demoGraphs={demoIdeaGraphs}
+          onSaveDemoGraph={handleSaveDemoIdeaGraph}
         />
       ) : (
         <>
@@ -2264,6 +2586,61 @@ export function App() {
             setListToEdit(undefined);
           }}
           onSave={handleSaveTaskList}
+        />
+      )}
+
+      {deleteIdeaFlowTarget && (
+        <div
+          className="dialog-backdrop"
+          role="presentation"
+          onMouseDown={(event) => event.target === event.currentTarget && setDeleteIdeaFlowTarget(null)}
+        >
+          <div
+            className="organization-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-idea-flow-dialog-title"
+            style={{ maxWidth: 420 }}
+          >
+            <header>
+              <Trash2 aria-hidden="true" style={{ color: "#ef4444" }} />
+              <h2 id="delete-idea-flow-dialog-title">Excluir fluxo de ideias</h2>
+              <button
+                type="button"
+                onClick={() => setDeleteIdeaFlowTarget(null)}
+                aria-label="Fechar"
+                title="Fechar"
+              >
+                <X aria-hidden="true" />
+              </button>
+            </header>
+            <p style={{ marginTop: 12, marginBottom: 20, color: "var(--muted)", fontSize: 13, lineHeight: 1.5 }}>
+              Tem certeza que deseja excluir o fluxo <strong>{deleteIdeaFlowTarget.title}</strong>? Todos os nós e conexões deste mapa mental serão removidos.
+            </p>
+            <footer>
+              <button type="button" className="ghost" onClick={() => setDeleteIdeaFlowTarget(null)}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                style={{ background: "#dc2626", color: "#ffffff", borderColor: "#b91c1c" }}
+                onClick={() => void handleDeleteIdeaFlow(deleteIdeaFlowTarget)}
+              >
+                Excluir fluxo
+              </button>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {ideaFlowDialogOpen && (
+        <IdeaFlowDialog
+          flowToEdit={ideaFlowToEdit}
+          onClose={() => {
+            setIdeaFlowDialogOpen(false);
+            setIdeaFlowToEdit(undefined);
+          }}
+          onSave={handleSaveIdeaFlow}
         />
       )}
     </main>

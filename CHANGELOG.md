@@ -2,6 +2,20 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## [v2.0.0] - 2026-11-12
+
+### Added
+
+- **Novo Módulo "Fluxo de Ideias" (Mapas Mentais, Diagramas e Fluxogramas Interativos):**
+  - **Navegação Dedicada na Barra Lateral:** Nova seção **Fluxo de Ideias** posicionada logo abaixo de **Stickers**, com botão de acesso rápido e atalho de criação instantânea.
+  - **Hub de Gerenciamento com Visualização Dupla e CRUD Completo:** Alternância entre visualização em **Cards** e **Listas** (com preferência salva), busca em tempo real, criação, edição de metadados (título, descrição, paleta de 10 cores e 8 ícones), duplicação de fluxos e exclusão segura com confirmação.
+  - **Canvas Vetorial Interativo de Alta Definição:** Ao selecionar um fluxo, o mapa mental abre na mesma tela com grade pontilhada escalável em alta definição, pan fluido, minimapa interativo, controle de **zoom de alta precisão (15% a 350%)**, opção **Ajustar à Tela** e Snap-to-Grid opcional.
+  - **Múltiplos Tipos de Nós & Edição Rica:** Suporte a nós de **Tópico Central**, **Ideia / Conceito**, **Decisão / Condição**, **Anotação Rápida**, **Grupo / Contêiner** redimensionável e **Referência Magnetares**, com edição inline por duplo clique, redimensionamento, seleção, histórico de **Desfazer / Refazer (`Ctrl+Z` / `Ctrl+Y`)**, duplicação (`Ctrl+D`) e painel inspetor lateral.
+  - **Conexões Inteligentes:** 4 pontos de conexão por nó (*top, right, bottom, left*) com pré-visualização ao vivo durante o arraste, curvas **Bezier**, **Degrau Ortogonal** e **Linha Reta**, setas direcionais, modo animado/tracejado, cores personalizadas e rótulos editáveis.
+  - **Referências Cruzadas com Hyperlink Direto:** O **Nó de Referência Magnetares** permite buscar e vincular qualquer **Nota**, **Lista de Tarefas** ou **Quadro de Stickers** cadastrado no projeto, gerando um hyperlink interativo (`Abrir ↗`) que navega e abre diretamente o item correspondente no aplicativo.
+  - **Exportação em PNG de Alta Qualidade:** Renderização vetorial offscreen em alta resolução (escala 2.5x) respeitando o tema ativo (Claro ou Escuro), com salvamento nativo via diálogo do sistema operacional (`ExportIdeaFlowPNG`).
+  - **Persistência Local-First, Sincronização Turso & Compliance:** Novas tabelas `idea_flows`, `idea_nodes` e `idea_edges` (`0015_idea_flows.sql`), sincronização bidirecional LWW com Turso (`sync_idea_flows`, `sync_idea_nodes`, `sync_idea_edges`) e auditoria automática de integridade (`ensureIdeaFlowCompliance`).
+
 ## [v1.9.0] - 2026-11-03
 
 ### Added

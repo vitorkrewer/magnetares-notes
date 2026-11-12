@@ -46,14 +46,24 @@ flowchart LR
 | **Editor** | Títulos, fórmulas matemáticas e químicas (LaTeX KaTeX + mhchem offline), destaques acadêmicos (Callouts), cores customizáveis, alinhamento, espaçamento entre linhas, negrito, itálico, destaque, listas, citações, checklists, tabelas com colagem direta do Excel/Sheets, cálculos inline, hyperlinks e blocos de código. |
 | **Code Snippets** | Notas de código independentes com motor Monaco Editor (o mesmo do VS Code). Syntax highlighting avançado, dropdown com diversas linguagens, Color Badges elegantes na interface, e botão de cópia com 1 clique. |
 | **Stickers** | Mural full-width de notas autoadesivas (post-its) organizado por quadros dedicados, 8 cores pastel (temas claro/escuro), fixação no topo, busca instantânea e reordenação por Drag & Drop (no mural e entre quadros na barra lateral). |
+| **Fluxo de Ideias** | Canvas vetorial interativo de alta definição para mapas mentais e fluxogramas, Hub com visualização em Cards/Lista e CRUD completo, zoom de precisão (15%–350%), minimapa, referências com hyperlink direto para Notas, Listas/Tarefas e Quadros/Stickers (com atualização automática de nomes) e exportação PNG de alta qualidade (2.5x). |
 | **Listas & Tarefas** | Módulo nativo de produtividade pessoal: hierarquia em 4 níveis (Listas ➔ Tarefas ➔ Subtarefas ➔ Múltiplas Notas contextuais), prioridades visuais semânticas (🔥 Alta, ⚠️ Média, ⬇️ Baixa, ➖ Nenhuma), barra de adição rápida (Quick-Add), arquivamento de listas com modo consulta e sincronização em tempo real (Turso LWW). |
 | **Organização** | Pastas/subpastas com cores HSL e 8 ícones personalizáveis, CRUD de etiquetas com 6 ícones, edição de pastas legadas, notas fixadas e Pastas Inteligentes. |
 | **Dados locais & Compliance** | SQLite com WAL, migrações automáticas, lixeira, auditoria de integridade (`EnsureDataCompliance`) e autorreparo em Preferências. |
-| **Portabilidade & PDF** | Exportação de artigos acadêmicos no padrão ABNT (.docx com NBR 14724/6024/10520/6023), importação/exportação Markdown (fórmulas, callouts, toggles e mermaid), exportação HTML estática, motor `@media print` de alta fidelidade com prevenção de quebras em diagramas/fórmulas e salvamento PDF nativo. |
-| **Experiência** | Tema claro/escuro com contraste balanceado (WCAG AA), barra de título desktop, layout responsivo de três painéis para notas e tarefas, full-width para stickers, árvore de navegação alinhada e modais nativos centralizados. |
-| **Sync Nuvem** | Lógica segura de Tombstones (evitando retorno de itens deletados), Outbox local, transações remotas, snapshots por cursor, sync automático com indicador de nuvem animado, resolução local/remota/merge e sync de tarefas e pastas com Last-Write-Wins. |
+| **Portabilidade & PDF** | Emissão vetorial nativa de **PDF (`.pdf`)** 100% offline, exportação de artigos acadêmicos no padrão ABNT (`.docx` com NBR 14724/6024/10520/6023), importação/exportação Markdown, HTML estático e pacote universal **Portable Multiverse** para pendrives. |
+| **Experiência** | Tema claro/escuro com contraste balanceado (WCAG AA), Modo Foco em janela independente (Picture-in-Picture com Always-on-Top), dropdowns estilizados e suaves em toda a interface (`CustomSelect`), barra de título desktop, árvore de navegação alinhada e modais nativos centralizados. |
+| **Sync Nuvem** | Lógica segura de Tombstones (evitando retorno de itens deletados), Outbox local, transações remotas, snapshots por cursor, sync automático com indicador de nuvem animado, resolução local/remota/merge e sync de tarefas, pastas e fluxos de ideias com Last-Write-Wins. |
 
-> Confira a [matriz de funcionalidades](docs/feature-status.md) para status detalhado de recursos implementados, beta e planejados.
+> Confira a [matriz de funcionalidades](docs/feature-status.md) e o [Guia de Uso Completo](https://vitorkrewer.github.io/magnetares-notes/guia-usuario.html) para detalhes dos recursos.
+
+### Fluxo de Ideias — Mapas Mentais & Diagramas (v2.0.0)
+
+A partir da versão **2.0.0**, o Magnetares Notes inaugura o módulo **Fluxo de Ideias** logo abaixo de Stickers na barra lateral (**Meus Fluxos**):
+- **Hub com Visualização Dupla & CRUD Completo:** Alterne entre visualização em **Cards** e **Lista** (com preferência salva), busque instantaneamente e crie, edite, duplique ou exclua fluxos com paleta de 10 cores e 8 ícones.
+- **Canvas Vetorial de Alta Definição:** Ao clicar em um fluxo, o mapa mental abre na mesma tela com **zoom de precisão (15% a 350%)** centrado no cursor, pan fluido (`Espaço + arrastar` ou ferramenta Mão), grade escalável, Snap-to-Grid (`16px`), minimapa interativo e histórico **Desfazer / Refazer (`Ctrl+Z` / `Ctrl+Y`)**.
+- **6 Tipos de Nós & Conexões Inteligentes:** Crie blocos de **Tópico Central**, **Ideia / Conceito**, **Decisão**, **Anotação Rápida**, **Grupo / Contêiner** redimensionável e **Referência Magnetares**, conectados por curvas **Bezier**, **Degrau Ortogonal** ou **Linha Reta** com setas, modo animado e rótulos editáveis.
+- **Referências Cruzadas com Hyperlink Direto:** Vincule qualquer **Nota**, **Lista de Tarefas**, **Tarefa individual**, **Quadro de Stickers** ou **Sticker individual** ao mapa mental; clique em **Abrir ↗** para navegar diretamente até o item, com sincronização automática de nomes caso o item original seja renomeado.
+- **Exportação em PNG de Alta Qualidade:** Renderização vetorial offscreen em alta resolução (`2.5x`) respeitando os temas Claro e Escuro com salvamento nativo no sistema.
 
 ### Listas & Tarefas (v1.8.0)
 
@@ -110,6 +120,7 @@ Baixe a versão adequada na página de [Releases](https://github.com/vitorkrewer
 | Windows | `Magnetares-Notes-Windows-x64.exe` |
 | Linux | `Magnetares-Notes-Linux-x64.AppImage`, `Magnetares-Notes-Linux-x64.deb`, `Magnetares-Notes-Linux-x64.tar.gz` |
 | macOS | `Magnetares-Notes-macOS-universal.zip` |
+| Multiverse (Portátil) | `Magnetares-Notes-Multiverse-Portable.zip` (Windows, Linux e macOS em um único pendrive com `./data/magnetares.db`) |
 
 Na primeira abertura, o Magnetares cria seu banco local automaticamente. Não há necessidade de conta, internet ou configuração para começar a escrever.
 

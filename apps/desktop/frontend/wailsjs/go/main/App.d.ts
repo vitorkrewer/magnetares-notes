@@ -14,6 +14,8 @@ export function CreateDatabaseBackup():Promise<string>;
 
 export function DeleteFolder(arg1:string):Promise<void>;
 
+export function DeleteIdeaFlow(arg1:string):Promise<void>;
+
 export function DeleteNote(arg1:string):Promise<void>;
 
 export function DeleteSmartFolder(arg1:string):Promise<void>;
@@ -30,13 +32,19 @@ export function DeleteTask(arg1:string):Promise<void>;
 
 export function DeleteTaskList(arg1:string):Promise<void>;
 
+export function DuplicateIdeaFlow(arg1:string):Promise<main.IdeaFlow>;
+
 export function EmptyDeletedNotes():Promise<void>;
+
+export function ExportIdeaFlowPNG(arg1:string,arg2:string):Promise<string>;
 
 export function ExportNoteFile(arg1:string,arg2:string):Promise<string>;
 
 export function GetDatabasePath():Promise<string>;
 
 export function GetFocusNoteID():Promise<string>;
+
+export function GetIdeaFlowGraph(arg1:string):Promise<main.IdeaFlowGraph>;
 
 export function GetNote(arg1:string):Promise<main.Note>;
 
@@ -57,6 +65,8 @@ export function LaunchFocusWindow(arg1:string):Promise<void>;
 export function ListArchivedTaskLists():Promise<Array<main.TaskList>>;
 
 export function ListDeletedNotes():Promise<Array<main.Note>>;
+
+export function ListIdeaFlows():Promise<Array<main.IdeaFlow>>;
 
 export function ListNavigation():Promise<main.Navigation>;
 
@@ -99,6 +109,10 @@ export function RunComplianceAudit():Promise<main.ComplianceReport>;
 export function SaveAutoSyncInterval(arg1:number):Promise<main.SyncConfiguration>;
 
 export function SaveFolder(arg1:main.Folder):Promise<main.Folder>;
+
+export function SaveIdeaFlow(arg1:main.SaveIdeaFlowInput):Promise<main.IdeaFlow>;
+
+export function SaveIdeaFlowGraph(arg1:main.SaveIdeaFlowGraphInput):Promise<main.IdeaFlowGraph>;
 
 export function SaveNote(arg1:main.Note):Promise<main.Note>;
 
