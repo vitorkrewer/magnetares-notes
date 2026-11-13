@@ -52,31 +52,42 @@ ShowUnInstDetails show
 !insertmacro MUI_LANGUAGE "English"
 
 Section "Aplicativo Principal" SEC01
+  SetShellVarContext all
   SetOutPath "$INSTDIR"
   SetOverwrite on
   File "/oname=Magnetares Notes.exe" "${EXE_SOURCE}"
+  File "/oname=icon.ico" "${ICON_SOURCE}"
 
-  CreateDirectory "$SMPROGRAMS\${PRODUCT_NAME}"
-  CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk" "$INSTDIR\Magnetares Notes.exe" "" "$INSTDIR\Magnetares Notes.exe" 0
-  CreateShortCut "$DESKTOP\${PRODUCT_NAME}.lnk" "$INSTDIR\Magnetares Notes.exe" "" "$INSTDIR\Magnetares Notes.exe" 0
+  ; Limpa eventual subpasta legada e cria atalho direto no Menu Iniciar e Área de Trabalho
+  Delete "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk"
+  RMDir "$SMPROGRAMS\${PRODUCT_NAME}"
+  CreateShortCut "$SMPROGRAMS\${PRODUCT_NAME}.lnk" "$INSTDIR\Magnetares Notes.exe" "" "$INSTDIR\icon.ico" 0
+  CreateShortCut "$DESKTOP\${PRODUCT_NAME}.lnk" "$INSTDIR\Magnetares Notes.exe" "" "$INSTDIR\icon.ico" 0
 SectionEnd
 
 Section -Post
   WriteUninstaller "$INSTDIR\uninstall.exe"
   WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\Magnetares Notes.exe"
+  WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "Path" "$INSTDIR"
   WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayName" "${PRODUCT_NAME}"
   WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "UninstallString" '"$INSTDIR\uninstall.exe"'
-  WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\Magnetares Notes.exe"
+  WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "QuietUninstallString" '"$INSTDIR\uninstall.exe" /S'
+  WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\icon.ico"
   WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
   WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
   WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
+  WriteRegDWORD HKLM "${PRODUCT_UNINST_KEY}" "NoModify" 1
+  WriteRegDWORD HKLM "${PRODUCT_UNINST_KEY}" "NoRepair" 1
 SectionEnd
 
 Section Uninstall
+  SetShellVarContext all
   Delete "$DESKTOP\${PRODUCT_NAME}.lnk"
+  Delete "$SMPROGRAMS\${PRODUCT_NAME}.lnk"
   Delete "$SMPROGRAMS\${PRODUCT_NAME}\${PRODUCT_NAME}.lnk"
   RMDir "$SMPROGRAMS\${PRODUCT_NAME}"
   Delete "$INSTDIR\Magnetares Notes.exe"
+  Delete "$INSTDIR\icon.ico"
   Delete "$INSTDIR\uninstall.exe"
   RMDir "$INSTDIR"
 

@@ -1578,7 +1578,7 @@ button {
 
 .feature-detail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
   gap: 24px;
 }
 
@@ -1589,6 +1589,8 @@ button {
   padding: 30px;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  overflow-wrap: break-word;
   transition: all 0.22s ease;
 }
 
@@ -1602,6 +1604,8 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 18px;
 }
 
@@ -1659,17 +1663,29 @@ button {
 }
 
 .feature-detail-card ul li {
+  position: relative;
+  padding-left: 18px;
   font-size: 13px;
+  line-height: 1.55;
   color: #c0c6e8;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .feature-detail-card ul li::before {
   content: "✦";
+  position: absolute;
+  left: 0;
+  top: 2px;
   color: var(--blue-400);
   font-size: 11px;
+  line-height: 1.4;
+}
+
+.feature-detail-card code {
+  font-size: 12px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e8fc;
 }
 
 /* =========================================================

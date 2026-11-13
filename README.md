@@ -1,7 +1,7 @@
 # Magnetares Notes
 
 <p align="center">
-  <img src="site/assets/magnetar-icon.png" alt="Ícone do Magnetares Notes" width="132" />
+  <img src="site/assets/img/magnetar-icon.png" alt="Ícone do Magnetares Notes" width="132" />
 </p>
 
 <p align="center">
@@ -211,7 +211,7 @@ Leia [Segurança](docs/security.md) e [API e sincronização](docs/api-and-sync.
 
 - Tags `vMAJOR.MINOR.PATCH` disparam builds para Windows, Linux e macOS.
 - `site/` é publicado no GitHub Pages quando `main` recebe alterações nessa pasta.
-- Atualize [CHANGELOG.md](CHANGELOG.md) e os links de download em `site/script.js` antes de publicar uma versão.
+- Atualize [CHANGELOG.md](CHANGELOG.md) e os links de download em `site/assets/js/script.js` antes de publicar uma versão.
 
 O checklist completo está em [Release e deploy](docs/release-and-deployment.md).
 

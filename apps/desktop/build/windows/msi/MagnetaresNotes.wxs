@@ -22,9 +22,7 @@
       <Directory Id="INSTALLFOLDER" Name="Magnetares Notes" />
     </StandardDirectory>
 
-    <StandardDirectory Id="ProgramMenuFolder">
-      <Directory Id="ApplicationProgramsFolder" Name="Magnetares Notes" />
-    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
 
     <StandardDirectory Id="DesktopFolder" />
 
@@ -40,9 +38,12 @@
       <Component Id="MainExecutable" Guid="D1C42E8F-7290-4A3F-8B6E-19A5D8F40211">
         <File Id="MagnetaresNotesExe" Source="$(var.ExePath)" Name="Magnetares Notes.exe" KeyPath="yes" />
       </Component>
+      <Component Id="MainIcon" Guid="C7E21B09-4A18-4D92-A315-8E6F90C241B0">
+        <File Id="MagnetaresIconFile" Source="$(var.IconPath)" Name="icon.ico" KeyPath="yes" />
+      </Component>
     </ComponentGroup>
 
-    <Component Id="ApplicationShortcut" Directory="ApplicationProgramsFolder" Guid="E49B32A1-6C77-4D81-B2A4-5F9E01C78422">
+    <Component Id="ApplicationShortcut" Directory="ProgramMenuFolder" Guid="E49B32A1-6C77-4D81-B2A4-5F9E01C78422">
       <Shortcut
         Id="StartMenuShortcut"
         Name="Magnetares Notes"
@@ -50,8 +51,7 @@
         Target="[INSTALLFOLDER]Magnetares Notes.exe"
         WorkingDirectory="INSTALLFOLDER"
         Icon="MagnetaresAppIcon.ico" />
-      <RemoveFolder Id="CleanUpStartMenuFolder" On="uninstall" />
-      <RegistryValue Root="HKCU" Key="Software\Magnetares\MagnetaresNotes" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+      <RegistryValue Root="HKLM" Key="Software\Magnetares\MagnetaresNotes" Name="start_menu_shortcut" Type="integer" Value="1" KeyPath="yes" />
     </Component>
 
     <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="F81D9C04-2E3B-4A95-8C12-90B7E3A61533">
@@ -62,7 +62,7 @@
         Target="[INSTALLFOLDER]Magnetares Notes.exe"
         WorkingDirectory="INSTALLFOLDER"
         Icon="MagnetaresAppIcon.ico" />
-      <RegistryValue Root="HKCU" Key="Software\Magnetares\MagnetaresNotes" Name="desktop_shortcut" Type="integer" Value="1" KeyPath="yes" />
+      <RegistryValue Root="HKLM" Key="Software\Magnetares\MagnetaresNotes" Name="desktop_shortcut" Type="integer" Value="1" KeyPath="yes" />
     </Component>
   </Fragment>
 </Wix>
