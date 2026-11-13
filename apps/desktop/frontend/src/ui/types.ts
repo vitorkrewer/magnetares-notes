@@ -199,8 +199,49 @@ export type NavigationRecord = {
 };
 
 export type NoteQuery = {
-  kind: "all" | "deleted" | "pinned" | "tag" | "folder" | "smart" | "stickerBoard" | "taskList" | "ideaFlows" | "ideaFlow";
+  kind: "all" | "deleted" | "pinned" | "tag" | "folder" | "smart" | "stickerBoard" | "taskList" | "ideaFlows" | "ideaFlow" | "connections";
   id?: string;
+};
+
+export type ConnectionNoteItem = {
+  id: string;
+  title: string;
+  noteType: string;
+  language: string;
+  folderId: string;
+  folder: string;
+  pinned: boolean;
+  tags: string[];
+  updatedAt: string;
+};
+
+export type ConnectionNoteLink = {
+  sourceNoteId: string;
+  targetNoteId: string;
+  label: string;
+};
+
+export type ConnectionTagItem = {
+  id: string;
+  name: string;
+  normalizedName: string;
+  icon: string;
+  noteCount: number;
+};
+
+export type ConnectionsGraphPayload = {
+  notes: ConnectionNoteItem[];
+  links: ConnectionNoteLink[];
+  tags: ConnectionTagItem[];
+  folders: FolderRecord[];
+};
+
+export type NoteConnectionSummary = {
+  noteId: string;
+  title: string;
+  folder: string;
+  noteType: string;
+  direction: "outgoing" | "incoming";
 };
 
 export type SyncConflict = {
@@ -381,6 +422,8 @@ export type DesktopBridge = {
   GetIdeaFlowGraph?: (flowId: string) => Promise<IdeaFlowGraphRecord>;
   SaveIdeaFlowGraph?: (input: SaveIdeaFlowGraphInput) => Promise<IdeaFlowGraphRecord>;
   ExportIdeaFlowPNG?: (suggestedName: string, base64PNG: string) => Promise<string>;
+  GetConnectionsGraph?: () => Promise<ConnectionsGraphPayload>;
+  GetNoteConnections?: (noteID: string) => Promise<NoteConnectionSummary[]>;
   GetAppInfo?: () => Promise<AppInfoRecord>;
   CheckForUpdates?: () => Promise<UpdateCheckResultRecord>;
   OpenExternalURL?: (url: string) => Promise<void>;

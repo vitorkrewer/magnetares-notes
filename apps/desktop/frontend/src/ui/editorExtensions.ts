@@ -19,6 +19,7 @@ import { MathInlineNode, MathBlockNode } from "./MathNodes";
 import { CalloutNode } from "./CalloutNode";
 import { ToggleNode } from "./ToggleNode";
 import { MermaidNode } from "./MermaidNode";
+import { NoteLinkNode } from "./NoteLinkNode";
 
 export const editorExtensions = [
   StarterKit.configure({ codeBlock: false }),
@@ -37,6 +38,7 @@ export const editorExtensions = [
   CalloutNode,
   ToggleNode,
   MermaidNode,
+  NoteLinkNode,
   Placeholder.configure({ placeholder: "Comece a escrever" }),
   TextAlign.configure({ types: ["heading", "paragraph"] }),
   TextStyle,

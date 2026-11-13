@@ -90,6 +90,10 @@ export function GetAppInfo() {
   return window['go']['main']['App']['GetAppInfo']();
 }
 
+export function GetConnectionsGraph() {
+  return window['go']['main']['App']['GetConnectionsGraph']();
+}
+
 export function GetDatabasePath() {
   return window['go']['main']['App']['GetDatabasePath']();
 }
@@ -104,6 +108,10 @@ export function GetIdeaFlowGraph(arg1) {
 
 export function GetNote(arg1) {
   return window['go']['main']['App']['GetNote'](arg1);
+}
+
+export function GetNoteConnections(arg1) {
+  return window['go']['main']['App']['GetNoteConnections'](arg1);
 }
 
 export function GetSyncConfiguration() {

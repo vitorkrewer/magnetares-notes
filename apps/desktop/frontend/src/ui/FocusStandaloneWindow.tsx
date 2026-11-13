@@ -6,15 +6,17 @@ import {
   Maximize2, 
   Minimize2, 
   Minus, 
+  Network,
   Pin, 
   PinOff,
   Sparkles, 
   X,
   PictureInPicture2
 } from "lucide-react";
-import { Note } from "./types";
+import { Note, NoteConnectionSummary } from "./types";
 import { StructuredEditor } from "./StructuredEditor";
 import { CodeEditor } from "./CodeEditor";
+import type { NoteLinkMeta } from "./NoteLinkNode";
 
 type FocusStandaloneWindowProps = {
   noteId: string;
@@ -39,6 +41,8 @@ const fullDateLabel = (value: string) => {
 
 export function FocusStandaloneWindow({ noteId }: FocusStandaloneWindowProps) {
   const [note, setNote] = useState<Note | null>(null);
+  const [availableNotes, setAvailableNotes] = useState<NoteLinkMeta[]>([]);
+  const [connections, setConnections] = useState<NoteConnectionSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("saved");
@@ -112,9 +116,21 @@ export function FocusStandaloneWindow({ noteId }: FocusStandaloneWindowProps) {
       try {
         const bridge = window.go?.main?.App;
         if (bridge?.GetNote) {
-          const loaded = await bridge.GetNote(noteId);
+          const [loaded, listed, noteConns] = await Promise.all([
+            bridge.GetNote(noteId),
+            bridge.ListNotes ? bridge.ListNotes().catch(() => []) : Promise.resolve([]),
+            bridge.GetNoteConnections ? bridge.GetNoteConnections(noteId).catch(() => []) : Promise.resolve([]),
+          ]);
           if (isMounted) {
             setNote(loaded);
+            setAvailableNotes(
+              (listed || []).map((item) => ({
+                id: item.id,
+                title: item.title,
+                folder: item.folder,
+              }))
+            );
+            setConnections(noteConns || []);
             latestNoteRef.current = loaded;
             setLoading(false);
           }
@@ -157,6 +173,9 @@ export function FocusStandaloneWindow({ noteId }: FocusStandaloneWindowProps) {
         const saved = await bridge.SaveNote(targetNote);
         setNote((prev) => (prev ? { ...prev, revision: saved.revision, updatedAt: saved.updatedAt } : saved));
         latestNoteRef.current = saved;
+        if (bridge.GetNoteConnections) {
+          bridge.GetNoteConnections(targetNote.id).then(setConnections).catch(() => undefined);
+        }
       }
       setSaveState("saved");
 
@@ -418,11 +437,57 @@ export function FocusStandaloneWindow({ noteId }: FocusStandaloneWindowProps) {
                 key={`focus-standalone-rtf-${note.id}`}
                 value={note.body}
                 readOnly={false}
+                currentNoteId={note.id}
+                availableNotes={availableNotes}
+                onOpenLinkedNote={(linkedId) => {
+                  const bridge = window.go?.main?.App;
+                  if (bridge?.LaunchFocusWindow) {
+                    void bridge.LaunchFocusWindow(linkedId);
+                  } else {
+                    window.open(`?focusNote=${linkedId}`, `magnetares_focus_${linkedId}`, "width=620,height=780");
+                  }
+                }}
                 onChange={(document, text) => handlePatch({ body: document, bodyText: text })}
                 onBlur={() => void flushSave()}
               />
             )}
           </div>
+
+          {connections.length > 0 && (
+            <section className="note-connections-panel focus-connections-panel" aria-label="Conexões desta nota">
+              <div className="note-connections-header">
+                <Network size={14} aria-hidden="true" />
+                <span>Conexões desta nota ({connections.length})</span>
+              </div>
+              <div className="note-connections-chips">
+                {connections.map((conn) => (
+                  <button
+                    key={`${conn.direction}-${conn.noteId}`}
+                    type="button"
+                    className={`note-connection-pill ${conn.direction}`}
+                    onClick={() => {
+                      const bridge = window.go?.main?.App;
+                      if (bridge?.LaunchFocusWindow) {
+                        void bridge.LaunchFocusWindow(conn.noteId);
+                      } else {
+                        window.open(`?focusNote=${conn.noteId}`, `magnetares_focus_${conn.noteId}`, "width=620,height=780");
+                      }
+                    }}
+                    title={
+                      conn.direction === "outgoing"
+                        ? "Link citado nesta nota · Abrir em janela separada"
+                        : "Backlink recebido · Abrir em janela separada"
+                    }
+                  >
+                    <span className="dir-arrow" aria-hidden="true">
+                      {conn.direction === "outgoing" ? "→" : "←"}
+                    </span>
+                    <span>{conn.title || "Sem título"}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
 
           <footer className="print-footer" aria-hidden="true">
             <span className="print-footer-brand">Gerado via Magnetares Notes</span>

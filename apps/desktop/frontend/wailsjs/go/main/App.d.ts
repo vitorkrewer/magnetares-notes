@@ -46,6 +46,8 @@ export function ExportNoteFile(arg1:string,arg2:string):Promise<string>;
 
 export function GetAppInfo():Promise<main.AppInfo>;
 
+export function GetConnectionsGraph():Promise<main.ConnectionsGraphPayload>;
+
 export function GetDatabasePath():Promise<string>;
 
 export function GetFocusNoteID():Promise<string>;
@@ -53,6 +55,8 @@ export function GetFocusNoteID():Promise<string>;
 export function GetIdeaFlowGraph(arg1:string):Promise<main.IdeaFlowGraph>;
 
 export function GetNote(arg1:string):Promise<main.Note>;
+
+export function GetNoteConnections(arg1:string):Promise<Array<main.NoteConnectionSummary>>;
 
 export function GetSyncConfiguration():Promise<main.SyncConfiguration>;
 

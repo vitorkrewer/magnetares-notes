@@ -213,6 +213,17 @@ func (s *noteStore) EnsureDataCompliance() (ComplianceReport, error) {
 	// 14. Fluxo de Ideias: nós/arestas órfãos, zoom/cores/dimensões e metadados de sync
 	s.ensureIdeaFlowCompliance(tx, nowIdeaFlowTimestamp(), &report)
 
+	// 15. Conexões: limpar vínculos inválidos ou órfãos entre notas
+	res, err = tx.Exec(`DELETE FROM note_links
+		WHERE source_note_id = target_note_id
+		   OR source_note_id NOT IN (SELECT id FROM notes)
+		   OR target_note_id NOT IN (SELECT id FROM notes)`)
+	if err == nil {
+		if affected, _ := res.RowsAffected(); affected > 0 {
+			report.Details = append(report.Details, fmt.Sprintf("Removidos %d vínculos órfãos entre notas", affected))
+		}
+	}
+
 	if err := tx.Commit(); err != nil {
 		return report, fmt.Errorf("commit compliance: %w", err)
 	}

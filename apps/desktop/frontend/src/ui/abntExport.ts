@@ -100,6 +100,17 @@ function processInlineRuns(content: JSONContent[], defaultSize = ABNT_CONSTANTS.
           color: "000000"
         })
       );
+    } else if (item.type === "noteLink") {
+      const linkedTitle = (item.attrs?.title as string) || "Nota";
+      runs.push(
+        new TextRun({
+          text: linkedTitle,
+          italics: true,
+          font: ABNT_CONSTANTS.FONT_FAMILY,
+          size: defaultSize,
+          color: "000000"
+        })
+      );
     }
   }
 

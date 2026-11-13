@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { EditorContent, useEditor, type Editor, type JSONContent } from "@tiptap/react";
-import { Bold, Calculator, Code2, Columns3, Highlighter, Italic, Link2, List as BulletList, ListChecks, ListOrdered, Quote, Redo2, Rows3, Table2, Trash2, Undo2, Unlink, AlignLeft, AlignCenter, AlignRight, AlignJustify, Palette, Space, Sigma, BookmarkCheck, ListCollapse, ChevronsUpDown, Workflow } from "lucide-react";
+import { Bold, Calculator, Code2, Columns3, FileText, Highlighter, Italic, Link2, List as BulletList, ListChecks, ListOrdered, Network, Quote, Redo2, Rows3, Table2, Trash2, Undo2, Unlink, AlignLeft, AlignCenter, AlignRight, AlignJustify, Palette, Space, Sigma, BookmarkCheck, ListCollapse, ChevronsUpDown, Workflow } from "lucide-react";
 import { calculateExpression } from "./CalculationNode";
 import { MATH_SNIPPETS, renderKaTeXToString } from "./MathNodes";
 import { MERMAID_TEMPLATES } from "./MermaidNode";
 import { editorExtensions } from "./editorExtensions";
 import { CustomSelect } from "./CustomSelect";
+import type { NoteLinkMeta, NoteLinkStorage } from "./NoteLinkNode";
 
 const PRESET_COLORS = [
   "#000000", "#434343", "#666666", "#999999", "#b7b7b7", "#cccccc", "#d9d9d9", "#efefef", "#f3f3f3", "#ffffff",
@@ -17,6 +18,10 @@ type StructuredEditorProps = {
   readOnly: boolean;
   onChange: (document: string, text: string) => void;
   onBlur: () => void;
+  currentNoteId?: string;
+  availableNotes?: NoteLinkMeta[];
+  onOpenLinkedNote?: (noteId: string, title: string, openSeparateWindow: boolean) => void;
+  onOpenConnectionsPanel?: () => void;
 };
 
 type ToolButtonProps = {
@@ -70,7 +75,15 @@ function ToolButton({ label, active = false, disabled = false, onClick, children
   );
 }
 
-function FormattingToolbar({ editor }: { editor: Editor }) {
+function FormattingToolbar({
+  editor,
+  availableNotes,
+  onOpenConnectionsPanel,
+}: {
+  editor: Editor;
+  availableNotes: NoteLinkMeta[];
+  onOpenConnectionsPanel?: () => void;
+}) {
   const [calculationOpen, setCalculationOpen] = useState(false);
   const [calculationExpression, setCalculationExpression] = useState("");
   const [calculationError, setCalculationError] = useState("");
@@ -82,6 +95,8 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkURL, setLinkURL] = useState("");
   const [linkError, setLinkError] = useState("");
+  const [noteLinkOpen, setNoteLinkOpen] = useState(false);
+  const [noteLinkFilter, setNoteLinkFilter] = useState("");
   const [colorOpen, setColorOpen] = useState(false);
   const [lineHeightOpen, setLineHeightOpen] = useState(false);
   const insideTable = editor.isActive("table");
@@ -330,6 +345,23 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
       )}
       <ToolButton label="Inserir ou editar link" active={editor.isActive("link") || linkOpen} onClick={openLinkEditor}><Link2 aria-hidden="true" /></ToolButton>
       {editor.isActive("link") && <ToolButton label="Remover link" onClick={() => editor.chain().focus().unsetLink().run()}><Unlink aria-hidden="true" /></ToolButton>}
+      <ToolButton
+        label="Vincular nota ou abrir painel de vínculos (ou digite [[)"
+        active={noteLinkOpen}
+        onClick={() => {
+          if (onOpenConnectionsPanel) {
+            onOpenConnectionsPanel();
+            return;
+          }
+          setNoteLinkFilter("");
+          setNoteLinkOpen((open) => !open);
+          setLinkOpen(false);
+          setMathOpen(false);
+          setCalculationOpen(false);
+        }}
+      >
+        <Network aria-hidden="true" />
+      </ToolButton>
       <span className="toolbar-separator" />
       <ToolButton label="Lista" active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()}><BulletList aria-hidden="true" /></ToolButton>
       <ToolButton label="Lista numerada" active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}><ListOrdered aria-hidden="true" /></ToolButton>
@@ -482,13 +514,156 @@ function FormattingToolbar({ editor }: { editor: Editor }) {
           </div>
         </form>
       )}
+      {noteLinkOpen && (
+        <div className="note-link-toolbar-popover" role="dialog" aria-label="Vincular nota">
+          <div className="note-link-popover-head">
+            <label htmlFor="note-link-search">Vincular outra nota (ou digite [[ no texto)</label>
+            <button type="button" className="note-link-close-btn" onClick={() => setNoteLinkOpen(false)}>
+              Fechar
+            </button>
+          </div>
+          <input
+            id="note-link-search"
+            autoFocus
+            value={noteLinkFilter}
+            onChange={(event) => setNoteLinkFilter(event.target.value)}
+            onKeyDown={(event) => event.key === "Escape" && setNoteLinkOpen(false)}
+            placeholder="Buscar nota pelo título ou pasta..."
+          />
+          <div className="note-link-picker-list">
+            {availableNotes
+              .filter((item) => {
+                const needle = noteLinkFilter.trim().toLocaleLowerCase();
+                if (!needle) return true;
+                return (
+                  (item.title || "Sem título").toLocaleLowerCase().includes(needle) ||
+                  (item.folder || "").toLocaleLowerCase().includes(needle)
+                );
+              })
+              .slice(0, 20)
+              .map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className="note-link-picker-item"
+                  onClick={() => {
+                    editor
+                      .chain()
+                      .focus()
+                      .insertContent([
+                        { type: "noteLink", attrs: { noteId: item.id, title: item.title || "Sem título" } },
+                        { type: "text", text: " " },
+                      ])
+                      .run();
+                    setNoteLinkOpen(false);
+                    setNoteLinkFilter("");
+                  }}
+                >
+                  <FileText size={13} aria-hidden="true" />
+                  <span className="note-link-picker-title">{item.title || "Sem título"}</span>
+                  {item.folder && <span className="note-link-picker-folder">{item.folder}</span>}
+                </button>
+              ))}
+            {availableNotes.length === 0 && (
+              <p className="note-link-picker-empty">Crie mais uma nota para vincular entre si.</p>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }
 
-export function StructuredEditor({ value, readOnly, onChange, onBlur }: StructuredEditorProps) {
+type NoteLinkTriggerState = {
+  from: number;
+  to: number;
+  query: string;
+  top: number;
+  left: number;
+};
+
+function detectNoteLinkTrigger(currentEditor: Editor): NoteLinkTriggerState | null {
+  const { selection } = currentEditor.state;
+  if (!selection.empty || currentEditor.isActive("codeBlock")) return null;
+  const { $from } = selection;
+  const textBefore = $from.parent.textBetween(0, $from.parentOffset, undefined, "\ufffc");
+  const match = textBefore.match(/(?:^|\s)\[\[([^[\]\n]{0,60})$/);
+  if (!match) return null;
+  const query = match[1] ?? "";
+  const triggerLen = query.length + 2; // "[[" + query
+  const to = $from.pos;
+  const from = to - triggerLen;
+  if (from < 0) return null;
+
+  try {
+    const coords = currentEditor.view.coordsAtPos(to);
+    return {
+      from,
+      to,
+      query,
+      top: Math.min(window.innerHeight - 240, coords.bottom + 6),
+      left: Math.min(window.innerWidth - 310, Math.max(12, coords.left)),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function StructuredEditor({
+  value,
+  readOnly,
+  onChange,
+  onBlur,
+  currentNoteId,
+  availableNotes = [],
+  onOpenLinkedNote,
+  onOpenConnectionsPanel,
+}: StructuredEditorProps) {
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+
+  const linkableNotes = useMemo(
+    () => availableNotes.filter((item) => item.id !== currentNoteId),
+    [availableNotes, currentNoteId]
+  );
+
+  const availableMapRef = useRef<Map<string, NoteLinkMeta>>(new Map());
+  useEffect(() => {
+    const map = new Map<string, NoteLinkMeta>();
+    for (const item of availableNotes) {
+      map.set(item.id, item);
+    }
+    availableMapRef.current = map;
+  }, [availableNotes]);
+
+  const onOpenLinkedNoteRef = useRef(onOpenLinkedNote);
+  onOpenLinkedNoteRef.current = onOpenLinkedNote;
+
+  const [linkTrigger, setLinkTrigger] = useState<NoteLinkTriggerState | null>(null);
+  const [triggerIndex, setTriggerIndex] = useState(0);
+
+  const triggerSuggestions = useMemo(() => {
+    if (!linkTrigger) return [];
+    const needle = linkTrigger.query.trim().toLocaleLowerCase();
+    return linkableNotes
+      .filter((item) => {
+        if (!needle) return true;
+        return (
+          (item.title || "Sem título").toLocaleLowerCase().includes(needle) ||
+          (item.folder || "").toLocaleLowerCase().includes(needle)
+        );
+      })
+      .slice(0, 8);
+  }, [linkTrigger, linkableNotes]);
+
+  const triggerRef = useRef<NoteLinkTriggerState | null>(null);
+  triggerRef.current = linkTrigger;
+  const suggestionsRef = useRef<NoteLinkMeta[]>([]);
+  suggestionsRef.current = triggerSuggestions;
+  const triggerIndexRef = useRef(0);
+  triggerIndexRef.current = triggerIndex;
+
+  const insertTriggeredNoteRef = useRef<(item: NoteLinkMeta) => void>(() => {});
 
   const editor = useEditor({
     extensions: editorExtensions,
@@ -496,6 +671,38 @@ export function StructuredEditor({ value, readOnly, onChange, onBlur }: Structur
     editable: !readOnly,
     immediatelyRender: false,
     editorProps: {
+      handleKeyDown: (_view, event) => {
+        const activeTrigger = triggerRef.current;
+        const list = suggestionsRef.current;
+        if (!activeTrigger) return false;
+
+        if (event.key === "Escape") {
+          event.preventDefault();
+          setLinkTrigger(null);
+          return true;
+        }
+        if (list.length === 0) return false;
+
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          setTriggerIndex((prev) => (prev + 1) % list.length);
+          return true;
+        }
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          setTriggerIndex((prev) => (prev - 1 + list.length) % list.length);
+          return true;
+        }
+        if (event.key === "Enter" || event.key === "Tab") {
+          event.preventDefault();
+          const chosen = list[Math.min(triggerIndexRef.current, list.length - 1)];
+          if (chosen) {
+            insertTriggeredNoteRef.current(chosen);
+          }
+          return true;
+        }
+        return false;
+      },
       handlePaste: (view, event) => {
         const text = event.clipboardData?.getData("text/plain");
         const html = event.clipboardData?.getData("text/html");
@@ -520,19 +727,55 @@ export function StructuredEditor({ value, readOnly, onChange, onBlur }: Structur
           }
         }
         return false;
-      }
+      },
     },
     onUpdate: ({ editor: currentEditor }) => {
+      const nextTrigger = detectNoteLinkTrigger(currentEditor);
+      setLinkTrigger(nextTrigger);
+      setTriggerIndex(0);
       onChangeRef.current(
         JSON.stringify(currentEditor.getJSON()),
         currentEditor.getText({ blockSeparator: "\n" })
       );
-    }
+    },
+    onSelectionUpdate: ({ editor: currentEditor }) => {
+      const nextTrigger = detectNoteLinkTrigger(currentEditor);
+      setLinkTrigger(nextTrigger);
+    },
   });
+
+  insertTriggeredNoteRef.current = (item: NoteLinkMeta) => {
+    const activeTrigger = triggerRef.current;
+    if (!editor || !activeTrigger) return;
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(
+        { from: activeTrigger.from, to: activeTrigger.to },
+        [
+          { type: "noteLink", attrs: { noteId: item.id, title: item.title || "Sem título" } },
+          { type: "text", text: " " },
+        ]
+      )
+      .run();
+    setLinkTrigger(null);
+    setTriggerIndex(0);
+  };
+
+  useEffect(() => {
+    if (!editor) return;
+    const storage = (editor.storage as { noteLink?: NoteLinkStorage }).noteLink;
+    if (!storage) return;
+    storage.resolveNoteMeta = (noteId: string) => availableMapRef.current.get(noteId);
+    storage.onOpenNoteLink = (noteId: string, title: string, openSeparateWindow: boolean) => {
+      onOpenLinkedNoteRef.current?.(noteId, title, openSeparateWindow);
+    };
+  }, [editor]);
 
   useEffect(() => {
     if (!editor) return;
     editor.setEditable(!readOnly);
+    if (readOnly) setLinkTrigger(null);
   }, [editor, readOnly]);
 
   useEffect(() => {
@@ -549,12 +792,95 @@ export function StructuredEditor({ value, readOnly, onChange, onBlur }: Structur
     return () => { cancelled = true; };
   }, [editor, value]);
 
+  useEffect(() => {
+    if (!editor) return;
+    const handleExternalInsertLink = (event: Event) => {
+      const custom = event as CustomEvent<{
+        editorNoteId?: string;
+        noteId: string;
+        title: string;
+      }>;
+      if (!custom.detail?.noteId || readOnly) return;
+      if (custom.detail.editorNoteId && custom.detail.editorNoteId !== currentNoteId) {
+        return;
+      }
+      editor
+        .chain()
+        .focus("end")
+        .insertContent([
+          {
+            type: "noteLink",
+            attrs: {
+              noteId: custom.detail.noteId,
+              title: custom.detail.title || "Sem título",
+            },
+          },
+          { type: "text", text: " " },
+        ])
+        .run();
+    };
+    window.addEventListener("magnetares:insert-note-link", handleExternalInsertLink);
+    return () => {
+      window.removeEventListener("magnetares:insert-note-link", handleExternalInsertLink);
+    };
+  }, [editor, readOnly, currentNoteId]);
+
   if (!editor) return null;
 
   return (
-    <div className={`structured-editor ${readOnly ? "read-only" : ""}`} onBlur={onBlur}>
-      {!readOnly && <FormattingToolbar editor={editor} />}
+    <div
+      className={`structured-editor ${readOnly ? "read-only" : ""}`}
+      onBlur={() => {
+        setTimeout(() => setLinkTrigger(null), 150);
+        onBlur();
+      }}
+    >
+      {!readOnly && (
+        <FormattingToolbar
+          editor={editor}
+          availableNotes={linkableNotes}
+          onOpenConnectionsPanel={onOpenConnectionsPanel}
+        />
+      )}
       <EditorContent editor={editor} />
+      {!readOnly && linkTrigger && (
+        <div
+          className="note-link-autocomplete"
+          style={{ top: `${linkTrigger.top}px`, left: `${linkTrigger.left}px` }}
+          role="listbox"
+          aria-label="Sugestões de vínculo entre notas"
+        >
+          <div className="note-link-autocomplete-header">
+            <Network size={12} aria-hidden="true" />
+            <span>Vincular nota</span>
+          </div>
+          {triggerSuggestions.length > 0 ? (
+            triggerSuggestions.map((item, idx) => (
+              <button
+                key={item.id}
+                type="button"
+                role="option"
+                aria-selected={idx === triggerIndex}
+                className={`note-link-autocomplete-item ${idx === triggerIndex ? "active" : ""}`}
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  insertTriggeredNoteRef.current(item);
+                }}
+              >
+                <FileText size={13} aria-hidden="true" />
+                <span className="note-link-picker-title">{item.title || "Sem título"}</span>
+                {item.folder && <span className="note-link-picker-folder">{item.folder}</span>}
+              </button>
+            ))
+          ) : (
+            <div className="note-link-autocomplete-empty">
+              {linkableNotes.length === 0
+                ? "Nenhuma outra nota disponível para vincular"
+                : "Nenhuma nota encontrada"}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -61,7 +61,7 @@ func main() {
 		windowHeight = 780
 		minWidth = 420
 		minHeight = 500
-		winOpts.WebviewUserDataPath = filepath.Join(os.TempDir(), "magnetares_focus_webview")
+		winOpts.WebviewUserDataPath = filepath.Join(os.TempDir(), "magnetares_focus_webview_"+focusNoteID)
 	}
 
 	err = wails.Run(&options.App{

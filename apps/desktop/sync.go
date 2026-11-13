@@ -1497,6 +1497,7 @@ func (s *noteStore) applyRemoteNote(remote syncRemoteNote) (bool, error) {
 
 	if err == nil {
 		_, _ = s.setNoteTags(remote.ID, remote.Tags)
+		_ = s.syncNoteLinksFromBody(remote.ID, remote.Body)
 		_, _ = s.db.Exec("UPDATE notes SET sync_state = 'clean', pending_mutation_id = NULL WHERE id = ?", remote.ID)
 	}
 

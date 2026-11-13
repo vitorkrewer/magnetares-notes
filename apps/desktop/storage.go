@@ -573,6 +573,10 @@ func (s *noteStore) saveNote(note Note) (Note, error) {
 		return Note{}, fmt.Errorf("save note: %w", err)
 	}
 
+	if err := replaceNoteLinksTx(tx, note.ID, extractNoteLinks(note.Body)); err != nil {
+		return Note{}, fmt.Errorf("save note links: %w", err)
+	}
+
 	if _, err := commitLocalOp(tx, "note", note.ID, "update", note, nextRev); err != nil {
 		return Note{}, fmt.Errorf("commit outbox op: %w", err)
 	}
@@ -648,6 +652,7 @@ func (s *noteStore) permanentlyDeleteNote(id string) error {
 		if _, err := tx.Exec("DELETE FROM note_conflicts WHERE note_id = ?", id); err != nil { return err }
 		if _, err := tx.Exec("DELETE FROM sync_outbox WHERE entity_id = ?", id); err != nil { return err }
 		if _, err := tx.Exec("DELETE FROM note_tags WHERE note_id = ?", id); err != nil { return err }
+		if _, err := tx.Exec("DELETE FROM note_links WHERE source_note_id = ? OR target_note_id = ?", id, id); err != nil { return err }
 		if _, err := tx.Exec("DELETE FROM notes WHERE id = ?", id); err != nil { return err }
 	} else if err == nil {
 		if _, err := tx.Exec(`UPDATE notes SET folder_id = 'tombstone', deleted_at = COALESCE(deleted_at, ?), updated_at = ? WHERE id = ?`, time.Now().UTC().UnixMilli(), time.Now().UTC().UnixMilli(), id); err != nil { return err }
@@ -667,6 +672,9 @@ func (s *noteStore) emptyDeletedNotes() error {
 		return err
 	}
 	if _, err := tx.Exec("DELETE FROM note_tags WHERE note_id NOT IN (SELECT id FROM notes)"); err != nil {
+		return err
+	}
+	if _, err := tx.Exec("DELETE FROM note_links WHERE source_note_id NOT IN (SELECT id FROM notes) OR target_note_id NOT IN (SELECT id FROM notes)"); err != nil {
 		return err
 	}
 	if _, err := tx.Exec("DELETE FROM note_conflicts WHERE note_id NOT IN (SELECT id FROM notes)"); err != nil {

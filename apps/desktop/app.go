@@ -123,6 +123,14 @@ func (a *App) QueryNotes(query NoteQuery) ([]Note, error) {
 	return a.store.queryNotes(query)
 }
 
+func (a *App) GetConnectionsGraph() (ConnectionsGraphPayload, error) {
+	return a.store.getConnectionsGraph()
+}
+
+func (a *App) GetNoteConnections(noteID string) ([]NoteConnectionSummary, error) {
+	return a.store.getNoteConnections(noteID)
+}
+
 func (a *App) SaveSmartFolder(smart SmartFolder) (SmartFolder, error) {
 	return a.store.saveSmartFolder(smart)
 }

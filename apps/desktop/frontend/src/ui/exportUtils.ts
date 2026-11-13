@@ -143,6 +143,9 @@ function inlineToMarkdown(node: JSONContent): string {
   if (node.type === "mathInline") {
     return `$${node.attrs?.latex || ""}$`;
   }
+  if (node.type === "noteLink") {
+    return `[[${node.attrs?.title || "Nota"}]]`;
+  }
 
   let text = node.text || "";
   if (!text) return "";
@@ -297,6 +300,13 @@ function inlineToHTML(node: JSONContent): string {
     const mathHtml = katex.renderToString(latex, { displayMode: false, throwOnError: false });
     return `<span class="math-inline" data-latex="${encodeURIComponent(latex)}">${mathHtml}</span>`;
   }
+  if (node.type === "noteLink") {
+    const safeTitle = String(node.attrs?.title || "Nota")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    return `<span class="note-link-export">[[${safeTitle}]]</span>`;
+  }
 
   let text = node.text || "";
   if (!text) return "";
@@ -325,6 +335,9 @@ export function tiptapJsonToPlainText(node: JSONContent): string {
   }
   if (node.type === "mathInline") {
     return `$${node.attrs?.latex || ""}$`;
+  }
+  if (node.type === "noteLink") {
+    return `[[${node.attrs?.title || "Nota"}]]`;
   }
   if (node.type === "toggle") {
     const title = node.attrs?.title || "";

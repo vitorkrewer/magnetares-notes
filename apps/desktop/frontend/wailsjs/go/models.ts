@@ -62,6 +62,128 @@ export namespace main {
 	        this.auditedAt = source["auditedAt"];
 	    }
 	}
+	export class ConnectionNoteItem {
+	    id: string;
+	    title: string;
+	    noteType: string;
+	    language: string;
+	    folderId: string;
+	    folder: string;
+	    pinned: boolean;
+	    tags: string[];
+	    updatedAt: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ConnectionNoteItem(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.title = source["title"];
+	        this.noteType = source["noteType"];
+	        this.language = source["language"];
+	        this.folderId = source["folderId"];
+	        this.folder = source["folder"];
+	        this.pinned = source["pinned"];
+	        this.tags = source["tags"];
+	        this.updatedAt = source["updatedAt"];
+	    }
+	}
+	export class ConnectionNoteLink {
+	    sourceNoteId: string;
+	    targetNoteId: string;
+	    label: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new ConnectionNoteLink(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.sourceNoteId = source["sourceNoteId"];
+	        this.targetNoteId = source["targetNoteId"];
+	        this.label = source["label"];
+	    }
+	}
+	export class ConnectionTagItem {
+	    id: string;
+	    name: string;
+	    normalizedName: string;
+	    icon: string;
+	    noteCount: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new ConnectionTagItem(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.normalizedName = source["normalizedName"];
+	        this.icon = source["icon"];
+	        this.noteCount = source["noteCount"];
+	    }
+	}
+	export class Folder {
+	    id: string;
+	    name: string;
+	    parentId?: string;
+	    color: string;
+	    icon: string;
+	    noteCount: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new Folder(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.id = source["id"];
+	        this.name = source["name"];
+	        this.parentId = source["parentId"];
+	        this.color = source["color"];
+	        this.icon = source["icon"];
+	        this.noteCount = source["noteCount"];
+	    }
+	}
+	export class ConnectionsGraphPayload {
+	    notes: ConnectionNoteItem[];
+	    links: ConnectionNoteLink[];
+	    tags: ConnectionTagItem[];
+	    folders: Folder[];
+	
+	    static createFrom(source: any = {}) {
+	        return new ConnectionsGraphPayload(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.notes = this.convertValues(source["notes"], ConnectionNoteItem);
+	        this.links = this.convertValues(source["links"], ConnectionNoteLink);
+	        this.tags = this.convertValues(source["tags"], ConnectionTagItem);
+	        this.folders = this.convertValues(source["folders"], Folder);
+	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 	export class DatabaseTargetInfo {
 	    currentPath: string;
 	    resolvedPath: string;
@@ -90,28 +212,7 @@ export namespace main {
 	        this.isPortable = source["isPortable"];
 	    }
 	}
-	export class Folder {
-	    id: string;
-	    name: string;
-	    parentId?: string;
-	    color: string;
-	    icon: string;
-	    noteCount: number;
 	
-	    static createFrom(source: any = {}) {
-	        return new Folder(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.id = source["id"];
-	        this.name = source["name"];
-	        this.parentId = source["parentId"];
-	        this.color = source["color"];
-	        this.icon = source["icon"];
-	        this.noteCount = source["noteCount"];
-	    }
-	}
 	export class IdeaEdge {
 	    id: string;
 	    flowId: string;
@@ -481,6 +582,26 @@ export namespace main {
 		    }
 		    return a;
 		}
+	}
+	export class NoteConnectionSummary {
+	    noteId: string;
+	    title: string;
+	    folder: string;
+	    noteType: string;
+	    direction: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new NoteConnectionSummary(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.noteId = source["noteId"];
+	        this.title = source["title"];
+	        this.folder = source["folder"];
+	        this.noteType = source["noteType"];
+	        this.direction = source["direction"];
+	    }
 	}
 	export class NoteQuery {
 	    kind: string;

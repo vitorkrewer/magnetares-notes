@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { Archive, ArchiveRestore, Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, FileCode, FileCode2, FileDown, FilePenLine, FileText, Folder, GitBranch, Globe, List, Minimize2, Moon, PictureInPicture2, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Sun, Trash2, Upload, X } from "lucide-react";
+import { Archive, ArchiveRestore, Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, ExternalLink, FileCode, FileCode2, FileDown, FilePenLine, FileText, Folder, GitBranch, Globe, Hash, Link2, List, Minimize2, Moon, Network, PictureInPicture2, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Sun, Trash2, Upload, X } from "lucide-react";
 import { StructuredEditor } from "./StructuredEditor";
 import { CodeEditor } from "./CodeEditor";
+import { CustomSelect } from "./CustomSelect";
 import { TitleBar } from "./TitleBar";
 import { OrganizationDialog, getFolderIconComponent, getTagIconComponent } from "./OrganizationDialog";
 import { SettingsDialog, type SettingsTab, type ThemeOption } from "./SettingsDialog";
@@ -13,13 +14,15 @@ import { TaskListView } from "./TaskListView";
 import { IdeaFlowDialog } from "./IdeaFlowDialog";
 import { IdeaFlowsView } from "./IdeaFlowsView";
 import type { IdeaReferenceKind } from "./IdeaNodeLinkModal";
-import { AppInfoRecord, DatabaseMigrationMode, FolderRecord, IdeaFlowGraphRecord, IdeaFlowRecord, NavigationRecord, Note, NoteQuery, SaveIdeaFlowGraphInput, SaveIdeaFlowInput, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord, TaskListRecord, UpdateCheckResultRecord } from "./types";
+import { ConnectionsGraphView, buildDemoConnectionsPayload } from "./ConnectionsGraphView";
+import type { NoteLinkMeta } from "./NoteLinkNode";
+import { AppInfoRecord, ConnectionsGraphPayload, DatabaseMigrationMode, FolderRecord, IdeaFlowGraphRecord, IdeaFlowRecord, NavigationRecord, Note, NoteConnectionSummary, NoteQuery, SaveIdeaFlowGraphInput, SaveIdeaFlowInput, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord, TaskListRecord, UpdateCheckResultRecord } from "./types";
 import { downloadBlob, downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
 import { exportToAbntDocxBase64, exportToAbntDocxBlob } from "./abntExport";
 import { exportToPdfBase64, exportToPdfBlob } from "./pdfExport";
 
 type SaveState = "saved" | "saving" | "error";
-type LibraryView = "notes" | "deleted" | "stickers" | "tasks" | "ideas";
+type LibraryView = "notes" | "deleted" | "stickers" | "tasks" | "ideas" | "connections";
 
 const DEFAULT_APP_INFO: AppInfoRecord = {
   appName: "Magnetares Notes",
@@ -129,6 +132,15 @@ export function App() {
   const [ideaFlowToEdit, setIdeaFlowToEdit] = useState<IdeaFlowRecord | undefined>(undefined);
   const [deleteIdeaFlowTarget, setDeleteIdeaFlowTarget] = useState<IdeaFlowRecord | null>(null);
   const [demoIdeaGraphs, setDemoIdeaGraphs] = useState<Record<string, IdeaFlowGraphRecord>>({});
+  const [connectionsGraph, setConnectionsGraph] = useState<ConnectionsGraphPayload>({ notes: [], links: [], tags: [], folders: [] });
+  const [connectionsLoading, setConnectionsLoading] = useState(false);
+  const [activeNoteConnections, setActiveNoteConnections] = useState<NoteConnectionSummary[]>([]);
+  const [noteLinksPanelOpen, setNoteLinksPanelOpen] = useState(false);
+  const [noteLinksPanelTab, setNoteLinksPanelTab] = useState<"notes" | "tags" | "connected">("notes");
+  const [noteLinksPanelSearch, setNoteLinksPanelSearch] = useState("");
+  const [noteLinksPanelFolder, setNoteLinksPanelFolder] = useState("");
+  const [floatingModalNoteId, setFloatingModalNoteId] = useState<string | null>(null);
+  const [floatingModalTagInput, setFloatingModalTagInput] = useState("");
   const [theme, setTheme] = useState<ThemeOption>(() => ((localStorage.getItem("magnetares_theme") || localStorage.getItem("aster_theme")) as ThemeOption) || "light");
   const [isDark, setIsDark] = useState<boolean>(() => {
     const saved = ((localStorage.getItem("magnetares_theme") || localStorage.getItem("aster_theme")) as ThemeOption) || "light";
@@ -260,6 +272,36 @@ export function App() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  const reloadConnectionsGraph = async () => {
+    const bridge = window.go?.main?.App;
+    if (!bridge?.GetConnectionsGraph) return;
+    setConnectionsLoading(true);
+    try {
+      const graph = await bridge.GetConnectionsGraph();
+      if (graph) setConnectionsGraph(graph);
+    } catch {
+      // Ignora erro transitório
+    } finally {
+      setConnectionsLoading(false);
+    }
+  };
+
+  const refreshActiveNoteConnections = async (noteId: string) => {
+    const bridge = window.go?.main?.App;
+    if (!noteId) {
+      setActiveNoteConnections([]);
+      return;
+    }
+    if (bridge?.GetNoteConnections) {
+      try {
+        const items = await bridge.GetNoteConnections(noteId);
+        setActiveNoteConnections(items || []);
+      } catch {
+        // Ignora
+      }
+    }
+  };
+
   // Sincroniza estado de Modo Foco e notas entre janelas via Eventos nativos e BroadcastChannel
   useEffect(() => {
     // 1. Escuta evento nativo emitido pelo Go quando a janela independente fecha (por Esc, 'X', etc.)
@@ -278,6 +320,10 @@ export function App() {
             setNotes((current) => current.map((n) => (n.id === updated.id ? updated : n)));
           }
         }).catch(() => undefined);
+      }
+      void reloadConnectionsGraph();
+      if (activeIdRef.current === closedNoteId) {
+        void refreshActiveNoteConnections(closedNoteId);
       }
     });
 
@@ -304,8 +350,13 @@ export function App() {
               }
             }).catch(() => undefined);
           }
+          void reloadConnectionsGraph();
         } else if (data.type === "NOTE_UPDATED" && data.note) {
           setNotes((current) => current.map((n) => (n.id === data.note.id ? { ...n, ...data.note } : n)));
+          void reloadConnectionsGraph();
+          if (activeIdRef.current === data.note.id) {
+            void refreshActiveNoteConnections(data.note.id);
+          }
         }
       };
     } catch {
@@ -324,22 +375,45 @@ export function App() {
     };
   }, []);
 
-  const handleLaunchFocusMode = async (note: Note) => {
-    if (detachedFocusNoteIds.has(note.id)) {
+  const handleLaunchFocusById = async (noteId: string) => {
+    if (!noteId) {
       return;
     }
     const bridge = window.go?.main?.App;
     if (bridge?.LaunchFocusWindow) {
       try {
-        await bridge.LaunchFocusWindow(note.id);
-        setDetachedFocusNoteIds((prev) => new Set(prev).add(note.id));
+        await bridge.LaunchFocusWindow(noteId);
+        setDetachedFocusNoteIds((prev) => new Set(prev).add(noteId));
       } catch (err) {
         console.error("Falha ao abrir janela de foco:", err);
       }
     } else {
-      window.open(`?focusNote=${note.id}`, `magnetares_focus_${note.id}`, "width=620,height=780");
-      setDetachedFocusNoteIds((prev) => new Set(prev).add(note.id));
+      window.open(`?focusNote=${noteId}`, `magnetares_focus_${noteId}`, "width=620,height=780");
+      setDetachedFocusNoteIds((prev) => new Set(prev).add(noteId));
     }
+  };
+
+  const handleOpenSeparateEditorModal = async (noteId: string) => {
+    if (!noteId) return;
+    const exists = notes.some((n) => n.id === noteId);
+    if (!exists) {
+      const bridge = window.go?.main?.App;
+      if (bridge?.GetNote) {
+        try {
+          const fetched = await bridge.GetNote(noteId);
+          if (fetched) {
+            setNotes((prev) => (prev.some((n) => n.id === fetched.id) ? prev : [fetched, ...prev]));
+          }
+        } catch {
+          // Ignora falha
+        }
+      }
+    }
+    setFloatingModalNoteId(noteId);
+  };
+
+  const handleLaunchFocusMode = async (note: Note) => {
+    await handleLaunchFocusById(note.id);
   };
 
   const handleCloseFocusWindow = (noteId: string) => {
@@ -405,7 +479,11 @@ export function App() {
         const saved = await saveNote(note);
         if (saveVersions.current.get(note.id) !== version) return;
         setNotes((current) => current.map((item) => item.id === saved.id ? saved : item));
-        if (activeIdRef.current === note.id) setSaveState("saved");
+        if (activeIdRef.current === note.id) {
+          setSaveState("saved");
+          void refreshActiveNoteConnections(saved.id);
+        }
+        void reloadConnectionsGraph();
       })
       .catch(() => {
         if (saveVersions.current.get(note.id) === version && activeIdRef.current === note.id) {
@@ -460,6 +538,56 @@ export function App() {
     scheduleSave(next);
   };
 
+  const saveNoteById = (noteId: string, patch: Partial<Note>) => {
+    const target = notes.find((n) => n.id === noteId);
+    if (!target) return;
+    const next = { ...target, ...patch, updatedAt: new Date().toISOString() };
+    setNotes((current) => current.map((note) => (note.id === next.id ? next : note)));
+    scheduleSave(next);
+  };
+
+  const toggleTagOnNoteById = async (noteId: string, tagName: string) => {
+    const target = notes.find((n) => n.id === noteId);
+    if (!target || !tagName.trim()) return;
+    const cleanTag = tagName.trim().replace(/^#/, "");
+    const currentTags = target.tags ?? [];
+    const hasTag = currentTags.some((t) => t.toLowerCase() === cleanTag.toLowerCase());
+    const nextTags = hasTag
+      ? currentTags.filter((t) => t.toLowerCase() !== cleanTag.toLowerCase())
+      : [...currentTags, cleanTag];
+    const bridge = window.go?.main?.App;
+    if (bridge?.SetNoteTags) {
+      try {
+        const updated = await bridge.SetNoteTags(target.id, nextTags);
+        setNotes((current) => current.map((n) => (n.id === updated.id ? updated : n)));
+        void reloadNavigation();
+      } catch {
+        setSaveState("error");
+      }
+    } else {
+      const updated = { ...target, tags: nextTags };
+      setNotes((current) => current.map((n) => (n.id === updated.id ? updated : n)));
+    }
+  };
+
+  const insertNoteLinkIntoNote = (targetNoteId: string, targetTitle: string) => {
+    if (!active || view === "deleted" || targetNoteId === active.id) return;
+    if (active.type === "code") {
+      const nextBody = `${active.body}\n// [[${targetTitle || "Sem título"}]]`;
+      save({ body: nextBody, bodyText: nextBody });
+      return;
+    }
+    window.dispatchEvent(
+      new CustomEvent("magnetares:insert-note-link", {
+        detail: {
+          editorNoteId: active.id,
+          noteId: targetNoteId,
+          title: targetTitle || "Sem título",
+        },
+      })
+    );
+  };
+
   const selectQuery = (targetQuery: NoteQuery) => {
     setFocusedTaskId(null);
     setFocusedStickerId(null);
@@ -473,6 +601,8 @@ export function App() {
         ? "tasks"
         : targetQuery.kind === "ideaFlows" || targetQuery.kind === "ideaFlow"
         ? "ideas"
+        : targetQuery.kind === "connections"
+        ? "connections"
         : "notes";
     setView(nextView);
     if (targetQuery.kind === "ideaFlow") {
@@ -482,7 +612,9 @@ export function App() {
     }
     setQuery("");
     setLoadError("");
-    if (
+    if (targetQuery.kind === "connections") {
+      void reloadConnectionsGraph();
+    } else if (
       targetQuery.kind !== "stickerBoard" &&
       targetQuery.kind !== "taskList" &&
       targetQuery.kind !== "ideaFlows" &&
@@ -1111,6 +1243,7 @@ export function App() {
       } else if (nav.ideaFlows) {
         setIdeaFlows(nav.ideaFlows);
       }
+      void reloadConnectionsGraph();
     } catch {
       // Graceful fallback for browser
     }
@@ -1142,17 +1275,160 @@ export function App() {
       bridge.ListDeletedNotes?.() ?? Promise.resolve([]),
       bridge.ListNavigation?.() ?? Promise.resolve<NavigationRecord>({ folders: [], tags: [], smartFolders: [], stickerBoards: [], ideaFlows: [] }),
       bridge.ListIdeaFlows?.() ?? Promise.resolve(null),
+      bridge.GetConnectionsGraph?.() ?? Promise.resolve(null),
     ])
-      .then(([loadedNotes, loadedDeletedNotes, loadedNav, loadedFlows]) => {
+      .then(([loadedNotes, loadedDeletedNotes, loadedNav, loadedFlows, loadedGraph]) => {
         setNotes(loadedNotes);
         setDeletedNotes(loadedDeletedNotes);
         setNavigation(loadedNav);
         setIdeaFlows(loadedFlows ?? loadedNav.ideaFlows ?? []);
+        if (loadedGraph) setConnectionsGraph(loadedGraph);
         setActiveId(loadedNotes[0]?.id ?? "");
       })
       .catch(() => setLoadError("Não foi possível abrir suas notas."))
       .finally(() => setIsLoading(false));
   }, []);
+
+  // Em modo demonstração (browser sem Wails), mantém o grafo derivado do estado em memória
+  useEffect(() => {
+    if (window.go?.main?.App?.GetConnectionsGraph) return;
+    const derived = buildDemoConnectionsPayload(notes, navigation.tags, navigation.folders);
+    setConnectionsGraph(derived);
+  }, [notes, navigation.tags, navigation.folders]);
+
+  // Atualiza painel de conexões da nota ativa sempre que a seleção mudar
+  useEffect(() => {
+    if (!activeId || view === "deleted") {
+      setActiveNoteConnections([]);
+      return;
+    }
+    const bridge = window.go?.main?.App;
+    if (bridge?.GetNoteConnections) {
+      void refreshActiveNoteConnections(activeId);
+    } else {
+      const titleMap = new Map(notes.map((n) => [n.id, n]));
+      const items: NoteConnectionSummary[] = [];
+      for (const link of connectionsGraph.links) {
+        if (link.sourceNoteId === activeId) {
+          const target = titleMap.get(link.targetNoteId);
+          if (target) {
+            items.push({
+              noteId: target.id,
+              title: target.title,
+              folder: target.folder || "Notas",
+              noteType: target.type || "rtf",
+              direction: "outgoing",
+            });
+          }
+        } else if (link.targetNoteId === activeId) {
+          const src = titleMap.get(link.sourceNoteId);
+          if (src) {
+            items.push({
+              noteId: src.id,
+              title: src.title,
+              folder: src.folder || "Notas",
+              noteType: src.type || "rtf",
+              direction: "incoming",
+            });
+          }
+        }
+      }
+      setActiveNoteConnections(items);
+    }
+  }, [activeId, view, connectionsGraph.links]);
+
+  const availableLinkNotes = useMemo<NoteLinkMeta[]>(() => {
+    if (connectionsGraph.notes.length > 0) {
+      return connectionsGraph.notes.map((n) => ({ id: n.id, title: n.title, folder: n.folder }));
+    }
+    return notes.map((n) => ({ id: n.id, title: n.title, folder: n.folder }));
+  }, [connectionsGraph.notes, notes]);
+
+  // Mapa rápido de indicadores de conexão para todas as notas (links diretos + etiquetas compartilhadas)
+  const noteConnectionsMetaMap = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        directCount: number;
+        tagsCount: number;
+        linkedNoteIds: Set<string>;
+        relatedByTag: Array<{ id: string; title: string; folder: string; sharedTag: string }>;
+      }
+    >();
+
+    const allSourceNotes =
+      connectionsGraph.notes.length > 0
+        ? connectionsGraph.notes
+        : notes.map((n) => ({
+            id: n.id,
+            title: n.title,
+            folderId: n.folderId || "folder-default",
+            folder: n.folder || "Notas",
+            noteType: n.type || "rtf",
+            language: n.language || "",
+            pinned: Boolean(n.pinnedAt),
+            tags: n.tags || [],
+            updatedAt: n.updatedAt,
+          }));
+
+    const tagToNotes = new Map<string, Array<{ id: string; title: string; folder: string; rawTag: string }>>();
+    for (const n of allSourceNotes) {
+      map.set(n.id, {
+        directCount: 0,
+        tagsCount: n.tags?.length ?? 0,
+        linkedNoteIds: new Set<string>(),
+        relatedByTag: [],
+      });
+      for (const rawTag of n.tags || []) {
+        const key = rawTag.trim().toLocaleLowerCase();
+        if (!key) continue;
+        const list = tagToNotes.get(key) ?? [];
+        list.push({ id: n.id, title: n.title || "Sem título", folder: n.folder || "Notas", rawTag });
+        tagToNotes.set(key, list);
+      }
+    }
+
+    for (const link of connectionsGraph.links || []) {
+      const srcMeta = map.get(link.sourceNoteId);
+      if (srcMeta && !srcMeta.linkedNoteIds.has(link.targetNoteId)) {
+        srcMeta.linkedNoteIds.add(link.targetNoteId);
+        srcMeta.directCount += 1;
+      }
+      const tgtMeta = map.get(link.targetNoteId);
+      if (tgtMeta && !tgtMeta.linkedNoteIds.has(link.sourceNoteId)) {
+        tgtMeta.linkedNoteIds.add(link.sourceNoteId);
+        tgtMeta.directCount += 1;
+      }
+    }
+
+    for (const n of allSourceNotes) {
+      const meta = map.get(n.id);
+      if (!meta) continue;
+      const seenRel = new Set<string>();
+      for (const rawTag of n.tags || []) {
+        const key = rawTag.trim().toLocaleLowerCase();
+        const peers = tagToNotes.get(key) || [];
+        for (const peer of peers) {
+          if (peer.id !== n.id && !seenRel.has(peer.id)) {
+            seenRel.add(peer.id);
+            meta.relatedByTag.push({
+              id: peer.id,
+              title: peer.title,
+              folder: peer.folder,
+              sharedTag: peer.rawTag,
+            });
+          }
+        }
+      }
+    }
+
+    return map;
+  }, [connectionsGraph.notes, connectionsGraph.links, notes]);
+
+  const floatingModalNote = useMemo(
+    () => (floatingModalNoteId ? notes.find((n) => n.id === floatingModalNoteId) ?? null : null),
+    [floatingModalNoteId, notes]
+  );
 
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
@@ -1720,6 +1996,8 @@ export function App() {
             ? `${(navigation.taskLists || []).find((l) => l.id === selectedQuery.id)?.name ?? "Tarefas"} — Magnetares`
             : view === "ideas"
             ? `${(selectedIdeaFlowId ? ideaFlows.find((f) => f.id === selectedIdeaFlowId)?.title : null) ?? "Fluxo de Ideias"} — Magnetares`
+            : view === "connections"
+            ? "Minhas Conexões — Magnetares"
             : active?.title
             ? `${active.title} — Magnetares`
             : "Magnetares Notes"
@@ -1733,7 +2011,7 @@ export function App() {
           </button>
         </div>
       )}
-      <main className={`shell ${sidebarOpen ? "" : "sidebar-closed"} ${view === "stickers" ? "stickers-view" : ""} ${view === "tasks" ? "tasks-view" : ""} ${view === "ideas" ? "ideas-view" : ""}`}>
+      <main className={`shell ${sidebarOpen ? "" : "sidebar-closed"} ${view === "stickers" ? "stickers-view" : ""} ${view === "tasks" ? "tasks-view" : ""} ${view === "ideas" ? "ideas-view" : ""} ${view === "connections" ? "connections-view" : ""}`}>
       <aside className="sidebar" aria-label="Pastas">
         <div className="sidebar-heading">
           <img
@@ -1904,6 +2182,29 @@ export function App() {
                 <span className="nav-item-title">Meus Fluxos</span>
               </span>
               <small>{ideaFlows.length}</small>
+            </button>
+          </div>
+        </>
+
+        <>
+          <div className="sidebar-section-header">
+            <span className="folder-label">CONEXÕES</span>
+          </div>
+          <div className="folder-tree">
+            <button
+              type="button"
+              className={`nav-item idea-flow-nav-item ${view === "connections" ? "selected" : ""}`}
+              onClick={() => selectQuery({ kind: "connections" })}
+              title="Abrir mapa de conexões entre notas e etiquetas"
+            >
+              <span>
+                <Network className="idea-flow-nav-icon" size={14} aria-hidden="true" />
+                <span className="nav-item-title">Minhas Conexões</span>
+              </span>
+              <small>
+                {connectionsGraph.links.length +
+                  connectionsGraph.notes.reduce((acc, n) => acc + (n.tags?.length ?? 0), 0)}
+              </small>
             </button>
           </div>
         </>
@@ -2252,6 +2553,17 @@ export function App() {
           demoGraphs={demoIdeaGraphs}
           onSaveDemoGraph={handleSaveDemoIdeaGraph}
         />
+      ) : view === "connections" ? (
+        <ConnectionsGraphView
+          payload={connectionsGraph}
+          loading={connectionsLoading}
+          sidebarOpen={sidebarOpen}
+          onOpenSidebar={() => setSidebarOpen(true)}
+          onRefresh={() => void reloadConnectionsGraph()}
+          onOpenNoteSeparateWindow={(noteId) => void handleOpenSeparateEditorModal(noteId)}
+          onNavigateToNote={(noteId) => void handleNavigateToReference("note", noteId)}
+          detachedFocusNoteIds={detachedFocusNoteIds}
+        />
       ) : (
         <>
           <section className="note-list" aria-label="Lista de notas">
@@ -2281,33 +2593,69 @@ export function App() {
         <div className="notes" aria-live="polite">
           {isLoading && <div className="list-message">Abrindo notas…</div>}
           {loadError && <div className="list-message error">{loadError}</div>}
-          {!isLoading && !loadError && visible.map((note) => (
-            <button
-              key={note.id}
-              type="button"
-              draggable={view !== "deleted"}
-              className={`note-row ${note.id === active?.id ? "active" : ""}`}
-              onClick={() => selectNote(note.id)}
-              onDragStart={(event) => {
-                event.dataTransfer.effectAllowed = "move";
-                event.dataTransfer.setData("application/x-magnetares-note", note.id);
-                draggedNoteIdRef.current = note.id;
-                setDraggedNoteId(note.id);
-              }}
-              onDragEnd={() => {
-                setDraggedNoteId(null);
-                draggedNoteIdRef.current = null;
-                setDropTargetFolderId(null);
-              }}
-            >
-              <strong>
-                {Boolean(note.pinnedAt) && <Pin className="pin-icon" aria-hidden="true" />}
-                {note.type === "code" && <LanguageBadge language={note.language} />}
-                {note.title || "Nova nota"}
-              </strong>
-              <span className="note-preview"><time>{dateLabel(note.updatedAt)}</time> {(note.bodyText ?? note.body).replace(/\s+/g, " ") || "Nenhum texto adicional"}</span>
-            </button>
-          ))}
+          {!isLoading && !loadError && visible.map((note) => {
+            const connMeta = noteConnectionsMetaMap.get(note.id);
+            const directCount = connMeta?.directCount ?? 0;
+            const tagsCount = note.tags?.length ?? connMeta?.tagsCount ?? 0;
+            const relatedCount = connMeta?.relatedByTag.length ?? 0;
+            return (
+              <button
+                key={note.id}
+                type="button"
+                draggable={view !== "deleted"}
+                className={`note-row ${note.id === active?.id ? "active" : ""}`}
+                onClick={() => selectNote(note.id)}
+                onDragStart={(event) => {
+                  event.dataTransfer.effectAllowed = "move";
+                  event.dataTransfer.setData("application/x-magnetares-note", note.id);
+                  draggedNoteIdRef.current = note.id;
+                  setDraggedNoteId(note.id);
+                }}
+                onDragEnd={() => {
+                  setDraggedNoteId(null);
+                  draggedNoteIdRef.current = null;
+                  setDropTargetFolderId(null);
+                }}
+              >
+                <strong>
+                  {Boolean(note.pinnedAt) && <Pin className="pin-icon" aria-hidden="true" />}
+                  {note.type === "code" && <LanguageBadge language={note.language} />}
+                  {note.title || "Nova nota"}
+                </strong>
+                <span className="note-preview"><time>{dateLabel(note.updatedAt)}</time> {(note.bodyText ?? note.body).replace(/\s+/g, " ") || "Nenhum texto adicional"}</span>
+                {(directCount > 0 || tagsCount > 0) && (
+                  <span className="note-row-conn-indicators">
+                    {directCount > 0 && (
+                      <span
+                        className="note-row-conn-badge direct"
+                        title={`${directCount} ${directCount === 1 ? "vínculo direto com outra nota" : "vínculos diretos com outras notas"}`}
+                      >
+                        <Network size={10} aria-hidden="true" />
+                        <span>{directCount} {directCount === 1 ? "vínculo" : "vínculos"}</span>
+                      </span>
+                    )}
+                    {tagsCount > 0 && (
+                      <span
+                        className="note-row-conn-badge tags"
+                        title={`${tagsCount} ${tagsCount === 1 ? "etiqueta" : "etiquetas"}${relatedCount > 0 ? ` · ${relatedCount} nota(s) relacionada(s)` : ""}`}
+                      >
+                        <Hash size={10} aria-hidden="true" />
+                        <span>{tagsCount}</span>
+                      </span>
+                    )}
+                    {relatedCount > 0 && (
+                      <span
+                        className="note-row-conn-badge related"
+                        title={`${relatedCount} ${relatedCount === 1 ? "nota compartilha etiqueta" : "notas compartilham etiquetas"}`}
+                      >
+                        +{relatedCount} {relatedCount === 1 ? "conexão" : "conexões"}
+                      </span>
+                    )}
+                  </span>
+                )}
+              </button>
+            );
+          })}
           {!isLoading && !loadError && visible.length === 0 && (
             <div className="empty-list">
               {view === "deleted" ? <Trash2 aria-hidden="true" /> : <Search aria-hidden="true" />}
@@ -2339,6 +2687,25 @@ export function App() {
                   <>
                     <button className="icon-button" onClick={handlePrint} title="Imprimir nota" aria-label="Imprimir nota"><Printer aria-hidden="true" /></button>
                     <button className={`icon-button cloud-sync-button ${syncing ? "syncing" : ""}`} onClick={() => void handleQuickSync()} title={syncing ? "Sincronizando com a nuvem" : "Sincronizar com a nuvem"} aria-label="Sincronizar com a nuvem" disabled={syncing}><Cloud aria-hidden="true" /></button>
+                    <button
+                      type="button"
+                      className={`connections-header-cta ${noteLinksPanelOpen ? "active" : ""}`}
+                      onClick={() => setNoteLinksPanelOpen((open) => !open)}
+                      title="Abrir painel lateral de vínculos, notas e etiquetas"
+                      aria-label="Abrir painel lateral de vínculos"
+                    >
+                      <Network size={15} aria-hidden="true" />
+                      {(() => {
+                        const activeMeta = noteConnectionsMetaMap.get(active.id);
+                        const count =
+                          activeNoteConnections.length +
+                          (active.tags?.length ?? 0) +
+                          (activeMeta?.relatedByTag.length ?? 0);
+                        return (
+                          <span className="connections-header-cta-badge">{count}</span>
+                        );
+                      })()}
+                    </button>
                     <div className="export-popover-anchor">
                       <button className={`icon-button ${exportMenuOpen ? "active-pin" : ""}`} onClick={() => setExportMenuOpen((open) => !open)} title="Exportar nota" aria-label="Exportar nota"><Download aria-hidden="true" /></button>
                       {exportMenuOpen && (
@@ -2397,6 +2764,7 @@ export function App() {
                 </div>
               </div>
             ) : (
+            <div className="editor-workspace-row">
             <div className="editor-scroll-area">
               <div className="editor-page">
                 <time className="edited-at">{fullDateLabel(active.updatedAt)}</time>
@@ -2408,6 +2776,35 @@ export function App() {
                     <Folder aria-hidden="true" />
                     <span className="note-location-label">Pasta</span>
                     <strong className="note-location-value">{active.folder ?? "Notas"}</strong>
+                    {(() => {
+                      const activeMeta = noteConnectionsMetaMap.get(active.id);
+                      const directCount = activeNoteConnections.length;
+                      const relatedCount = activeMeta?.relatedByTag.length ?? 0;
+                      const tagsCount = active.tags?.length ?? 0;
+                      const hasAnyConnection = directCount > 0 || relatedCount > 0 || tagsCount > 0;
+                      return (
+                        <button
+                          type="button"
+                          className={`note-location-conn-indicator ${hasAnyConnection ? "connected" : ""}`}
+                          onClick={() => setNoteLinksPanelOpen(true)}
+                          title="Clique para gerenciar os vínculos e etiquetas desta nota no painel lateral"
+                        >
+                          <Network size={12} aria-hidden="true" />
+                          {hasAnyConnection ? (
+                            <span>
+                              {directCount > 0
+                                ? `${directCount} ${directCount === 1 ? "vínculo" : "vínculos"}`
+                                : `${tagsCount} ${tagsCount === 1 ? "etiqueta" : "etiquetas"}`}
+                              {relatedCount > 0
+                                ? ` · ${relatedCount} ${relatedCount === 1 ? "nota conectada" : "notas conectadas"}`
+                                : ""}
+                            </span>
+                          ) : (
+                            <span>Vincular nota</span>
+                          )}
+                        </button>
+                      );
+                    })()}
                     <span className="note-location-hint">Arraste a nota para outra pasta na barra lateral</span>
                   </div>
                 )}
@@ -2491,10 +2888,88 @@ export function App() {
                     key={active.id} 
                     value={active.body} 
                     readOnly={view === "deleted"} 
+                    currentNoteId={active.id}
+                    availableNotes={availableLinkNotes}
+                    onOpenConnectionsPanel={() => setNoteLinksPanelOpen(true)}
+                    onOpenLinkedNote={(linkedId, _title, openSeparateWindow) => {
+                      if (openSeparateWindow) {
+                        void handleOpenSeparateEditorModal(linkedId);
+                      } else {
+                        void handleNavigateToReference("note", linkedId);
+                      }
+                    }}
                     onChange={(document, text) => save({ body: document, bodyText: text })} 
                     onBlur={() => void flushNote(active.id)} 
                   />
                 )}
+
+                {(() => {
+                  const activeMeta = noteConnectionsMetaMap.get(active.id);
+                  const relatedByTag = activeMeta?.relatedByTag ?? [];
+                  const totalConnected = activeNoteConnections.length + relatedByTag.length;
+                  if (view === "deleted" || totalConnected === 0) return null;
+                  return (
+                    <section className="note-connections-panel" aria-label="Conexões desta nota">
+                      <div className="note-connections-header">
+                        <div className="note-connections-title">
+                          <Network size={14} aria-hidden="true" />
+                          <span>Conexões desta nota ({totalConnected})</span>
+                        </div>
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          <button
+                            type="button"
+                            className="note-connections-map-btn"
+                            onClick={() => setNoteLinksPanelOpen(true)}
+                          >
+                            Gerenciar vínculos
+                          </button>
+                          <button
+                            type="button"
+                            className="note-connections-map-btn"
+                            onClick={() => selectQuery({ kind: "connections" })}
+                            title="Visualizar todas as conexões no mapa de grafos"
+                          >
+                            Ver no mapa
+                          </button>
+                        </div>
+                      </div>
+                      <div className="note-connections-chips">
+                        {activeNoteConnections.map((conn) => (
+                          <div key={`${conn.direction}-${conn.noteId}`} className={`note-connection-pill-wrap ${conn.direction}`}>
+                            <button
+                              type="button"
+                              className={`note-connection-pill ${conn.direction}`}
+                              onClick={() => void handleOpenSeparateEditorModal(conn.noteId)}
+                              title={
+                                conn.direction === "outgoing"
+                                  ? `Link citado nesta nota (${conn.folder}) · Abrir editor em janela separada`
+                                  : `Backlink recebido de "${conn.title}" (${conn.folder}) · Abrir editor em janela separada`
+                              }
+                            >
+                              <span className="dir-arrow" aria-hidden="true">
+                                {conn.direction === "outgoing" ? "→" : "←"}
+                              </span>
+                              <span>{conn.title || "Sem título"}</span>
+                            </button>
+                          </div>
+                        ))}
+                        {relatedByTag.map((rel) => (
+                          <div key={`tagrel-${rel.id}`} className="note-connection-pill-wrap tag-related">
+                            <button
+                              type="button"
+                              className="note-connection-pill tag-related"
+                              onClick={() => void handleOpenSeparateEditorModal(rel.id)}
+                              title={`Conectada pela etiqueta #${rel.sharedTag} (${rel.folder}) · Abrir editor em janela separada`}
+                            >
+                              <Hash size={11} aria-hidden="true" />
+                              <span>{rel.title || "Sem título"}</span>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })()}
 
                 <footer className="print-footer" aria-hidden="true">
                   <span className="print-footer-brand">Gerado via Magnetares Notes</span>
@@ -2503,6 +2978,326 @@ export function App() {
                   </span>
                 </footer>
               </div>
+            </div>
+
+            {view !== "deleted" && noteLinksPanelOpen && (
+              <aside className="note-links-side-panel" aria-label="Painel lateral de vínculos e etiquetas">
+                <div className="note-links-side-head">
+                  <div className="note-links-side-title">
+                    <Network size={15} aria-hidden="true" />
+                    <strong>Vínculos & Etiquetas</strong>
+                  </div>
+                  <div className="note-links-side-head-actions">
+                    <button
+                      type="button"
+                      className="note-connections-map-btn"
+                      onClick={() => selectQuery({ kind: "connections" })}
+                      title="Abrir mapa completo de conexões"
+                    >
+                      Ver Mapa
+                    </button>
+                    <button
+                      type="button"
+                      className="icon-button mini"
+                      onClick={() => setNoteLinksPanelOpen(false)}
+                      title="Fechar painel lateral"
+                      aria-label="Fechar painel lateral"
+                    >
+                      <X size={14} aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="note-links-side-tabs" role="tablist">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={noteLinksPanelTab === "notes"}
+                    className={`note-links-side-tab ${noteLinksPanelTab === "notes" ? "active" : ""}`}
+                    onClick={() => setNoteLinksPanelTab("notes")}
+                  >
+                    <Link2 size={12} aria-hidden="true" />
+                    <span>Vincular ({Math.max(0, availableLinkNotes.length - 1)})</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={noteLinksPanelTab === "tags"}
+                    className={`note-links-side-tab ${noteLinksPanelTab === "tags" ? "active" : ""}`}
+                    onClick={() => setNoteLinksPanelTab("tags")}
+                  >
+                    <Hash size={12} aria-hidden="true" />
+                    <span>Etiquetas ({navigation.tags.length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={noteLinksPanelTab === "connected"}
+                    className={`note-links-side-tab ${noteLinksPanelTab === "connected" ? "active" : ""}`}
+                    onClick={() => setNoteLinksPanelTab("connected")}
+                  >
+                    <Network size={12} aria-hidden="true" />
+                    <span>
+                      Ativas (
+                      {activeNoteConnections.length +
+                        (noteConnectionsMetaMap.get(active.id)?.relatedByTag.length ?? 0)}
+                      )
+                    </span>
+                  </button>
+                </div>
+
+                {noteLinksPanelTab !== "connected" && (
+                  <div className="note-links-side-filters">
+                    <div className="connections-explorer-search">
+                      <Search size={13} className="connections-search-icon" aria-hidden="true" />
+                      <input
+                        type="search"
+                        value={noteLinksPanelSearch}
+                        onChange={(e) => setNoteLinksPanelSearch(e.target.value)}
+                        placeholder={
+                          noteLinksPanelTab === "notes"
+                            ? "Buscar nota por título ou pasta..."
+                            : "Buscar ou criar nova etiqueta..."
+                        }
+                        aria-label="Buscar no catálogo de vínculos"
+                      />
+                    </div>
+                    {noteLinksPanelTab === "notes" && (
+                      <CustomSelect
+                        compact
+                        className="note-links-folder-select"
+                        value={noteLinksPanelFolder}
+                        options={[
+                          { value: "", label: "Todas as pastas", icon: <Folder size={13} /> },
+                          ...navigation.folders.map((f) => ({
+                            value: f.name,
+                            label: f.name,
+                            icon: <Folder size={13} />,
+                          })),
+                        ]}
+                        onChange={(val) => setNoteLinksPanelFolder(val)}
+                        ariaLabel="Filtrar notas por pasta"
+                        title="Filtrar notas por pasta"
+                      />
+                    )}
+                  </div>
+                )}
+
+                <div className="note-links-side-body">
+                  {noteLinksPanelTab === "notes" &&
+                    (() => {
+                      const needle = noteLinksPanelSearch.trim().toLocaleLowerCase();
+                      const linkedIds = new Set(activeNoteConnections.map((c) => c.noteId));
+                      const candidates = availableLinkNotes.filter((item) => {
+                        if (item.id === active.id) return false;
+                        if (noteLinksPanelFolder && item.folder !== noteLinksPanelFolder) {
+                          return false;
+                        }
+                        if (!needle) return true;
+                        return (
+                          (item.title || "Sem título").toLocaleLowerCase().includes(needle) ||
+                          (item.folder || "").toLocaleLowerCase().includes(needle)
+                        );
+                      });
+
+                      if (candidates.length === 0) {
+                        return (
+                          <p className="connections-list-empty">
+                            Nenhuma nota encontrada com esse filtro.
+                          </p>
+                        );
+                      }
+
+                      return candidates.map((item) => {
+                        const isAlreadyLinked = linkedIds.has(item.id);
+                        return (
+                          <div key={item.id} className="note-links-catalog-row">
+                            <div className="note-links-catalog-info">
+                              <strong>{item.title || "Sem título"}</strong>
+                              <small>{item.folder || "Notas"}</small>
+                            </div>
+                            <div className="note-links-catalog-actions">
+                              <button
+                                type="button"
+                                className={`note-links-insert-btn icon-only ${isAlreadyLinked ? "linked" : ""}`}
+                                onClick={() => insertNoteLinkIntoNote(item.id, item.title || "Sem título")}
+                                title={
+                                  isAlreadyLinked
+                                    ? "Inserir vínculo [[Nota]] novamente no texto da nota atual"
+                                    : "Inserir vínculo [[Nota]] no texto da nota atual"
+                                }
+                                aria-label={`Vincular ${item.title || "nota"}`}
+                              >
+                                <Plus size={14} aria-hidden="true" />
+                              </button>
+                              <button
+                                type="button"
+                                className="icon-button mini"
+                                onClick={() => void handleOpenSeparateEditorModal(item.id)}
+                                title="Abrir nota em janela separada"
+                                aria-label={`Abrir ${item.title || "nota"} em janela separada`}
+                              >
+                                <PictureInPicture2 size={13} aria-hidden="true" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+
+                  {noteLinksPanelTab === "tags" &&
+                    (() => {
+                      const needle = noteLinksPanelSearch.trim();
+                      const lowerNeedle = needle.toLocaleLowerCase().replace(/^#/, "");
+                      const activeTagsSet = new Set(
+                        (active.tags ?? []).map((t) => t.toLocaleLowerCase())
+                      );
+                      const filteredTags = navigation.tags.filter((t) =>
+                        !lowerNeedle ? true : t.name.toLocaleLowerCase().includes(lowerNeedle)
+                      );
+                      const exactExists = navigation.tags.some(
+                        (t) => t.name.toLocaleLowerCase() === lowerNeedle
+                      );
+
+                      return (
+                        <>
+                          {lowerNeedle && !exactExists && (
+                            <button
+                              type="button"
+                              className="note-links-create-tag-btn"
+                              onClick={() => {
+                                void addTagToActiveNote(lowerNeedle);
+                                setNoteLinksPanelSearch("");
+                              }}
+                            >
+                              <Plus size={13} aria-hidden="true" />
+                              <span>Criar e associar etiqueta #{lowerNeedle}</span>
+                            </button>
+                          )}
+                          {filteredTags.map((t) => {
+                            const attached = activeTagsSet.has(t.name.toLocaleLowerCase());
+                            return (
+                              <div key={t.id} className="note-links-catalog-row">
+                                <div className="note-links-catalog-info">
+                                  <strong>#{t.name}</strong>
+                                  <small>
+                                    {t.noteCount ?? 0} {(t.noteCount ?? 0) === 1 ? "nota" : "notas"}
+                                  </small>
+                                </div>
+                                <button
+                                  type="button"
+                                  className={`note-links-insert-btn ${attached ? "linked" : ""}`}
+                                  onClick={() => {
+                                    if (attached) {
+                                      void removeTagFromActiveNote(t.name);
+                                    } else {
+                                      void addTagToActiveNote(t.name);
+                                    }
+                                  }}
+                                >
+                                  {attached ? (
+                                    <>
+                                      <Check size={12} aria-hidden="true" />
+                                      <span>Associada</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Plus size={12} aria-hidden="true" />
+                                      <span>Associar</span>
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            );
+                          })}
+                          {filteredTags.length === 0 && !lowerNeedle && (
+                            <p className="connections-list-empty">
+                              Digite acima para criar sua primeira etiqueta.
+                            </p>
+                          )}
+                        </>
+                      );
+                    })()}
+
+                  {noteLinksPanelTab === "connected" &&
+                    (() => {
+                      const relatedByTag =
+                        noteConnectionsMetaMap.get(active.id)?.relatedByTag ?? [];
+                      return (
+                        <div className="connections-inspector-lists" style={{ borderTop: 0, paddingTop: 0 }}>
+                          <div className="connections-list-block">
+                            <h4>Vínculos diretos ({activeNoteConnections.length})</h4>
+                            {activeNoteConnections.length > 0 ? (
+                              activeNoteConnections.map((conn) => (
+                                <div
+                                  key={`${conn.direction}-${conn.noteId}`}
+                                  className="connections-neighbor-row"
+                                >
+                                  <button
+                                    type="button"
+                                    className="connections-neighbor-btn"
+                                    onClick={() => void handleOpenSeparateEditorModal(conn.noteId)}
+                                    title="Clique para abrir no editor de janela separada"
+                                  >
+                                    <span className="dir-arrow" aria-hidden="true">
+                                      {conn.direction === "outgoing" ? "→" : "←"}
+                                    </span>
+                                    <span>{conn.title || "Sem título"}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="icon-button mini"
+                                    onClick={() => void handleNavigateToReference("note", conn.noteId)}
+                                    title="Ir para esta nota no painel principal"
+                                  >
+                                    <ExternalLink size={12} aria-hidden="true" />
+                                  </button>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="connections-list-empty">
+                                Nenhum vínculo direto ainda. Use a aba "Vincular" ou digite{" "}
+                                <code>[[</code> no texto.
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="connections-list-block">
+                            <h4>Notas conectadas por etiquetas ({relatedByTag.length})</h4>
+                            {relatedByTag.length > 0 ? (
+                              relatedByTag.map((rel) => (
+                                <div key={rel.id} className="connections-neighbor-row">
+                                  <button
+                                    type="button"
+                                    className="connections-neighbor-btn"
+                                    onClick={() => void handleOpenSeparateEditorModal(rel.id)}
+                                    title={`Compartilha #${rel.sharedTag} · Clique para abrir em janela separada`}
+                                  >
+                                    <Hash size={12} aria-hidden="true" />
+                                    <span>{rel.title || "Sem título"}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="icon-button mini"
+                                    onClick={() => void handleNavigateToReference("note", rel.id)}
+                                    title="Ir para esta nota no painel principal"
+                                  >
+                                    <ExternalLink size={12} aria-hidden="true" />
+                                  </button>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="connections-list-empty">
+                                Nenhuma outra nota compartilha as etiquetas atuais.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                </div>
+              </aside>
+            )}
             </div>
             )}
           </>
@@ -2799,6 +3594,167 @@ export function App() {
             </div>
           </aside>
         )}
+      {floatingModalNote && (
+        <div
+          className="dialog-backdrop separate-note-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Editor em janela separada: ${floatingModalNote.title || "Sem título"}`}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) {
+              void flushNote(floatingModalNote.id);
+              setFloatingModalNoteId(null);
+            }
+          }}
+        >
+          <div className="separate-note-modal-window">
+            <header className="separate-note-modal-header">
+              <div className="separate-note-modal-meta">
+                <span className="separate-note-modal-badge">
+                  <PictureInPicture2 size={14} aria-hidden="true" />
+                  <span>Janela Separada</span>
+                </span>
+                <span className="separate-note-modal-folder">
+                  <Folder size={13} aria-hidden="true" />
+                  <span>{floatingModalNote.folder || "Notas"}</span>
+                </span>
+              </div>
+              <div className="separate-note-modal-actions">
+                <button
+                  type="button"
+                  className="connections-secondary-btn"
+                  onClick={() => {
+                    const targetId = floatingModalNote.id;
+                    void flushNote(targetId);
+                    setFloatingModalNoteId(null);
+                    void handleNavigateToReference("note", targetId);
+                  }}
+                  title="Abrir esta nota no painel principal de notas"
+                >
+                  <ExternalLink size={13} aria-hidden="true" />
+                  <span>Ir para a nota no painel</span>
+                </button>
+                <button
+                  type="button"
+                  className="connections-secondary-btn"
+                  onClick={() => {
+                    const targetId = floatingModalNote.id;
+                    void flushNote(targetId);
+                    setFloatingModalNoteId(null);
+                    void handleLaunchFocusById(targetId);
+                  }}
+                  title="Destacar em janela independente do sistema operacional"
+                >
+                  <PictureInPicture2 size={13} aria-hidden="true" />
+                  <span>Destacar no sistema</span>
+                </button>
+                <button
+                  type="button"
+                  className="icon-button"
+                  onClick={() => {
+                    void flushNote(floatingModalNote.id);
+                    setFloatingModalNoteId(null);
+                  }}
+                  title="Fechar editor (Esc)"
+                  aria-label="Fechar janela separada"
+                >
+                  <X size={16} aria-hidden="true" />
+                </button>
+              </div>
+            </header>
+
+            <div className="separate-note-modal-body">
+              <div className="separate-note-modal-page">
+                <time className="edited-at">{fullDateLabel(floatingModalNote.updatedAt)}</time>
+                <input
+                  className="title"
+                  value={floatingModalNote.title}
+                  onChange={(e) => saveNoteById(floatingModalNote.id, { title: e.target.value })}
+                  onBlur={() => void flushNote(floatingModalNote.id)}
+                  placeholder="Título da nota"
+                  aria-label="Título da nota"
+                />
+
+                <div className="tag-chips-bar">
+                  {(floatingModalNote.tags ?? []).map((tag) => (
+                    <span key={tag} className="tag-chip" title={`#${tag}`}>
+                      <span className="tag-chip-text">#{tag}</span>
+                      <button
+                        type="button"
+                        onClick={() => void toggleTagOnNoteById(floatingModalNote.id, tag)}
+                        title={`Remover etiqueta #${tag}`}
+                        aria-label={`Remover etiqueta #${tag}`}
+                      >
+                        <X aria-hidden="true" />
+                      </button>
+                    </span>
+                  ))}
+                  <div className="new-tag-input-box">
+                    <input
+                      value={floatingModalTagInput}
+                      onChange={(e) => setFloatingModalTagInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && floatingModalTagInput.trim()) {
+                          e.preventDefault();
+                          void toggleTagOnNoteById(floatingModalNote.id, floatingModalTagInput);
+                          setFloatingModalTagInput("");
+                        }
+                      }}
+                      placeholder="+ etiqueta..."
+                    />
+                    {floatingModalTagInput.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void toggleTagOnNoteById(floatingModalNote.id, floatingModalTagInput);
+                          setFloatingModalTagInput("");
+                        }}
+                        title="Adicionar etiqueta"
+                      >
+                        <Check aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {floatingModalNote.type === "code" ? (
+                  <CodeEditor
+                    key={`modal-code-${floatingModalNote.id}`}
+                    value={floatingModalNote.body}
+                    language={floatingModalNote.language || "plaintext"}
+                    title={floatingModalNote.title || "Protótipo"}
+                    readOnly={false}
+                    onChange={(text) =>
+                      saveNoteById(floatingModalNote.id, { body: text, bodyText: text })
+                    }
+                    onLanguageChange={(lang) =>
+                      saveNoteById(floatingModalNote.id, { language: lang })
+                    }
+                    onBlur={() => void flushNote(floatingModalNote.id)}
+                  />
+                ) : (
+                  <StructuredEditor
+                    key={`modal-rtf-${floatingModalNote.id}`}
+                    value={floatingModalNote.body}
+                    readOnly={false}
+                    currentNoteId={floatingModalNote.id}
+                    availableNotes={availableLinkNotes}
+                    onOpenLinkedNote={(linkedId) => {
+                      void flushNote(floatingModalNote.id);
+                      void handleOpenSeparateEditorModal(linkedId);
+                    }}
+                    onChange={(document, text) =>
+                      saveNoteById(floatingModalNote.id, { body: document, bodyText: text })
+                    }
+                    onBlur={() => void flushNote(floatingModalNote.id)}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </main>
     </div>
   );
