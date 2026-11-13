@@ -29,6 +29,5 @@ modules:
       - type: file
         path: ../linux/io.github.vitorkrewer.MagnetaresNotes.metainfo.xml
       - type: file
-        path: ../../apps/desktop/build/appicon.png
-        dest-filename: io.github.vitorkrewer.MagnetaresNotes.png
+        path: dist/io.github.vitorkrewer.MagnetaresNotes.png
 

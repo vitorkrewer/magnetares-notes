@@ -1,10 +1,13 @@
 name: Release Magnetares Notes
 
 on:
+  push:
+    tags:
+      - "v*"
   workflow_dispatch:
     inputs:
       version:
-        description: "Versão a publicar (ex: v1.0.0). Deixe em branco para auto-detectar do CHANGELOG.md"
+        description: "Versão a publicar (ex: v2.1.0). Deixe em branco para auto-detectar do CHANGELOG.md"
         required: false
         default: ""
         type: string
@@ -59,7 +62,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libgtk-3-dev libwebkit2gtk-4.1-dev
+          sudo apt-get install -y build-essential libgtk-3-dev libwebkit2gtk-4.1-dev python3-pil
 
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
@@ -72,8 +75,11 @@ jobs:
         shell: bash
         run: |
           RAW_VERSION="${{ github.event.inputs.version }}"
+          if [ -z "$RAW_VERSION" ] && [[ "${{ github.ref_name }}" == v* ]]; then
+            RAW_VERSION="${{ github.ref_name }}"
+          fi
           if [ -z "$RAW_VERSION" ]; then
-            RAW_VERSION=$(grep -m1 -oE '\[v?[0-9]+\.[0-9]+\.[0-9]+[^]]*\]' CHANGELOG.md | tr -d '[]' || echo "2.0.0")
+            RAW_VERSION=$(grep -m1 -oE '\[v?[0-9]+\.[0-9]+\.[0-9]+[^]]*\]' CHANGELOG.md | tr -d '[]' || echo "2.1.0")
           fi
           CLEAN_VERSION="${RAW_VERSION#v}"
           BUILD_DATE=$(date -u +%Y-%m-%d)
@@ -106,7 +112,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path release-assets
-          $binary = Get-ChildItem "apps/desktop/build/bin" -Filter *.exe | Select-Object -First 1
+          $binary = Get-ChildItem "apps/desktop/build/bin" -Filter "*.exe" | Where-Object { $_.Name -notlike "*~" } | Select-Object -First 1
+          if (-not $binary) { throw "Binario Windows (.exe) nao encontrado em apps/desktop/build/bin" }
           Copy-Item $binary.FullName "release-assets/Magnetares-Notes-Windows-x64.exe"
 
           # 2. Gerar versão Portátil (Zip com pasta data/ e marcador portable.dat)
@@ -125,8 +132,11 @@ jobs:
           }
           if (-not (Test-Path $nsisExe)) {
             choco install nsis -y
+            if ($LASTEXITCODE -ne 0) { throw "Falha ao instalar NSIS via Chocolatey" }
             $nsisExe = "C:\Program Files (x86)\NSIS\makensis.exe"
           }
+          if (-not (Test-Path $nsisExe)) { throw "makensis.exe nao encontrado" }
+
           $exeFullPath = (Resolve-Path "release-assets/Magnetares-Notes-Windows-x64.exe").Path
           $iconFullPath = (Resolve-Path "apps/desktop/build/windows/icon.ico").Path
           $setupOutPath = Join-Path (Resolve-Path "release-assets").Path "Magnetares-Notes-Windows-x64-Setup.exe"
@@ -136,10 +146,19 @@ jobs:
             "/DICON_SOURCE=$iconFullPath" `
             "/DOUT_FILE=$setupOutPath" `
             "apps/desktop/build/windows/installer/magnetares.nsi"
-          if ($LASTEXITCODE -ne 0) { throw "Falha ao gerar instalador NSIS" }
+          if ($LASTEXITCODE -ne 0 -or -not (Test-Path $setupOutPath)) {
+            throw "Falha ao gerar instalador NSIS"
+          }
 
           # 4. Gerar Instalador Corporativo Windows (.msi via WiX v4)
-          dotnet tool install --global wix --version 4.0.5
+          $dotnetTools = Join-Path $env:USERPROFILE ".dotnet\tools"
+          if ($env:PATH -notlike "*$dotnetTools*") {
+            $env:PATH = "$dotnetTools;$env:PATH"
+          }
+          if (-not (Get-Command wix -ErrorAction SilentlyContinue)) {
+            dotnet tool install --global wix --version 4.0.5
+            if ($LASTEXITCODE -ne 0) { throw "Falha ao instalar WiX Toolset v4" }
+          }
           $msiVersion = if ("${{ env.APP_VERSION }}" -match '^(\d+\.\d+\.\d+)') { $Matches[1] } else { "2.1.0" }
           $msiOutPath = Join-Path (Resolve-Path "release-assets").Path "Magnetares-Notes-Windows-x64.msi"
           wix build "apps/desktop/build/windows/msi/MagnetaresNotes.wxs" `
@@ -148,13 +167,24 @@ jobs:
             -d "ExePath=$exeFullPath" `
             -d "IconPath=$iconFullPath" `
             -o "$msiOutPath"
-          if ($LASTEXITCODE -ne 0) { throw "Falha ao gerar instalador MSI" }
+          if ($LASTEXITCODE -ne 0 -or -not (Test-Path $msiOutPath)) {
+            throw "Falha ao gerar instalador MSI"
+          }
 
       - name: Prepare Linux artifact
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          mkdir -p release-assets
+          mkdir -p release-assets build-icons
+
+          # Gerar ícones PNG nos tamanhos padrão XDG para Menu Iniciar e lojas Linux
+          python3 - <<'PY'
+          from PIL import Image
+          img = Image.open("apps/desktop/build/appicon.png")
+          resample = getattr(Image, "Resampling", Image).LANCZOS
+          for size in (512, 256, 128, 64):
+              img.resize((size, size), resample).save(f"build-icons/icon-{size}.png", "PNG")
+          PY
 
           # 1. Archive tar.gz
           tar -C apps/desktop/build/bin -czf release-assets/Magnetares-Notes-Linux-x64.tar.gz .
@@ -167,12 +197,8 @@ jobs:
           echo "Binário Linux encontrado em: $BIN_PATH"
 
           # Determinar versão para os pacotes
-          VERSION="${GITHUB_REF_NAME}"
-          if [[ -z "$VERSION" || "$VERSION" != v* ]]; then
-            VERSION=$(grep -oE '^##\s*\[?v?[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -n 1 | sed -E 's/##\s*\[?v?//')
-          fi
-          CLEAN_VER="${VERSION#v}"
-          [ -z "$CLEAN_VER" ] && CLEAN_VER="1.3.0"
+          CLEAN_VER="${{ env.APP_VERSION }}"
+          [ -z "$CLEAN_VER" ] && CLEAN_VER="2.1.0"
           echo "Versão do pacote Linux: $CLEAN_VER"
 
           # 2. Gerar pacote Debian (.deb)
@@ -182,14 +208,21 @@ jobs:
           mkdir -p "$DEB_ROOT/usr/bin"
           mkdir -p "$DEB_ROOT/usr/share/applications"
           mkdir -p "$DEB_ROOT/usr/share/metainfo"
-          mkdir -p "$DEB_ROOT/usr/share/icons/hicolor/512x512/apps"
           mkdir -p "$DEB_ROOT/usr/share/pixmaps"
 
           cp "$BIN_PATH" "$DEB_ROOT/usr/bin/magnetares-notes"
           chmod 755 "$DEB_ROOT/usr/bin/magnetares-notes"
-          cp apps/desktop/build/appicon.png "$DEB_ROOT/usr/share/icons/hicolor/512x512/apps/magnetares-notes.png"
-          cp apps/desktop/build/appicon.png "$DEB_ROOT/usr/share/pixmaps/magnetares-notes.png"
+
+          for sz in 512 256 128 64; do
+            mkdir -p "$DEB_ROOT/usr/share/icons/hicolor/${sz}x${sz}/apps"
+            cp "build-icons/icon-${sz}.png" "$DEB_ROOT/usr/share/icons/hicolor/${sz}x${sz}/apps/io.github.vitorkrewer.MagnetaresNotes.png"
+            cp "build-icons/icon-${sz}.png" "$DEB_ROOT/usr/share/icons/hicolor/${sz}x${sz}/apps/magnetares-notes.png"
+          done
+          cp "build-icons/icon-512.png" "$DEB_ROOT/usr/share/pixmaps/io.github.vitorkrewer.MagnetaresNotes.png"
+          cp "build-icons/icon-512.png" "$DEB_ROOT/usr/share/pixmaps/magnetares-notes.png"
           cp packaging/linux/io.github.vitorkrewer.MagnetaresNotes.metainfo.xml "$DEB_ROOT/usr/share/metainfo/io.github.vitorkrewer.MagnetaresNotes.metainfo.xml"
+          cp packaging/linux/io.github.vitorkrewer.MagnetaresNotes.desktop "$DEB_ROOT/usr/share/applications/io.github.vitorkrewer.MagnetaresNotes.desktop"
+          chmod 644 "$DEB_ROOT/usr/share/applications/io.github.vitorkrewer.MagnetaresNotes.desktop"
 
           printf "%s\n" \
             "Package: magnetares-notes" \
@@ -203,19 +236,6 @@ jobs:
             " Modern and secure markdown notes app with local-first storage and cloud sync." \
             > "$DEB_ROOT/DEBIAN/control"
 
-          printf "%s\n" \
-            "[Desktop Entry]" \
-            "Name=Magnetares Notes" \
-            "Comment=Onde pensamentos ganham gravidade própria." \
-            "Exec=magnetares-notes %u" \
-            "Icon=magnetares-notes" \
-            "Terminal=false" \
-            "Type=Application" \
-            "Categories=Office;Utility;TextEditor;" \
-            "StartupWMClass=Magnetares Notes" \
-            > "$DEB_ROOT/usr/share/applications/magnetares-notes.desktop"
-          chmod 644 "$DEB_ROOT/usr/share/applications/magnetares-notes.desktop"
-
           dpkg-deb --build --root-owner-group "$DEB_ROOT" release-assets/Magnetares-Notes-Linux-x64.deb
 
           # 3. Gerar AppImage (.AppImage)
@@ -226,9 +246,9 @@ jobs:
 
           cp "$BIN_PATH" "$APPDIR/usr/bin/magnetares-notes"
           chmod 755 "$APPDIR/usr/bin/magnetares-notes"
-          cp apps/desktop/build/appicon.png "$APPDIR/usr/share/icons/hicolor/512x512/apps/magnetares-notes.png"
-          cp apps/desktop/build/appicon.png "$APPDIR/magnetares-notes.png"
-          cp apps/desktop/build/appicon.png "$APPDIR/.DirIcon"
+          cp "build-icons/icon-512.png" "$APPDIR/usr/share/icons/hicolor/512x512/apps/magnetares-notes.png"
+          cp "build-icons/icon-512.png" "$APPDIR/magnetares-notes.png"
+          cp "build-icons/icon-512.png" "$APPDIR/.DirIcon"
 
           printf "%s\n" \
             "[Desktop Entry]" \
@@ -265,10 +285,11 @@ jobs:
           mkdir -p packaging/flatpak/dist
           cp "$BIN_PATH" packaging/flatpak/dist/magnetares-notes
           chmod 755 packaging/flatpak/dist/magnetares-notes
+          cp "build-icons/icon-512.png" packaging/flatpak/dist/io.github.vitorkrewer.MagnetaresNotes.png
 
           flatpak-builder --user --force-clean --disable-rofiles-fuse --repo=flatpak-repo flatpak-build packaging/flatpak/io.github.vitorkrewer.MagnetaresNotes.yml
           flatpak build-bundle flatpak-repo release-assets/Magnetares-Notes-Linux-x64.flatpak io.github.vitorkrewer.MagnetaresNotes --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
-          rm -rf flatpak-build flatpak-repo packaging/flatpak/dist
+          rm -rf flatpak-build flatpak-repo packaging/flatpak/dist build-icons
 
       - name: Prepare macOS artifact
         if: runner.os == 'macOS'
@@ -303,6 +324,7 @@ jobs:
       - name: Prepare Snap staging
         shell: bash
         run: |
+          sudo apt-get update && sudo apt-get install -y python3-pil
           mkdir -p packaging/snap/staging
           tar -xzf linux-artifact/Magnetares-Notes-Linux-x64.tar.gz -C packaging/snap/staging
           BIN_FOUND=$(find packaging/snap/staging -maxdepth 1 -type f ! -name "*.png" ! -name "*.desktop" | head -n 1)
@@ -311,10 +333,24 @@ jobs:
           fi
           chmod 755 packaging/snap/staging/magnetares-notes
           cp packaging/snap/gui/magnetares-notes.desktop packaging/snap/staging/magnetares-notes.desktop
-          cp apps/desktop/build/appicon.png packaging/snap/staging/magnetares-notes.png
+          python3 - <<'PY'
+          from PIL import Image
+          img = Image.open("apps/desktop/build/appicon.png")
+          resample = getattr(Image, "Resampling", Image).LANCZOS
+          resized = img.resize((512, 512), resample)
+          resized.save("packaging/snap/staging/magnetares-notes.png", "PNG")
+          resized.save("packaging/snap/gui/magnetares-notes.png", "PNG")
+          PY
           cp packaging/linux/io.github.vitorkrewer.MagnetaresNotes.metainfo.xml packaging/snap/staging/io.github.vitorkrewer.MagnetaresNotes.metainfo.xml
 
-          CLEAN_VER=$(grep -oE '^##\s*\[?v?[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -n 1 | sed -E 's/##\s*\[?v?//' || echo "2.1.0")
+          RAW_VERSION="${{ github.event.inputs.version }}"
+          if [ -z "$RAW_VERSION" ] && [[ "${{ github.ref_name }}" == v* ]]; then
+            RAW_VERSION="${{ github.ref_name }}"
+          fi
+          if [ -z "$RAW_VERSION" ]; then
+            RAW_VERSION=$(grep -m1 -oE '\[v?[0-9]+\.[0-9]+\.[0-9]+[^]]*\]' CHANGELOG.md | tr -d '[]' || echo "2.1.0")
+          fi
+          CLEAN_VER="${RAW_VERSION#v}"
           sed -i "s/^version:.*/version: '${CLEAN_VER}'/" packaging/snap/snapcraft.yaml
 
       - name: Build Snap package

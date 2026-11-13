@@ -2,6 +2,8 @@ const REPO_OWNER = "vitorkrewer";
 const REPO_NAME = "magnetares-notes";
 const RELEASE_API = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest`;
 const LATEST_RELEASE_PAGE = `https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/latest`;
+let releaseFetched = false;
+let latestVersionTag = "";
 
 // Configurações padrão com fallback para a página de releases
 const DOWNLOADS = {
@@ -14,32 +16,40 @@ const DOWNLOADS = {
     selectedFormat: "setup",
     formats: {
       setup: {
+        shortLabel: "Setup (.exe)",
         label: "Baixar Instalador Windows (Setup .exe)",
         heroLabel: "Baixar para Windows",
         note: "Instalador NSIS completo com atalhos no Menu Iniciar, Área de Trabalho e desinstalador oficial",
         meta: "Versão mais recente · 64-bit (Setup .exe)",
-        url: LATEST_RELEASE_PAGE
+        url: LATEST_RELEASE_PAGE,
+        available: false
       },
       msi: {
+        shortLabel: "MSI (.msi)",
         label: "Baixar Instalador Corporativo (.msi)",
         heroLabel: "Baixar MSI (.msi)",
         note: "Pacote Windows Installer (.msi) ideal para implantação corporativa, GPO ou instalação padrão",
         meta: "Versão mais recente · 64-bit (.msi)",
-        url: LATEST_RELEASE_PAGE
+        url: LATEST_RELEASE_PAGE,
+        available: false
       },
       exe: {
+        shortLabel: "Executável (.exe)",
         label: "Baixar Executável Direto (.exe)",
         heroLabel: "Baixar Executável (.exe)",
         note: "Executável standalone direto, sem instalador · Dados salvos no perfil do usuário",
         meta: "Versão mais recente · 64-bit (.exe)",
-        url: LATEST_RELEASE_PAGE
+        url: LATEST_RELEASE_PAGE,
+        available: false
       },
       portable: {
+        shortLabel: "Portátil (.zip)",
         label: "Baixar Versão Portátil (Pendrive .zip)",
         heroLabel: "Baixar Portátil (.zip)",
         note: "Ideal para pendrives · Mantém banco e configurações na própria pasta (100% isolado)",
         meta: "Versão mais recente · 64-bit (.zip)",
-        url: LATEST_RELEASE_PAGE
+        url: LATEST_RELEASE_PAGE,
+        available: false
       }
     }
   },
@@ -48,7 +58,8 @@ const DOWNLOADS = {
     heroLabel: "Baixar para macOS",
     note: "macOS 12 Monterey ou superior · Apple Silicon e Intel (.zip)",
     meta: "Versão mais recente · Binário Universal",
-    url: LATEST_RELEASE_PAGE
+    url: LATEST_RELEASE_PAGE,
+    available: false
   },
   linux: {
     label: "Baixar para Linux (AppImage)",
@@ -59,39 +70,49 @@ const DOWNLOADS = {
     selectedFormat: "appimage",
     formats: {
       appimage: {
+        shortLabel: "AppImage",
         label: "Baixar AppImage (x64)",
         heroLabel: "Baixar AppImage",
         note: "Universal para Ubuntu, Fedora, Arch, Debian · Executável sem instalação (.AppImage)",
         meta: "Versão mais recente · 64-bit (.AppImage)",
-        url: LATEST_RELEASE_PAGE
+        url: LATEST_RELEASE_PAGE,
+        available: false
       },
       flatpak: {
+        shortLabel: "Flatpak",
         label: "Baixar Pacote Flatpak (.flatpak)",
         heroLabel: "Baixar Flatpak",
         note: "Pacote universal Linux (.flatpak)",
         meta: "Versão mais recente · 64-bit (.flatpak)",
-        url: LATEST_RELEASE_PAGE
+        url: LATEST_RELEASE_PAGE,
+        available: false
       },
       snap: {
+        shortLabel: "Snap",
         label: "Baixar Pacote Snap (.snap)",
         heroLabel: "Baixar Snap",
         note: "Pacote Snap Linux (.snap)",
         meta: "Versão mais recente · 64-bit (.snap)",
-        url: LATEST_RELEASE_PAGE
+        url: LATEST_RELEASE_PAGE,
+        available: false
       },
       deb: {
+        shortLabel: "Pacote .deb",
         label: "Baixar Pacote Debian (.deb)",
         heroLabel: "Baixar .deb",
         note: "Para Ubuntu, Debian, Linux Mint, Pop!_OS e derivados (.deb)",
         meta: "Versão mais recente · 64-bit (.deb)",
-        url: LATEST_RELEASE_PAGE
+        url: LATEST_RELEASE_PAGE,
+        available: false
       },
       targz: {
+        shortLabel: "Arquivo .tar.gz",
         label: "Baixar Arquivo Tarball (.tar.gz)",
         heroLabel: "Baixar .tar.gz",
         note: "Binário puro compactado para execução manual (.tar.gz)",
         meta: "Versão mais recente · 64-bit (.tar.gz)",
-        url: LATEST_RELEASE_PAGE
+        url: LATEST_RELEASE_PAGE,
+        available: false
       }
     }
   }
@@ -134,65 +155,53 @@ function updateDownloadUI(platform) {
     item.setAttribute("aria-selected", String(isSelected));
   });
 
-  if (platform === "windows") {
-    if (windowsFormatsContainer) windowsFormatsContainer.style.display = "flex";
-    if (linuxFormatsContainer) linuxFormatsContainer.style.display = "none";
+  if (platform === "windows" || platform === "linux") {
+    const isWindows = platform === "windows";
+    if (windowsFormatsContainer) windowsFormatsContainer.style.display = isWindows ? "flex" : "none";
+    if (linuxFormatsContainer) linuxFormatsContainer.style.display = isWindows ? "none" : "flex";
 
-    const fmtKey = data.selectedFormat || "exe";
-    const fmt = data.formats[fmtKey] || data.formats.exe;
+    const defaultKey = isWindows ? "setup" : "appimage";
+    const fmtKey = data.selectedFormat || defaultKey;
+    const fmt = data.formats[fmtKey] || data.formats[defaultKey];
 
     formatPills.forEach((pill) => {
-      if (pill.dataset.platformTarget === "windows") {
+      if (pill.dataset.platformTarget === platform) {
         pill.classList.toggle("active", pill.dataset.format === fmtKey);
       }
     });
 
+    const isUnavailable = releaseFetched && !fmt.available;
     if (downloadLink) downloadLink.href = fmt.url;
-    if (downloadLabel) downloadLabel.textContent = fmt.label;
-    if (platformNote) platformNote.textContent = fmt.note;
-    if (downloadMeta) downloadMeta.textContent = fmt.meta;
-
-    if (heroDownloadBtn) heroDownloadBtn.href = fmt.url;
-    if (heroDownloadText) heroDownloadText.textContent = fmt.heroLabel;
-
-    if (downloadAltLinks) {
-      const otherKey = fmtKey === "exe" ? "portable" : "exe";
-      const otherFmt = data.formats[otherKey];
-      downloadAltLinks.innerHTML = `<span>Outro formato disponível: <a href="${otherFmt.url}">${otherKey === "portable" ? "Versão Portátil (.zip)" : "Executável (.exe)"}</a></span>`;
+    if (downloadLabel) {
+      downloadLabel.textContent = isUnavailable
+        ? `Ver ${fmt.shortLabel} no GitHub Releases`
+        : fmt.label;
     }
-  } else if (platform === "linux") {
-    if (windowsFormatsContainer) windowsFormatsContainer.style.display = "none";
-    if (linuxFormatsContainer) linuxFormatsContainer.style.display = "flex";
-
-    const fmtKey = data.selectedFormat || "appimage";
-    const fmt = data.formats[fmtKey] || data.formats.appimage;
-
-    formatPills.forEach((pill) => {
-      if (pill.dataset.platformTarget === "linux") {
-        pill.classList.toggle("active", pill.dataset.format === fmtKey);
-      }
-    });
-
-    if (downloadLink) downloadLink.href = fmt.url;
-    if (downloadLabel) downloadLabel.textContent = fmt.label;
     if (platformNote) platformNote.textContent = fmt.note;
-    if (downloadMeta) downloadMeta.textContent = fmt.meta;
+    if (downloadMeta) {
+      downloadMeta.textContent = isUnavailable
+        ? `Arquivo ainda não anexado à release ${latestVersionTag || "atual"} — selecione outro formato abaixo ou acesse o GitHub`
+        : fmt.meta;
+    }
 
     if (heroDownloadBtn) heroDownloadBtn.href = fmt.url;
     if (heroDownloadText) heroDownloadText.textContent = fmt.heroLabel;
 
     if (downloadAltLinks) {
-      const alts = [];
-      if (fmtKey !== "appimage") {
-        alts.push(`<a href="${data.formats.appimage.url}">AppImage</a>`);
+      const altKeys = Object.keys(data.formats).filter((key) => {
+        if (key === fmtKey) return false;
+        const item = data.formats[key];
+        return releaseFetched ? item.available : true;
+      });
+      if (altKeys.length > 0) {
+        const linksHtml = altKeys.map((key) => {
+          const item = data.formats[key];
+          return `<a href="${item.url}">${item.shortLabel}</a>`;
+        });
+        downloadAltLinks.innerHTML = `<span>Também disponível em: ${linksHtml.join(" · ")}</span>`;
+      } else {
+        downloadAltLinks.innerHTML = "";
       }
-      if (fmtKey !== "deb") {
-        alts.push(`<a href="${data.formats.deb.url}">Pacote .deb</a>`);
-      }
-      if (fmtKey !== "targz") {
-        alts.push(`<a href="${data.formats.targz.url}">Arquivo .tar.gz</a>`);
-      }
-      downloadAltLinks.innerHTML = `<span>Também disponível em: ${alts.join(" · ")}</span>`;
     }
   } else {
     if (windowsFormatsContainer) windowsFormatsContainer.style.display = "none";
@@ -242,6 +251,8 @@ async function fetchLatestRelease() {
     const data = await res.json();
     const version = data.tag_name || "v2.0.0";
     const assets = data.assets || [];
+    latestVersionTag = version;
+    releaseFetched = true;
 
     if (headerVersionBadge) {
       headerVersionBadge.textContent = version;
@@ -259,36 +270,63 @@ async function fetchLatestRelease() {
       if (name.includes("portable") && name.endsWith(".zip") && name.includes("windows")) {
         DOWNLOADS.windows.formats.portable.url = downloadUrl;
         DOWNLOADS.windows.formats.portable.meta = `Versão ${version} · Portátil (.zip)`;
+        DOWNLOADS.windows.formats.portable.available = true;
       } else if (name.includes("setup") && name.endsWith(".exe")) {
         DOWNLOADS.windows.formats.setup.url = downloadUrl;
         DOWNLOADS.windows.formats.setup.meta = `Versão ${version} · Setup NSIS (.exe)`;
+        DOWNLOADS.windows.formats.setup.available = true;
         DOWNLOADS.windows.url = downloadUrl;
       } else if (name.endsWith(".msi")) {
         DOWNLOADS.windows.formats.msi.url = downloadUrl;
         DOWNLOADS.windows.formats.msi.meta = `Versão ${version} · Windows Installer (.msi)`;
+        DOWNLOADS.windows.formats.msi.available = true;
       } else if (name.includes("windows") && name.endsWith(".exe")) {
         DOWNLOADS.windows.formats.exe.url = downloadUrl;
         DOWNLOADS.windows.formats.exe.meta = `Versão ${version} · x64 (.exe)`;
+        DOWNLOADS.windows.formats.exe.available = true;
       } else if (name.includes("macos") || name.includes("darwin") || (name.endsWith(".zip") && !name.includes("portable"))) {
         DOWNLOADS.macos.url = downloadUrl;
         DOWNLOADS.macos.meta = `Versão ${version} · Universal (.zip)`;
+        DOWNLOADS.macos.available = true;
       } else if (name.endsWith(".appimage")) {
         DOWNLOADS.linux.formats.appimage.url = downloadUrl;
         DOWNLOADS.linux.formats.appimage.meta = `Versão ${version} · x64 (.AppImage)`;
+        DOWNLOADS.linux.formats.appimage.available = true;
       } else if (name.endsWith(".flatpak")) {
         DOWNLOADS.linux.formats.flatpak.url = downloadUrl;
         DOWNLOADS.linux.formats.flatpak.meta = `Versão ${version} · x64 (.flatpak)`;
+        DOWNLOADS.linux.formats.flatpak.available = true;
       } else if (name.endsWith(".snap")) {
         DOWNLOADS.linux.formats.snap.url = downloadUrl;
         DOWNLOADS.linux.formats.snap.meta = `Versão ${version} · x64 (.snap)`;
+        DOWNLOADS.linux.formats.snap.available = true;
       } else if (name.endsWith(".deb")) {
         DOWNLOADS.linux.formats.deb.url = downloadUrl;
         DOWNLOADS.linux.formats.deb.meta = `Versão ${version} · x64 (.deb)`;
+        DOWNLOADS.linux.formats.deb.available = true;
       } else if (name.endsWith(".tar.gz")) {
         DOWNLOADS.linux.formats.targz.url = downloadUrl;
         DOWNLOADS.linux.formats.targz.meta = `Versão ${version} · x64 (.tar.gz)`;
+        DOWNLOADS.linux.formats.targz.available = true;
       }
     });
+
+    // Fallback automático caso o formato padrão (ex: Setup .exe ou .msi) não exista na release publicada
+    const winFmt = DOWNLOADS.windows.formats[DOWNLOADS.windows.selectedFormat];
+    if (!winFmt || !winFmt.available) {
+      const firstWin = ["setup", "msi", "exe", "portable"].find((k) => DOWNLOADS.windows.formats[k].available);
+      if (firstWin) {
+        DOWNLOADS.windows.selectedFormat = firstWin;
+      }
+    }
+
+    const linFmt = DOWNLOADS.linux.formats[DOWNLOADS.linux.selectedFormat];
+    if (!linFmt || !linFmt.available) {
+      const firstLin = ["appimage", "deb", "targz", "flatpak", "snap"].find((k) => DOWNLOADS.linux.formats[k].available);
+      if (firstLin) {
+        DOWNLOADS.linux.selectedFormat = firstLin;
+      }
+    }
 
     const activeBtn = document.querySelector(".platform.selected");
     const activePlatform = activeBtn ? activeBtn.dataset.platform : initialOS;
