@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { Archive, ArchiveRestore, Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, ExternalLink, FileCode, FileCode2, FileDown, FilePenLine, FileText, Folder, GitBranch, Globe, Hash, Link2, List, Minimize2, Moon, Network, PictureInPicture2, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Sun, Trash2, Upload, X } from "lucide-react";
+import { Archive, ArchiveRestore, Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, ExternalLink, FileCode, FileCode2, FileDown, FilePenLine, FileText, Folder, GitBranch, Globe, Hash, LayoutTemplate, Link2, List, Minimize2, Moon, Network, PictureInPicture2, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Sun, Trash2, Upload, X } from "lucide-react";
 import { StructuredEditor } from "./StructuredEditor";
 import { CodeEditor } from "./CodeEditor";
 import { CustomSelect } from "./CustomSelect";
@@ -16,7 +16,9 @@ import { IdeaFlowsView } from "./IdeaFlowsView";
 import type { IdeaReferenceKind } from "./IdeaNodeLinkModal";
 import { ConnectionsGraphView, buildDemoConnectionsPayload } from "./ConnectionsGraphView";
 import type { NoteLinkMeta } from "./NoteLinkNode";
-import { AppInfoRecord, ConnectionsGraphPayload, DatabaseMigrationMode, FolderRecord, IdeaFlowGraphRecord, IdeaFlowRecord, NavigationRecord, Note, NoteConnectionSummary, NoteQuery, SaveIdeaFlowGraphInput, SaveIdeaFlowInput, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord, TaskListRecord, UpdateCheckResultRecord } from "./types";
+import { NoteTemplatesModal, type TemplateApplyMode } from "./NoteTemplatesModal";
+import { BUILTIN_NOTE_TEMPLATES, appendTemplateToNoteBody, buildTemplateApplication } from "./noteTemplates";
+import { AppInfoRecord, ConnectionsGraphPayload, DatabaseMigrationMode, FolderRecord, IdeaFlowGraphRecord, IdeaFlowRecord, NavigationRecord, Note, NoteConnectionSummary, NoteQuery, NoteTemplateCategory, NoteTemplateRecord, SaveIdeaFlowGraphInput, SaveIdeaFlowInput, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord, TaskListRecord, UpdateCheckResultRecord } from "./types";
 import { downloadBlob, downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
 import { exportToAbntDocxBase64, exportToAbntDocxBlob } from "./abntExport";
 import { exportToPdfBase64, exportToPdfBlob } from "./pdfExport";
@@ -171,6 +173,8 @@ export function App() {
   const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
   const [focusedStickerId, setFocusedStickerId] = useState<string | null>(null);
   const [tagsExpanded, setTagsExpanded] = useState(false);
+  const [templatesModalOpen, setTemplatesModalOpen] = useState(false);
+  const [customTemplates, setCustomTemplates] = useState<NoteTemplateRecord[]>([]);
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<string>>(new Set());
   const [draggedNoteId, setDraggedNoteId] = useState<string | null>(null);
   const [draggedFolderId, setDraggedFolderId] = useState<string | null>(null);
@@ -183,6 +187,18 @@ export function App() {
   const titleRef = useRef<HTMLInputElement>(null);
   const syncingRef = useRef(false);
   const syncRunnerRef = useRef<(() => Promise<SyncResult>) | null>(null);
+
+  useEffect(() => {
+    if (!syncNotification) return;
+    if (syncNotification.type !== "success" && syncNotification.type !== "info") return;
+    const timeoutMs = syncNotification.type === "success" ? 3500 : 4000;
+    const timer = window.setTimeout(() => {
+      setSyncNotification((current) =>
+        current === syncNotification ? null : current
+      );
+    }, timeoutMs);
+    return () => window.clearTimeout(timer);
+  }, [syncNotification]);
 
   useEffect(() => {
     localStorage.setItem("magnetares_theme", theme);
@@ -265,6 +281,21 @@ export function App() {
       void bridge.GetAppInfo().then((info) => {
         if (info) setAppInfo(info);
       }).catch(() => undefined);
+    }
+    if (bridge?.ListNoteTemplates) {
+      void bridge.ListNoteTemplates().then((list) => {
+        if (Array.isArray(list)) setCustomTemplates(list);
+      }).catch(() => undefined);
+    } else {
+      try {
+        const raw = localStorage.getItem("magnetares_custom_note_templates");
+        if (raw) {
+          const parsed = JSON.parse(raw) as NoteTemplateRecord[];
+          if (Array.isArray(parsed)) setCustomTemplates(parsed);
+        }
+      } catch {
+        // ignore
+      }
     }
     const timer = window.setTimeout(() => {
       void handleCheckForUpdates(true);
@@ -1177,6 +1208,167 @@ export function App() {
     saveVersions.current.set(note.id, version);
     void enqueueSave(note, version);
     window.setTimeout(() => titleRef.current?.focus(), 50);
+  };
+
+  const handleApplyNoteTemplate = async (
+    template: NoteTemplateRecord,
+    mode: TemplateApplyMode,
+    applyTags: boolean
+  ) => {
+    const applied = buildTemplateApplication(template);
+    const bridge = window.go?.main?.App;
+
+    if (mode === "new-note" || !active || active.type === "code") {
+      const now = new Date().toISOString();
+      const targetFolderID =
+        selectedQuery.kind === "folder" && selectedQuery.id
+          ? selectedQuery.id
+          : "folder-default";
+      const targetFolder =
+        folderOptions.find((f) => f.id === targetFolderID)?.name ?? "Notas";
+      const nextTags = applyTags ? applied.tags : [];
+
+      const newNote: Note = {
+        id: crypto.randomUUID(),
+        title: applied.title,
+        body: applied.body,
+        bodyText: applied.bodyText,
+        type: "rtf",
+        language: "plaintext",
+        folder: targetFolder,
+        folderId: targetFolderID,
+        tags: nextTags,
+        revision: 0,
+        createdAt: now,
+        updatedAt: now,
+      };
+      setView("notes");
+      setNotes((current) => [newNote, ...current]);
+      setActiveId(newNote.id);
+      setQuery("");
+      setSaveState("saving");
+      const version = (saveVersions.current.get(newNote.id) ?? 0) + 1;
+      saveVersions.current.set(newNote.id, version);
+      await enqueueSave(newNote, version);
+      if (applyTags && nextTags.length > 0 && bridge?.SetNoteTags) {
+        try {
+          const updated = await bridge.SetNoteTags(newNote.id, nextTags);
+          setNotes((current) => current.map((n) => (n.id === updated.id ? updated : n)));
+          void reloadNavigation();
+        } catch {
+          // ignore
+        }
+      }
+      setTemplatesModalOpen(false);
+      setSyncNotification({ type: "success", message: `Template "${template.name}" aplicado em uma nova nota.` });
+      return;
+    }
+
+    const nextPatch: Partial<Note> = {};
+    if (mode === "append") {
+      const merged = appendTemplateToNoteBody(active.body, template.body);
+      nextPatch.body = merged.body;
+      nextPatch.bodyText = merged.bodyText;
+      if (!active.title.trim()) {
+        nextPatch.title = applied.title;
+      }
+    } else {
+      nextPatch.body = applied.body;
+      nextPatch.bodyText = applied.bodyText;
+      if (!active.title.trim()) {
+        nextPatch.title = applied.title;
+      }
+    }
+
+    save(nextPatch);
+
+    if (applyTags && applied.tags.length > 0) {
+      const mergedTags = Array.from(
+        new Set([...(active.tags ?? []), ...applied.tags])
+      );
+      if (bridge?.SetNoteTags) {
+        try {
+          const updated = await bridge.SetNoteTags(active.id, mergedTags);
+          setNotes((current) =>
+            current.map((n) =>
+              n.id === active.id ? { ...n, tags: updated.tags } : n
+            )
+          );
+          void reloadNavigation();
+        } catch {
+          // ignore
+        }
+      } else {
+        setNotes((current) =>
+          current.map((n) => (n.id === active.id ? { ...n, tags: mergedTags } : n))
+        );
+      }
+    }
+
+    setTemplatesModalOpen(false);
+    setSyncNotification({ type: "success", message: `Template "${template.name}" aplicado com sucesso.` });
+  };
+
+  const handleSaveCustomTemplate = async (input: {
+    name: string;
+    description: string;
+    category: NoteTemplateCategory;
+    defaultTitle: string;
+    body: string;
+    tags: string[];
+  }): Promise<NoteTemplateRecord | null> => {
+    const bridge = window.go?.main?.App;
+    const now = new Date().toISOString();
+    const record: NoteTemplateRecord = {
+      id: `tpl-${crypto.randomUUID()}`,
+      name: input.name,
+      description: input.description,
+      category: input.category,
+      icon: "sparkles",
+      defaultTitle: input.defaultTitle,
+      body: input.body,
+      tags: input.tags,
+      builtIn: false,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    if (bridge?.SaveNoteTemplate) {
+      const saved = await bridge.SaveNoteTemplate(record);
+      setCustomTemplates((prev) => [
+        saved,
+        ...prev.filter((item) => item.id !== saved.id),
+      ]);
+      setSyncNotification({ type: "success", message: `Template "${saved.name}" salvo em Meus Templates.` });
+      return saved;
+    }
+
+    const next = [record, ...customTemplates.filter((item) => item.id !== record.id)];
+    setCustomTemplates(next);
+    try {
+      localStorage.setItem("magnetares_custom_note_templates", JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+    setSyncNotification({ type: "success", message: `Template "${record.name}" salvo em Meus Templates.` });
+    return record;
+  };
+
+  const handleDeleteCustomTemplate = async (id: string) => {
+    const bridge = window.go?.main?.App;
+    if (bridge?.DeleteNoteTemplate) {
+      await bridge.DeleteNoteTemplate(id);
+    }
+    const next = customTemplates.filter((item) => item.id !== id);
+    setCustomTemplates(next);
+    if (!bridge?.DeleteNoteTemplate) {
+      try {
+        localStorage.setItem("magnetares_custom_note_templates", JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+    }
+    setSyncNotification({ type: "info", message: "Template personalizado removido." });
   };
 
   const deleteNote = async (note: Note) => {
@@ -2685,6 +2877,17 @@ export function App() {
                   </>
                 ) : (
                   <>
+                    {active.type !== "code" && (
+                      <button
+                        type="button"
+                        className={`icon-button templates-header-cta ${templatesModalOpen ? "active-pin" : ""}`}
+                        onClick={() => setTemplatesModalOpen(true)}
+                        title="Galeria de templates prontos para esta nota"
+                        aria-label="Abrir galeria de templates de nota"
+                      >
+                        <LayoutTemplate size={16} aria-hidden="true" />
+                      </button>
+                    )}
                     <button className="icon-button" onClick={handlePrint} title="Imprimir nota" aria-label="Imprimir nota"><Printer aria-hidden="true" /></button>
                     <button className={`icon-button cloud-sync-button ${syncing ? "syncing" : ""}`} onClick={() => void handleQuickSync()} title={syncing ? "Sincronizando com a nuvem" : "Sincronizar com a nuvem"} aria-label="Sincronizar com a nuvem" disabled={syncing}><Cloud aria-hidden="true" /></button>
                     <button
@@ -2884,23 +3087,52 @@ export function App() {
                     onBlur={() => void flushNote(active.id)} 
                   />
                 ) : (
-                  <StructuredEditor 
-                    key={active.id} 
-                    value={active.body} 
-                    readOnly={view === "deleted"} 
-                    currentNoteId={active.id}
-                    availableNotes={availableLinkNotes}
-                    onOpenConnectionsPanel={() => setNoteLinksPanelOpen(true)}
-                    onOpenLinkedNote={(linkedId, _title, openSeparateWindow) => {
-                      if (openSeparateWindow) {
-                        void handleOpenSeparateEditorModal(linkedId);
-                      } else {
-                        void handleNavigateToReference("note", linkedId);
-                      }
-                    }}
-                    onChange={(document, text) => save({ body: document, bodyText: text })} 
-                    onBlur={() => void flushNote(active.id)} 
-                  />
+                  <>
+                    {view !== "deleted" && !(active.bodyText ?? "").trim() && (
+                      <div className="empty-note-template-bar" role="region" aria-label="Sugestões rápidas de templates">
+                        <button
+                          type="button"
+                          className="empty-note-template-trigger"
+                          onClick={() => setTemplatesModalOpen(true)}
+                        >
+                          <LayoutTemplate size={14} aria-hidden="true" />
+                          <span>Usar um template pronto</span>
+                        </button>
+                        <div className="empty-note-template-quick-chips">
+                          {BUILTIN_NOTE_TEMPLATES.filter((t) =>
+                            ["builtin-meeting-minutes", "builtin-prd", "builtin-briefing", "builtin-daily-journal"].includes(t.id)
+                          ).map((tpl) => (
+                            <button
+                              key={tpl.id}
+                              type="button"
+                              className="empty-note-template-chip"
+                              onClick={() => void handleApplyNoteTemplate(tpl, "replace", true)}
+                              title={`Aplicar "${tpl.name}" imediatamente`}
+                            >
+                              {tpl.name.split(" — ")[0].split(" (")[0]}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <StructuredEditor 
+                      key={active.id} 
+                      value={active.body} 
+                      readOnly={view === "deleted"} 
+                      currentNoteId={active.id}
+                      availableNotes={availableLinkNotes}
+                      onOpenConnectionsPanel={() => setNoteLinksPanelOpen(true)}
+                      onOpenLinkedNote={(linkedId, _title, openSeparateWindow) => {
+                        if (openSeparateWindow) {
+                          void handleOpenSeparateEditorModal(linkedId);
+                        } else {
+                          void handleNavigateToReference("note", linkedId);
+                        }
+                      }}
+                      onChange={(document, text) => save({ body: document, bodyText: text })} 
+                      onBlur={() => void flushNote(active.id)} 
+                    />
+                  </>
                 )}
 
                 {(() => {
@@ -3754,6 +3986,17 @@ export function App() {
           </div>
         </div>
       )}
+
+      <NoteTemplatesModal
+        open={templatesModalOpen}
+        activeNote={active ?? null}
+        activeNoteHasContent={Boolean(active && (active.bodyText ?? "").trim().length > 0)}
+        customTemplates={customTemplates}
+        onClose={() => setTemplatesModalOpen(false)}
+        onApplyTemplate={(tpl, mode, applyTags) => void handleApplyNoteTemplate(tpl, mode, applyTags)}
+        onSaveCustomTemplate={handleSaveCustomTemplate}
+        onDeleteCustomTemplate={handleDeleteCustomTemplate}
+      />
 
     </main>
     </div>

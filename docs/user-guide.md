@@ -2,11 +2,13 @@
 
 ## Navegação básica
 
-O Magnetares opera com uma barra lateral modular e três visualizações principais:
+O Magnetares opera com uma barra lateral modular e cinco visualizações principais:
 
-1. **Visão de Notas (Três Painéis):** Barra lateral (árvore de pastas e etiquetas), Lista central de notas e Editor rico estruturado.
-2. **Visão de Listas & Tarefas:** Painel central de tarefas com Quick-Add, filtros e busca, acompanhado do painel lateral Inspector para detalhes, subtarefas e notas anexas.
-3. **Visão de Stickers:** Mural em grade expansível (*full-width*) com post-its coloridos e ordenação fluida por arrastar e soltar.
+1. **Visão de Notas (Três Painéis):** Barra lateral (árvore de pastas e etiquetas), Lista central de notas e Editor rico estruturado (com Galeria de Templates e Painel Lateral de Vínculos).
+2. **Visão de Stickers:** Mural em grade expansível (*full-width*) com post-its coloridos e ordenação fluida por arrastar e soltar.
+3. **Visão de Fluxo de Ideias:** Hub (Cards/Lista) e canvas vetorial interativo de mapas mentais e fluxogramas com referências cruzadas.
+4. **Visão de Conexões:** Mapa de grafos interativo (**CONEXÕES → Minhas Conexões**) com explorador lateral retrátil e inspetor de vínculos e etiquetas.
+5. **Visão de Listas & Tarefas:** Painel central de tarefas com Quick-Add, filtros e busca, acompanhado do painel lateral Inspector para detalhes, subtarefas e notas anexas.
 
 O botão de recolher a barra lateral amplia a área de trabalho. A rolagem fica na borda direita e aparece de maneira discreta quando há conteúdo extenso.
 
@@ -17,6 +19,27 @@ O botão de recolher a barra lateral amplia a área de trabalho. A rolagem fica 
 - Edite título e conteúdo; o salvamento é automático com debounce e fila serial por nota.
 - O estado no topo do editor alterna entre **Salvando…**, **Salvo** e **Falha ao salvar**.
 - `Ctrl+F` ou `Cmd+F` move o foco para a busca.
+
+### Galeria de Templates de Notas (v2.1.0)
+
+Disponível exclusivamente para notas estruturadas (não-`code`), a **Galeria de Templates** acelera a criação de documentos corporativos, de produto, acadêmicos e pessoais:
+
+- **Como abrir:** clique no ícone de **Templates** no cabeçalho superior da nota ou use a barra rápida **"Usar um template pronto"** exibida automaticamente em notas vazias.
+- **13 Modelos Nativos Prontos:** organizados em 5 categorias (*Corporativo & Reuniões*, *Produto & PO*, *Briefings & Projetos*, *Acadêmico & Pesquisa* e *Pessoal & Diário*), aproveitando nativamente tabelas, checklists, callouts, toggles, diagramas Mermaid e fórmulas KaTeX, com preenchimento automático da data atual (`{{hoje}}`).
+- **Pré-visualização & Aplicação Segura:** visualize a estrutura do modelo antes de aplicar. Em notas já preenchidas, escolha entre **Inserir ao final**, **Substituir nota** ou **Criar nova nota**.
+- **Meus Templates:** clique em **Salvar nota como template** dentro da galeria para transformar qualquer nota sua em um modelo reutilizável salvo localmente no SQLite.
+
+### Conexões & Vínculos entre Notas `[[Nota]]` (v2.1.0)
+
+Conecte ideias, projetos e estudos em uma rede navegável de conhecimento:
+
+- **Links inline `[[`:** digite `[[` em qualquer ponto do texto para abrir o autocompletar de notas e inserir uma pílula clicável `[[Título da Nota]]`.
+- **Painel Lateral de Vínculos & Etiquetas:** clique no botão de conexões (ícone de rede + contador) ao lado da Nuvem no cabeçalho da nota para buscar notas (com filtro suave por pasta), inserir vínculos com 1 clique (`+`), gerenciar etiquetas e consultar notas relacionadas.
+- **Mapa Visual de Grafos (`CONEXÕES → Minhas Conexões`):** visualize todas as notas, cadernos de código e etiquetas em um grafo interativo orientado a forças, com ícones vetoriais dentro dos nós, explorador lateral retrátil, filtros de profundidade (1 a 3 saltos) e abertura de qualquer nó em um **Modal de Editor Completo em Janela Separada** sem sair do mapa.
+
+### Fluxo de Ideias — Mapas Mentais & Diagramas (v2.0.0)
+
+Acesse **FLUXO DE IDEIAS → Meus Fluxos** na barra lateral para criar mapas mentais e fluxogramas vetoriais em tela cheia, com zoom de alta precisão (15% a 350%), 6 tipos de nós (incluindo **Referência Magnetares** com hyperlink direto para notas, tarefas e stickers), conexões Bezier/ortogonais/retas e exportação em PNG de alta resolução (`2.5x`).
 
 ### Code Snippets
 O Magnetares agora permite criar arquivos exclusivos de código (independentes das anotações ricas).

@@ -341,6 +341,29 @@ export type UpdateCheckResultRecord = {
   websiteUrl: string;
 };
 
+export type NoteTemplateCategory =
+  | "corporate"
+  | "product"
+  | "briefings"
+  | "academic"
+  | "personal"
+  | "custom";
+
+export type NoteTemplateRecord = {
+  id: string;
+  name: string;
+  description: string;
+  category: NoteTemplateCategory | string;
+  icon: string;
+  defaultTitle: string;
+  body: string;
+  tags: string[];
+  features?: string[];
+  builtIn?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type DesktopBridge = {
   ListNotes?: () => Promise<Note[]>;
   ListDeletedNotes?: () => Promise<Note[]>;
@@ -424,6 +447,9 @@ export type DesktopBridge = {
   ExportIdeaFlowPNG?: (suggestedName: string, base64PNG: string) => Promise<string>;
   GetConnectionsGraph?: () => Promise<ConnectionsGraphPayload>;
   GetNoteConnections?: (noteID: string) => Promise<NoteConnectionSummary[]>;
+  ListNoteTemplates?: () => Promise<NoteTemplateRecord[]>;
+  SaveNoteTemplate?: (tpl: NoteTemplateRecord) => Promise<NoteTemplateRecord>;
+  DeleteNoteTemplate?: (id: string) => Promise<void>;
   GetAppInfo?: () => Promise<AppInfoRecord>;
   CheckForUpdates?: () => Promise<UpdateCheckResultRecord>;
   OpenExternalURL?: (url: string) => Promise<void>;

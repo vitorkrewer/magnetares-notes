@@ -2,23 +2,31 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
-## [v2.1.0] - 2026-11-13
+## [v2.1.0] - 2026-11-23
 
 ### Added
+
+- **Galeria de Templates de Notas (Exclusiva para Notas Estruturadas):**
+  - **Catálogo de 13 Modelos Nativos TipTap (`noteTemplates.ts`):** Templates prontos construídos diretamente com os blocos ricos do editor (**Tabelas**, **Checklists**, **Callouts**, **Toggles**, **Diagramas Mermaid** e **Fórmulas KaTeX**) e interpolação automática de data (`{{hoje}}` e `{{mes_ano}}`), organizados em 5 categorias:
+    - *Corporativo & Reuniões:* Pauta & Ata de Reunião Executiva, Reunião 1:1 (Liderança & Feedback) e Registro de Decisão (Decision Log / ADR).
+    - *Produto & PO:* PRD — Requisitos de Produto, Product Discovery & Hipótese e Planning & Refinamento de Sprint.
+    - *Briefings & Projetos:* Briefing de Projeto / Campanha, Kickoff & Plano de Projeto e Post-Mortem & Análise de Incidente.
+    - *Acadêmico & Pesquisa:* Artigo Acadêmico (Pronto para ABNT) e Fichamento & Estudo Ativo.
+    - *Pessoal & Diário:* Diário Pessoal & Reflexão Diária e Planejamento Semanal Pessoal.
+  - **Modal de Galeria com Pré-visualização Estruturada (`NoteTemplatesModal.tsx`):** Busca instantânea, filtros por categoria, pré-visualização visual dos blocos antes da aplicação, opção de aplicar etiquetas sugeridas e aplicação segura em notas já preenchidas (*Inserir ao final*, *Substituir nota* ou *Criar nova nota*).
+  - **Acesso Rápido em Notas Novas/Vazias:** Botão dedicado de **Templates** no cabeçalho de notas não-`code` e barra discreta de acesso rápido em notas vazias com chips para os modelos mais utilizados.
+  - **Templates Personalizados no SQLite (`0017_note_templates.sql`, `note_templates.go`, `app.go`):** Nova tabela `note_templates` e APIs Wails (`ListNoteTemplates`, `SaveNoteTemplate`, `DeleteNoteTemplate`) permitindo salvar qualquer nota estruturada como modelo reutilizável na aba **Meus Templates**.
 
 - **Módulo "Conexões" — Mapa Visual de Conhecimento e Vínculos Bidirecionais:**
   - **Mapa de Grafos Interativo (`ConnectionsGraphView.tsx`, `connectionsLayout.ts`):** Nova seção **CONEXÕES → Minhas Conexões** na barra lateral com motor de simulação física (force-directed layout) para visualizar o ecossistema completo de notas, cadernos de código e etiquetas.
   - **Ícones Vetoriais Sugestivos e Grau de Conexão nos Nós:** Cada nó do grafo renderiza ícones visuais dedicados por categoria (Documento para notas, `< />` para notas de código e `#` para etiquetas) acompanhados de selos numéricos com o total de vínculos diretos.
-  - **Explorador Lateral e Inspetor de Nós no Mapa:** Painel lateral retrátil para busca e navegação rápida em acervos extensos de notas e etiquetas, filtros combinados por pasta, etiqueta, nós isolados e profundidade de subgrafo (1 a 3 saltos), além de inspetor detalhado com conexões de saída, menções recebidas (backlinks) e expansão progressiva de ramos.
+  - **Explorador Lateral e Inspetor de Nós no Mapa:** Painel lateral retrátil com botão discreto de alternância para busca e navegação rápida em acervos extensos de notas e etiquetas, filtros combinados por pasta, etiqueta, nós isolados e profundidade de subgrafo (1 a 3 saltos), além de inspetor detalhado com conexões de saída, menções recebidas (backlinks) e expansão progressiva de ramos.
   - **Vínculos Inline entre Notas (`[[Nota]]` e `NoteLinkNode.tsx`):** Extensão do editor estruturado com autocompletar instantâneo ao digitar `[[`, seletor na barra de ferramentas do editor e renderização de pílulas clicáveis com navegação direta entre notas e preservação em exportações (Markdown, HTML, TXT e DOCX ABNT).
-  - **Botão de Destaque "Vínculos" e Painel Lateral de Conexões no Editor:** Novo botão em destaque (cor âmbar) no cabeçalho da nota, posicionado ao lado dos botões de Nuvem e Exportar, que abre o **Painel Lateral de Vínculos & Etiquetas** para inserir links no texto com 1 clique, gerenciar etiquetas e navegar por notas que compartilham o mesmo tema.
-  - **Indicadores Visuais de Conexão nas Notas:** Selos de contagem de vínculos diretos e conexões por etiquetas exibidos nos cartões da lista de notas, na barra de localização da nota ativa e no painel resumo ao final do documento.
+  - **Acesso Rápido a Vínculos e Painel Lateral de Conexões no Editor:** Botão compacto com ícone e contador numérico no cabeçalho da nota (ao lado dos botões de Nuvem e Exportar) que abre o **Painel Lateral de Vínculos & Etiquetas** para inserir links no texto com 1 clique, filtrar por pasta com droplist suave (`CustomSelect`), gerenciar etiquetas e navegar por notas relacionadas.
+  - **Indicadores Visuais de Conexão nas Notas:** Selos de contagem de vínculos diretos e conexões por etiquetas exibidos nos cartões da lista de notas, na barra de localização da nota ativa e no painel resumo alinhado à borda inferior do documento.
   - **Modal de Editor Completo em Janela Separada:** Abertura instantânea de qualquer nota vinculada ou nó do grafo em um modal de janela flutuante com o editor completo (`StructuredEditor`), gerenciamento de etiquetas e opção de destacar para janela nativa independente do sistema operacional.
   - **Persistência SQLite e Sincronização (`0016_note_links.sql`, `note_links.go`):** Nova tabela `note_links` com extração automática de vínculos ao salvar ou sincronizar notas com a nuvem Turso e limpeza automática de integridade no motor de conformidade (`compliance.go`).
 
-  ## [v2.1.0] - 2026-11-12
-
-  ### Added
 - **Instaladores Nativos para Windows (`.exe` NSIS e `.msi` WiX):**
   - **Instalador Setup NSIS (`magnetares.nsi`):** Geração automatizada de `Magnetares-Notes-Windows-x64-Setup.exe` com interface em Português (BR) e Inglês, criação de atalhos no Menu Iniciar e Área de Trabalho, ícone oficial e registro oficial de desinstalador no Windows.
   - **Instalador Corporativo MSI (`MagnetaresNotes.wxs`):** Geração automatizada de `Magnetares-Notes-Windows-x64.msi` via WiX Toolset v4 com `UpgradeCode` fixo para atualizações limpas (MajorUpgrade) e implantação corporativa.
@@ -31,6 +39,11 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 - **Portal de Downloads Atualizado (`site/`):**
   - Novos seletores de formato no portal para **Windows** (`Setup .exe`, `.msi`, executável direto `.exe` e portátil `.zip`) com detecção automática dos novos artefatos na API de Releases do GitHub.
+
+### Changed
+
+- **Notificações Toast com Auto-fechamento:** Mensagens de sucesso (`success`) e informação (`info`) desaparecem automaticamente após 3,5s / 4s, mantendo avisos e erros visíveis até dispensa manual.
+- **Refinamentos de Interface (Conexões & Editor):** Remoção de painel lateral duplicado no mapa de conexões, substituição da droplist nativa de pastas por `CustomSelect`, compactação dos botões de ação no painel de vínculos (ícone `+` dedicado) e alinhamento inferior do cartão **Conexões desta nota**.
 
 ## [v2.0.0] - 2026-11-12
 

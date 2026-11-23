@@ -131,6 +131,18 @@ func (a *App) GetNoteConnections(noteID string) ([]NoteConnectionSummary, error)
 	return a.store.getNoteConnections(noteID)
 }
 
+func (a *App) ListNoteTemplates() ([]NoteTemplate, error) {
+	return a.store.listNoteTemplates()
+}
+
+func (a *App) SaveNoteTemplate(tpl NoteTemplate) (NoteTemplate, error) {
+	return a.store.saveNoteTemplate(tpl)
+}
+
+func (a *App) DeleteNoteTemplate(id string) error {
+	return a.store.deleteNoteTemplate(id)
+}
+
 func (a *App) SaveSmartFolder(smart SmartFolder) (SmartFolder, error) {
 	return a.store.saveSmartFolder(smart)
 }

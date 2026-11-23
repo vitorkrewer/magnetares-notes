@@ -32,11 +32,11 @@ O workflow `.github/workflows/release.yml` dispara em tags `v*`.
 
 ### Matriz atual
 
-| Runner | Plataforma Wails | Artefato esperado |
+| Runner | Plataforma Wails | Artefatos gerados |
 | --- | --- | --- |
-| `windows-latest` | `windows/amd64` | executável `.exe` |
-| `ubuntu-latest` | `linux/amd64` | pacote `.tar.gz` |
-| `macos-latest` | `darwin/universal` | aplicativo compactado `.zip` |
+| `windows-latest` | `windows/amd64` | Instalador Setup NSIS (`Setup.exe`), Instalador Corporativo MSI (`.msi`), executável direto (`.exe`) e portátil (`.zip`) |
+| `ubuntu-latest` | `linux/amd64` | Pacote Debian (`.deb` com AppStream), `.AppImage`, `.flatpak`, `.snap` e portátil (`.tar.gz`) |
+| `macos-latest` | `darwin/universal` | Aplicativo compactado (`.zip`) |
 
 O workflow instala dependências do Linux, Wails, dependências npm e chama:
 
@@ -57,7 +57,7 @@ wails build -clean -trimpath -platform <plataforma>
 - [ ] `npm run build` passa sem erros.
 - [ ] `CHANGELOG.md` descreve a versão.
 - [ ] A tag segue SemVer e corresponde à versão desejada.
-- [ ] Links de download em `site/script.js` apontam para os artefatos da release.
+- [ ] Links de download em `site/assets/js/script.js` apontam para os artefatos da release (ou detecção automática via GitHub Releases API).
 - [ ] Nenhum `.env`, token, banco `.db` ou arquivo de usuário está no commit.
 - [ ] A API de produção está em HTTPS e os segredos estão no ambiente do servidor.
 

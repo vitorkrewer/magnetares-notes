@@ -68,8 +68,11 @@ Nunca altere uma migração já lançada. Crie uma nova migração com prefixo c
 | `0012_sync_profile_source.sql` | Origem do perfil de sincronização gravado (`remote`, `explicit`, `local`). |
 | `0013_task_lists.sql` | Tabelas `task_lists`, `tasks` e `subtasks`, lista padrão "Entrada" (`list-inbox`) e índices de busca. |
 | `0014_task_lists_archive.sql` | Coluna `archived_at` em `task_lists` e índice composto para arquivamento e soft-delete. |
+| `0015_idea_flows.sql` | Tabelas `idea_flows`, `idea_nodes` e `idea_edges` para o módulo Fluxo de Ideias e sincronização. |
+| `0016_note_links.sql` | Tabela `note_links` (`source_note_id`, `target_note_id`, `label`, `created_at`) e índices para o módulo Conexões e backlinks. |
+| `0017_note_templates.sql` | Tabela `note_templates` para persistência local de templates personalizados salvos pelo usuário. |
 
-> **Prefixo `0007` duplicado:** `0007_sync_folder_updated_at_index.sql` e `0007_tag_icon.sql` já foram aplicados em bancos existentes e são registrados pelo nome completo. Não os renomeie: um nome novo seria tratado como migração pendente e falharia ao recriar a coluna `icon`. Novas migrações continuam a partir de `0015_`.
+> **Prefixo `0007` duplicado:** `0007_sync_folder_updated_at_index.sql` e `0007_tag_icon.sql` já foram aplicados em bancos existentes e são registrados pelo nome completo. Não os renomeie: um nome novo seria tratado como migração pendente e falharia ao recriar a coluna `icon`. Novas migrações continuam a partir de `0018_`.
 
 As migrações em `db/migrations` descrevem o esquema remoto de referência; o esquema efetivo é criado por `InitSchema` em `apps/desktop/turso.go` e `apps/api/turso.go`, que devem ser mantidos em paridade.
 
@@ -164,12 +167,15 @@ As migrações em `db/migrations` descrevem o esquema remoto de referência; o e
 | `deleted_at` | Exclusão lógica para sincronização. |
 | `sync_state` | Estado de sincronização (`clean` / `pending`). |
 
-### Organização
+### Organização, Conexões & Templates
 
 - `folders`: árvore por `parent_id`; não permite ciclos nem exclusão de pasta usada.
 - `tags`: nome normalizado, único, ícone e marca de etiqueta gerenciada.
 - `note_tags`: associação N:N entre nota e tag.
 - `smart_folders`: regra única por pasta inteligente (`tag`, `date` ou `checklist`).
+- `idea_flows`, `idea_nodes`, `idea_edges`: fluxos de ideias, nós posicionais (incluindo nós de referência cruzada) e arestas direcionadas.
+- `note_links`: vínculos bidirecionais extraídos automaticamente dos nós `noteLink` (`[[Nota]]`) do documento TipTap ao salvar ou sincronizar notas.
+- `note_templates`: modelos reutilizáveis criados pelo usuário (*Meus Templates*) contendo nome, descrição, categoria, título padrão, documento TipTap JSON e etiquetas sugeridas.
 
 ## Backup e restauração
 
@@ -202,6 +208,4 @@ O laboratório de sincronização em `tests/` cobre cursores e snapshots. Backup
 
 ## Troca de local do banco
 
-Em **Preferências > Armazenamento**, informe um arquivo `.db` gravável. No desktop nativo, o aplicativo fecha o store atual, abre o banco informado e atualiza a configuração local.
-
-> **Atenção:** escolher um caminho novo cria ou abre outro banco. O aplicativo atual não possui assistente visual de cópia/mesclagem entre bancos. Faça backup manual antes da troca.
+Em **Preferências > Armazenamento**, use o botão **Procurar...** ou informe um caminho de arquivo `.db` gravável. A partir da v2.0.0, o aplicativo executa uma inspeção prévia (`InspectDatabasePathTarget`) e abre um assistente seguro de migração (`MigrateDatabasePath` / `ResetDatabasePathToDefault`) que permite escolher entre copiar o banco atual para o novo local, abrir um banco já existente ou restaurar o caminho padrão sem perda de dados.

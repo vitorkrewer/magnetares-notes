@@ -13,26 +13,17 @@ site/
   blog.html
   post.html
   release.html
-  styles.css
-  script.js
   assets/
+    css/styles.css
+    js/script.js
+    img/
 ```
 
 Isso permite publicar a mesma página diretamente no GitHub Pages.
 
 ## Links de download
 
-Edite `site/script.js` após uma release para substituir os placeholders `#` pelos links de artefatos reais:
-
-```js
-const DOWNLOADS = {
-  windows: { url: "https://github.com/<org>/<repo>/releases/download/v1.0.0/Magnetares-Notes-Windows.exe" },
-  macos: { url: "https://github.com/<org>/<repo>/releases/download/v1.0.0/Magnetares-Notes-macOS-universal.zip" },
-  linux: { url: "https://github.com/<org>/<repo>/releases/download/v1.0.0/Magnetares-Notes-Linux-x64.tar.gz" }
-};
-```
-
-Mantenha também rótulo, metadados e requisitos de plataforma alinhados à release.
+`site/assets/js/script.js` consulta automaticamente a API de Releases do GitHub para preencher os links reais de download por sistema operacional (**Windows**: Setup `.exe`, `.msi`, executável direto e portátil `.zip`; **Linux**: `.deb`, `.AppImage`, `.flatpak`, `.snap` e `.tar.gz`; **macOS**: `.zip` universal), mantendo fallbacks configurados para a última release estável.
 
 ## Publicação
 

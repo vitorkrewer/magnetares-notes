@@ -22,14 +22,17 @@ Este diretório descreve o Magnetares Notes como produto, aplicativo desktop e c
 
 ### Implementado no desktop local
 
-- Notas locais persistentes em SQLite com autosave, lixeira e restauração.
-- Editor rico: títulos, fórmulas matemáticas (LaTeX com KaTeX offline), negrito, itálico, destaque, listas, citações, checklists, tabelas e cálculos.
+- Notas locais persistentes em SQLite com autosave, lixeira, restauração e **Modo Foco** em janela independente.
+- Editor rico TipTap: títulos, fórmulas matemáticas e químicas (LaTeX com KaTeX + `mhchem` offline), destaques acadêmicos (*Callouts*), blocos expansíveis (*Toggles*), diagramas **Mermaid.js**, negrito, itálico, destaque, alinhamento, cores, listas, citações, checklists, tabelas, cálculos e **vínculos inline `[[Nota]]`**.
+- **Galeria de Templates de Notas (v2.1.0):** 13 modelos prontos (corporativo, reuniões, PO/produto, briefings, acadêmico ABNT e diário pessoal) exclusivos para notas estruturadas, com pré-visualização ao vivo, aplicação segura e criação de **Meus Templates** persistidos em SQLite (`note_templates`).
+- **Conexões (v2.1.0):** mapa de grafos interativo (**CONEXÕES → Minhas Conexões**), vínculos bidirecionais `[[Nota]]`, painel lateral de vínculos & etiquetas, backlinks automáticos e abertura em modal de editor completo em janela separada.
+- **Fluxo de Ideias (v2.0.0):** canvas vetorial interativo de mapas mentais e fluxogramas, hub Cards/Lista, zoom de precisão (15%–350%), referências cruzadas com hyperlink direto e exportação PNG 2.5x.
 - **Stickers (v1.4.0):** mural full-width de notas autoadesivas por quadros, 8 cores pastel, fixação no topo e drag & drop.
-- **Listas & Tarefas (v1.8.0):** módulo completo de produtividade pessoal com 4 níveis hierárquicos (Listas ➔ Tarefas ➔ Subtarefas ➔ Múltiplas Notas), prioridades visuais semânticas (🔥, ⚠️, ⬇️, ➖), arquivamento de listas com modo consulta, e sincronização em nuvem Turso com LWW.
+- **Listas & Tarefas (v1.8.0):** módulo completo de produtividade pessoal com 4 níveis hierárquicos (Listas ➔ Tarefas ➔ Subtarefas ➔ Múltiplas Notas), prioridades visuais semânticas (🔥, ⚠️, ⬇️, ➖), arquivamento de listas com modo consulta e sincronização em nuvem Turso com LWW.
 - Pastas, subpastas, fixadas, etiquetas e Pastas Inteligentes.
-- Importação de Markdown/texto, exportação Markdown/HTML/texto com diálogo nativo e impressão.
-- Tema claro/escuro, barra de título sem moldura e configuração do local do banco.
-- Sincronização em nuvem opcional com detecção de conflitos, resolução local/remoto/merge e sync de pastas e etiquetas.
+- Importação de Markdown/texto, exportação Markdown/HTML/texto/PDF nativo e **Artigo ABNT (`.docx`)** com diálogo nativo e impressão `@media print`.
+- Tema claro/escuro, barra de título sem moldura, assistente seguro de troca de local do banco de dados, notificação de atualizações e aba **Sobre**.
+- Sincronização em nuvem opcional com detecção de conflitos, resolução local/remoto/merge e sync de notas, pastas, etiquetas, stickers, tarefas e fluxos de ideias.
 
 ### Implementado com limitações
 

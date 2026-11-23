@@ -43,7 +43,9 @@ flowchart LR
 
 | Área | Disponível hoje |
 | --- | --- |
-| **Editor** | Títulos, fórmulas matemáticas e químicas (LaTeX KaTeX + mhchem offline), destaques acadêmicos (Callouts), cores customizáveis, alinhamento, espaçamento entre linhas, negrito, itálico, destaque, listas, citações, checklists, tabelas com colagem direta do Excel/Sheets, cálculos inline, hyperlinks e blocos de código. |
+| **Editor** | Títulos, fórmulas matemáticas e químicas (LaTeX KaTeX + mhchem offline), destaques acadêmicos (Callouts), blocos expansíveis (Toggles), diagramas Mermaid, cores customizáveis, alinhamento, espaçamento entre linhas, negrito, itálico, destaque, listas, citações, checklists, tabelas com colagem direta do Excel/Sheets, cálculos inline, hyperlinks, vínculos `[[Nota]]` e blocos de código. |
+| **Templates de Notas** | Galeria integrada exclusiva para notas estruturadas com 13 modelos prontos (Reuniões, 1:1, ADR, PRD, Discovery, Sprint Planning, Briefings, Kickoff, Post-Mortem, Artigo ABNT, Fichamento, Diário Pessoal e Planejamento Semanal), pré-visualização estruturada ao vivo e criação de **Meus Templates** salvos localmente no SQLite. |
+| **Conexões** | Mapa de grafos interativo orientado a forças (**CONEXÕES → Minhas Conexões**), vínculos bidirecionais inline `[[Nota]]`, painel lateral de vínculos & etiquetas, backlinks automáticos, indicadores de conexões nos cartões de notas e abertura em modal de editor separado. |
 | **Code Snippets** | Notas de código independentes com motor Monaco Editor (o mesmo do VS Code). Syntax highlighting avançado, dropdown com diversas linguagens, Color Badges elegantes na interface, e botão de cópia com 1 clique. |
 | **Stickers** | Mural full-width de notas autoadesivas (post-its) organizado por quadros dedicados, 8 cores pastel (temas claro/escuro), fixação no topo, busca instantânea e reordenação por Drag & Drop (no mural e entre quadros na barra lateral). |
 | **Fluxo de Ideias** | Canvas vetorial interativo de alta definição para mapas mentais e fluxogramas, Hub com visualização em Cards/Lista e CRUD completo, zoom de precisão (15%–350%), minimapa, referências com hyperlink direto para Notas, Listas/Tarefas e Quadros/Stickers (com atualização automática de nomes) e exportação PNG de alta qualidade (2.5x). |
@@ -55,6 +57,12 @@ flowchart LR
 | **Sync Nuvem** | Lógica segura de Tombstones (evitando retorno de itens deletados), Outbox local, transações remotas, snapshots por cursor, sync automático com indicador de nuvem animado, resolução local/remota/merge e sync de tarefas, pastas e fluxos de ideias com Last-Write-Wins. |
 
 > Confira a [matriz de funcionalidades](docs/feature-status.md) e o [Guia de Uso Completo](https://vitorkrewer.github.io/magnetares-notes/guia-usuario.html) para detalhes dos recursos.
+
+### Galeria de Templates & Módulo Conexões (v2.1.0)
+
+A versão **2.1.0** amplia a produtividade corporativa, acadêmica e pessoal no Magnetares Notes com dois grandes recursos integrados ao editor estruturado:
+- **Galeria de Templates de Notas:** Disponível para todas as notas estruturadas (não-`code`) via botão no cabeçalho ou faixa de acesso rápido em notas vazias. Inclui **13 modelos prontos** (Pauta/Ata de Reunião, 1:1, ADR, PRD, Discovery, Planning de Sprint, Briefing, Kickoff, Post-Mortem, Artigo Acadêmico ABNT, Fichamento, Diário Pessoal e Planejamento Semanal) com pré-visualização ao vivo, aplicação segura (*Inserir ao final*, *Substituir* ou *Nova nota*) e suporte para salvar qualquer nota como modelo próprio em **Meus Templates** (`note_templates` no SQLite).
+- **Módulo Conexões & Vínculos `[[Nota]]`:** Crie ligações bidirecionais entre notas digitando `[[` ou pelo **Painel Lateral de Vínculos & Etiquetas**, visualize toda a rede de conhecimento em **CONEXÕES → Minhas Conexões** com mapa de grafos interativo, explorador lateral retrátil, backlinks e abertura instantânea em modal de editor completo.
 
 ### Fluxo de Ideias — Mapas Mentais & Diagramas (v2.0.0)
 

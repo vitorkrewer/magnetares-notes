@@ -42,6 +42,10 @@ export function DeleteNote(arg1) {
   return window['go']['main']['App']['DeleteNote'](arg1);
 }
 
+export function DeleteNoteTemplate(arg1) {
+  return window['go']['main']['App']['DeleteNoteTemplate'](arg1);
+}
+
 export function DeleteSmartFolder(arg1) {
   return window['go']['main']['App']['DeleteSmartFolder'](arg1);
 }
@@ -166,6 +170,10 @@ export function ListNoteConflicts() {
   return window['go']['main']['App']['ListNoteConflicts']();
 }
 
+export function ListNoteTemplates() {
+  return window['go']['main']['App']['ListNoteTemplates']();
+}
+
 export function ListNotes() {
   return window['go']['main']['App']['ListNotes']();
 }
@@ -264,6 +272,10 @@ export function SaveIdeaFlowGraph(arg1) {
 
 export function SaveNote(arg1) {
   return window['go']['main']['App']['SaveNote'](arg1);
+}
+
+export function SaveNoteTemplate(arg1) {
+  return window['go']['main']['App']['SaveNoteTemplate'](arg1);
 }
 
 export function SaveSmartFolder(arg1) {

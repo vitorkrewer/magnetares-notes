@@ -35,16 +35,26 @@ Exemplos de métodos expostos:
 - `SaveTaskNote`, `DeleteTaskNote`.
 - `ListStickerBoards`, `SaveStickerBoard`, `DeleteStickerBoard`.
 - `ListStickers`, `SaveSticker`, `DeleteSticker`, `MoveSticker`, `SetStickerPinned`.
+- `ListIdeaFlows`, `SaveIdeaFlow`, `DeleteIdeaFlow`, `DuplicateIdeaFlow`, `GetIdeaFlowGraph`, `SaveIdeaFlowGraph`, `ExportIdeaFlowPNG`.
+- `GetConnectionsGraph`, `GetNoteConnections`.
+- `ListNoteTemplates`, `SaveNoteTemplate`, `DeleteNoteTemplate`.
 - `QueryNotes`, `SaveSmartFolder`, `DeleteSmartFolder`.
-- `GetDatabasePath`, `SetCustomDatabasePath`.
-- `MinimizeWindow`, `ToggleMaximizeWindow`, `CloseWindow`.
+- `GetDatabasePath`, `BrowseDatabaseDirectory`, `InspectDatabasePathTarget`, `MigrateDatabasePath`, `ResetDatabasePathToDefault`.
+- `GetAppInfo`, `CheckForUpdates`, `OpenExternalURL`.
+- `MinimizeWindow`, `ToggleMaximizeWindow`, `CloseWindow`, `LaunchFocusWindow`, `CloseFocusWindow`.
 
 ### Frontend
 
 O frontend fica em `apps/desktop/frontend` e é construído por Vite/React.
 
-- `App.tsx`: estado, autosave, navegação, diálogos e integração bridge/API.
-- `StructuredEditor.tsx`: Tiptap e toolbar de formatação.
+- `App.tsx`: estado, autosave, navegação, notificações toast com auto-fechamento, modais e integração bridge/API.
+- `StructuredEditor.tsx`: Tiptap, autocompletar `[[` de vínculos entre notas e toolbar de formatação.
+- `NoteLinkNode.tsx`: nó inline clicável `[[Nota]]` com navegação direta ou abertura em modal de janela separada.
+- `ConnectionsGraphView.tsx` e `connectionsLayout.ts`: mapa de grafos interativo orientado a forças, explorador lateral retrátil e inspetor de nós/backlinks.
+- `NoteTemplatesModal.tsx` e `noteTemplates.ts`: galeria de 13 templates nativos TipTap, pré-visualização estruturada ao vivo e gestão de **Meus Templates**.
+- `IdeaFlowsView.tsx` e `IdeaFlowCanvas.tsx`: hub e canvas vetorial do módulo **Fluxo de Ideias** com referências cruzadas e exportação PNG.
+- `FocusStandaloneWindow.tsx`: janela independente de Modo Foco (Picture-in-Picture com Always-on-Top).
+- `CustomSelect.tsx`: componente de dropdown estilizado e acessível renderizado via portal em toda a interface.
 - `TaskListView.tsx`: módulo completo de tarefas (Quick-Add, filtros, busca, prioridades semânticas, inspector, subtarefas e notas anexadas).
 - `TaskListDialog.tsx`: diálogo de criação e personalização de listas de tarefas (cores e ícones).
 - `StickerBoardView.tsx`: mural full-width de notas adesivas com reordenação drag & drop e edição inline.

@@ -40,6 +40,13 @@ Este documento é a referência de status do produto. Ele evita que a documenta�
 | Prioridades Semânticas | Implementado (v1.8.0) | 4 níveis com ícones semânticos distintos (🔥 Alta, ⚠️ Média, ⬇️ Baixa, ➖ Nenhuma) e WCAG AA no tema claro. |
 | Diálogos Modais Centralizados | Implementado (v1.8.0) | Eliminação total de `window.confirm` do navegador; modais centralizados nativos integrados ao design system. |
 | Sincronização de Tarefas na Nuvem | Implementado (v1.8.0) | Tabelas remotas `sync_task_lists`, `sync_tasks` e `sync_subtasks` no Turso com LWW e sync imediato. |
+| Fluxo de Ideias (Mapas Mentais) | Implementado (v2.0.0) | Hub Cards/Lista, canvas vetorial de alta definição (zoom 15%–350%), 6 tipos de nós, referências cruzadas com hyperlink direto, exportação PNG 2.5x e sync Turso. |
+| Notificação de Atualizações & Aba Sobre | Implementado (v2.0.0) | Checagem automática/manual de releases do GitHub, banner discreto e metadados embutidos (`version.go`). |
+| Assistente Seguro de Troca do Banco | Implementado (v2.0.0) | Seletor nativo de pasta, inspeção prévia de destino e migração segura (copiar, abrir existente ou resetar padrão). |
+| Módulo Conexões (Mapa de Grafos) | Implementado (v2.1.0) | Grafo interativo force-directed em **CONEXÕES → Minhas Conexões**, ícones vetoriais por tipo, explorador lateral retrátil, filtros de profundidade (1–3 saltos) e modal de editor em janela separada. |
+| Vínculos Bidirecionais `[[Nota]]` & Backlinks | Implementado (v2.1.0) | Autocompletar inline `[[`, painel lateral de vínculos & etiquetas, indicadores de conexões nas notas e tabela `note_links` (`0016_note_links.sql`). |
+| Galeria de Templates de Notas | Implementado (v2.1.0) | 13 templates nativos TipTap (corporativo, reuniões, PO, briefings, ABNT e pessoal) exclusivos para notas estruturadas, pré-visualização ao vivo, barra rápida em notas vazias e **Meus Templates** no SQLite (`0017_note_templates.sql`). |
+| Instaladores Nativos (Windows & Linux) | Implementado (v2.1.0) | Setup NSIS (`.exe`), MSI corporativo WiX (`.msi`), Flatpak (`.flatpak`), Snap (`.snap`), Debian (`.deb`) com AppStream e AppImage. |
 | Backup Turso e Sync | Implementado | Sync bidirecional de notas/pastas, snapshots, transações, sync automático, conflitos local/remoto/merge e convergência por conteúdo. |
 | Anexos e PDFs | Planejado | Sem modelo de blob, visualizador ou armazenamento de arquivo. |
 | Desenho/anotação | Planejado | Depende de canvas e anexos. |
