@@ -5,22 +5,33 @@ export type TemplateCategoryMeta = {
   id: "all" | NoteTemplateCategory;
   label: string;
   shortLabel: string;
+  icon: string;
 };
 
 export const TEMPLATE_CATEGORIES: TemplateCategoryMeta[] = [
-  { id: "all", label: "Todos os Templates", shortLabel: "Todos" },
-  { id: "corporate", label: "Corporativo & Reuniões", shortLabel: "Reuniões" },
-  { id: "product", label: "Produto & PO", shortLabel: "Produto & PO" },
-  { id: "briefings", label: "Briefings & Projetos", shortLabel: "Briefings" },
-  { id: "academic", label: "Acadêmico & Pesquisa", shortLabel: "Acadêmico" },
-  { id: "personal", label: "Pessoal & Diário", shortLabel: "Pessoal" },
-  { id: "custom", label: "Meus Templates", shortLabel: "Meus Templates" },
+  { id: "all", label: "Todos os Templates", shortLabel: "Todos", icon: "layout-template" },
+  { id: "corporate", label: "Corporativo & Reuniões", shortLabel: "Reuniões", icon: "users" },
+  { id: "product", label: "Produto & PO", shortLabel: "Produto & PO", icon: "layers" },
+  { id: "briefings", label: "Briefings & Projetos", shortLabel: "Briefings", icon: "clipboard-list" },
+  { id: "health", label: "Saúde & Clínica", shortLabel: "Saúde & Clínica", icon: "stethoscope" },
+  { id: "engineering", label: "Exatas & Engenharia", shortLabel: "Exatas & Eng.", icon: "flask-conical" },
+  { id: "legal", label: "Jurídico & Negócios", shortLabel: "Jurídico & Negócios", icon: "scale" },
+  { id: "education", label: "Educação & Ensino", shortLabel: "Educação & Ensino", icon: "presentation" },
+  { id: "creative", label: "Criativo & Mídia", shortLabel: "Criativo & Mídia", icon: "clapperboard" },
+  { id: "academic", label: "Acadêmico & Pesquisa", shortLabel: "Acadêmico", icon: "graduation-cap" },
+  { id: "personal", label: "Pessoal & Diário", shortLabel: "Pessoal & Diário", icon: "sun" },
+  { id: "custom", label: "Meus Templates", shortLabel: "Meus Templates", icon: "sparkles" },
 ];
 
 export const TEMPLATE_CATEGORY_LABELS: Record<string, string> = {
   corporate: "Corporativo & Reuniões",
   product: "Produto & PO",
   briefings: "Briefings & Projetos",
+  health: "Saúde & Clínica",
+  engineering: "Exatas & Engenharia",
+  legal: "Jurídico & Negócios",
+  education: "Educação & Ensino",
+  creative: "Criativo & Mídia",
   academic: "Acadêmico & Pesquisa",
   personal: "Pessoal & Diário",
   custom: "Meus Templates",
@@ -904,6 +915,578 @@ export const BUILTIN_NOTE_TEMPLATES: NoteTemplateRecord[] = [
       bulletList([
         [bold("O que deu muito certo: "), txt("")],
         [bold("O que ajustar na próxima semana: "), txt("")],
+      ])
+    ),
+  },
+
+  // ======================== SAÚDE & CLÍNICA ========================
+  {
+    id: "builtin-clinical-soap",
+    name: "Prontuário / Evolução Clínica SOAP",
+    description:
+      "Registro estruturado de atendimento em saúde (Subjetivo, Objetivo, Avaliação e Plano) com sinais vitais e alerta clínico.",
+    category: "health",
+    icon: "stethoscope",
+    defaultTitle: "Evolução SOAP — [Iniciais/ID] ({{hoje}})",
+    tags: ["saude", "clinica", "soap"],
+    features: ["Callout", "Tabela", "Checklist"],
+    builtIn: true,
+    body: doc(
+      callout(
+        "warning",
+        p(bold("Alergias & Sinais de Alerta (Red Flags): "), txt("Registre alergias medicamentosas, comorbidades críticas, anticoagulação ou precauções especiais."))
+      ),
+      table(
+        ["Data / Hora", "PA (mmHg)", "FC (bpm)", "FR (irpm)", "Temp (°C)", "SpO₂ (%)"],
+        [["{{hoje}}", "120/80", "72", "16", "36,5", "98%"]]
+      ),
+      h1("S — Subjetivo (Queixa & História)"),
+      bulletList([
+        [bold("Queixa Principal (QP): "), txt("Motivo da consulta nas palavras do paciente e tempo de evolução.")],
+        [bold("História da Doença Atual (HDA): "), txt("Início, características, fatores de melhora/piora e tratamentos prévios.")],
+        [bold("Medicações em uso contínuo: "), txt("Fármaco, posologia e adesão.")],
+      ]),
+      h1("O — Objetivo (Exame Físico & Exames)"),
+      bulletList([
+        [bold("Estado geral: "), txt("Lúcido, orientado, hidratado, corado, eupneico.")],
+        [bold("Exame segmentar dirigido: "), txt("Ausculta cardiopulmonar, abdome, neurológico ou osteomuscular.")],
+        [bold("Exames complementares relevantes: "), txt("Resultados laboratoriais ou de imagem recentes.")],
+      ]),
+      h1("A — Avaliação (Hipóteses & Raciocínio Clínico)"),
+      orderedList([
+        [bold("Hipótese principal (CID): "), txt("Justificativa clínica e gravidade.")],
+        [bold("Diagnósticos diferenciais: "), txt("Condições secundárias em investigação.")],
+      ]),
+      h1("P — Plano & Conduta"),
+      taskList([
+        { text: "Prescrição terapêutica / ajuste posológico orientado" },
+        { text: "Solicitação de exames complementares" },
+        { text: "Orientações de sinais de alarme e retorno agendado" },
+      ])
+    ),
+  },
+  {
+    id: "builtin-clinical-case-study",
+    name: "Estudo de Caso Clínico (Residência / Discussão)",
+    description:
+      "Estruture casos clínicos para rounds, provas de residência e ligas acadêmicas com diagnóstico e conduta ocultos em Toggle.",
+    category: "health",
+    icon: "heart-pulse",
+    defaultTitle: "Caso Clínico — [Especialidade / Síndrome]",
+    tags: ["casoclinico", "medicina", "estudo"],
+    features: ["Tabela", "Toggle", "Callout"],
+    builtIn: true,
+    body: doc(
+      h1("1. Identificação & Anamnese"),
+      p(bold("Apresentação: "), txt("Paciente [sexo], [idade] anos, [profissão], procura atendimento referindo [queixa principal] há [tempo].")),
+      p(bold("Antecedentes: "), txt("Comorbidades, cirurgias prévias, tabagismo/etilismo e histórico familiar.")),
+      h1("2. Exame Físico & Achados Iniciais"),
+      table(
+        ["Sistema / Parâmetro", "Achado Clínico"],
+        [
+          ["Sinais Vitais", "PA: ___ | FC: ___ | Tax: ___ | SpO₂: ___"],
+          ["Cardiorrespiratório", "Descrição dos achados de inspeção, palpação e ausculta"],
+          ["Exames Iniciais", "Hemograma, função renal, eletrólitos, ECG / Imagem"],
+        ]
+      ),
+      h1("3. Raciocínio Diagnóstico (Auto-teste)"),
+      toggle(
+        "Qual é a principal hipótese diagnóstica e os diagnósticos diferenciais?",
+        false,
+        p(bold("Diagnóstico Principal: "), txt("Descreva a etiologia mais provável com base nos achados positivos e negativos.")),
+        p(bold("Diferenciais a descartar: "), txt("Liste as hipóteses alternativas e qual exame diferencia cada uma."))
+      ),
+      toggle(
+        "Qual é a conduta imediata e o tratamento de escolha?",
+        false,
+        p(bold("Estabilização / Primeira linha: "), txt("Medidas imediatas, fármacos e doses preconizadas pelas diretrizes.")),
+        p(bold("Seguimento: "), txt("Critérios de internação ou alta segura."))
+      ),
+      callout(
+        "info",
+        p(bold("Pérola Clínica (Take-home message): "), txt("Sintetize em 2 linhas o aprendizado essencial deste caso."))
+      )
+    ),
+  },
+  {
+    id: "builtin-therapy-session",
+    name: "Registro de Sessão (Psicologia & Terapia)",
+    description:
+      "Acompanhamento estruturado de sessões clínicas: estado afetivo, temas emergentes, intervenções técnicas e plano terapêutico.",
+    category: "health",
+    icon: "brain",
+    defaultTitle: "Sessão #[N] — [Iniciais] ({{hoje}})",
+    tags: ["psicologia", "terapia", "sessao"],
+    features: ["Tabela", "Callout", "Checklist"],
+    builtIn: true,
+    body: doc(
+      table(
+        ["Data", "Sessão Nº", "Modalidade", "Estado Afetivo Inicial"],
+        [["{{hoje}}", "#01", "Presencial / Online", "Ex.: Ansioso, colaborativo"]]
+      ),
+      h1("1. Demanda & Temas Trabalhados"),
+      bulletList([
+        "Eventos significativos relatados desde a última sessão.",
+        "Pensamentos automáticos, crenças ou padrões relacionais observados.",
+      ]),
+      h1("2. Intervenções & Manejo Clínico"),
+      bulletList([
+        [bold("Técnica / Abordagem utilizada: "), txt("Ex.: Reestruturação cognitiva, escuta analítica, psicoeducação, exposição.")],
+        [bold("Reação / Insight em sessão: "), txt("Como a pessoa respondeu à intervenção.")],
+      ]),
+      h1("3. Plano de Ação / Tarefa entre Sessões"),
+      taskList([
+        { text: "Atividade prática ou automonitoramento combinado para a semana" },
+        { text: "Ponto focal para retomar na abertura da próxima sessão" },
+      ]),
+      callout(
+        "info",
+        p(bold("Observações de Evolução: "), txt("Anotações reservadas sobre aliança terapêutica e progresso frente às metas do tratamento."))
+      )
+    ),
+  },
+
+  // ======================== EXATAS & ENGENHARIA ========================
+  {
+    id: "builtin-lab-report",
+    name: "Relatório de Prática de Laboratório",
+    description:
+      "Documente experimentos de Química, Física ou Biologia com reagentes, protocolo, equações KaTeX/mhchem, medições e erros.",
+    category: "engineering",
+    icon: "flask-conical",
+    defaultTitle: "Relatório Experimental — [Nome do Experimento]",
+    tags: ["laboratorio", "experimento", "ciencias"],
+    features: ["Callout", "KaTeX", "Tabela"],
+    builtIn: true,
+    body: doc(
+      callout(
+        "experiment",
+        p(bold("Objetivo Experimental: "), txt("Determinar experimentalmente [grandeza/fenômeno] e comparar com o modelo teórico esperado."))
+      ),
+      table(
+        ["Data", "Laboratório / Disciplina", "Condições Ambientais", "Equipe"],
+        [["{{hoje}}", "Lab. de Química / Física", "T = 25 °C · P = 1 atm", "Integrantes"]]
+      ),
+      h1("1. Materiais, Reagentes & Segurança"),
+      bulletList([
+        [bold("Vidrarias e instrumentos: "), txt("Bureta (±0,05 mL), balança analítica (±0,0001 g), multímetro...")],
+        [bold("Reagentes / EPIs obrigatórios: "), txt("Jaleco, óculos de proteção, luvas nitrílicas e capela de exaustão.")],
+      ]),
+      h1("2. Fundamentação & Reação / Equação"),
+      p("Modelo estequiométrico ou lei física que rege o ensaio:"),
+      mathBlock("\\ce{CH3COOH(aq) + NaOH(aq) -> CH3COONa(aq) + H2O(l)}"),
+      h1("3. Dados Coletados (Ensaios)"),
+      table(
+        ["Ensaio", "Medida Inicial", "Medida Final", "Valor Calculado", "Desvio (%)"],
+        [
+          ["Ensaio 1", "0,00", "24,80", "0,0992", "0,8%"],
+          ["Ensaio 2", "0,00", "25,05", "0,1002", "0,2%"],
+          ["Ensaio 3", "0,00", "24,95", "0,0998", "0,2%"],
+        ]
+      ),
+      h1("4. Análise de Resultados & Fontes de Incerteza"),
+      p("Discuta a precisão e exatidão obtidas, desvios sistemáticos ou aleatórios e aderência ao valor de referência."),
+      h1("5. Conclusão"),
+      p("Síntese objetiva confirmando se o objetivo experimental foi atingido.")
+    ),
+  },
+  {
+    id: "builtin-engineering-calc",
+    name: "Memorial de Cálculo de Engenharia",
+    description:
+      "Estruture dimensionamentos técnicos com normas de referência, parâmetros de projeto, deduções KaTeX e verificação de segurança.",
+    category: "engineering",
+    icon: "calculator",
+    defaultTitle: "Memorial de Cálculo — [Sistema / Estrutura]",
+    tags: ["engenharia", "calculo", "memorial"],
+    features: ["Tabela", "KaTeX", "Callout", "Checklist"],
+    builtIn: true,
+    body: doc(
+      table(
+        ["Projeto", "Disciplina", "Normas de Referência", "Revisão / Data"],
+        [["Nome do Empreendimento", "Civil / Mecânica / Elétrica", "ABNT NBR ...", "Rev. 00 — {{hoje}}"]]
+      ),
+      h1("1. Escopo & Premissas de Projeto"),
+      p("Descreva o elemento ou subsistema dimensionado, hipóteses simplificadoras adotadas e condições de contorno."),
+      h1("2. Parâmetros de Entrada"),
+      table(
+        ["Símbolo", "Grandeza", "Valor Adotado", "Unidade", "Fonte / Critério"],
+        [
+          ["F_d", "Solicitação de cálculo", "150,0", "kN", "Combinação ELU"],
+          ["f_yd", "Resistência de escoamento de projeto", "434,8", "MPa", "Aço / Material"],
+          ["\\gamma_s", "Coeficiente de minoração", "1,15", "—", "Norma técnica"],
+        ]
+      ),
+      h1("3. Equacionamento & Dimensionamento"),
+      p("Verificação do estado-limite último e determinação da seção/capacidade mínima exigida:"),
+      mathBlock("\\sigma_{sd} = \\frac{F_d}{A_{ef}} \\le f_{yd} \\implies A_{ef} \\ge \\frac{F_d}{f_{yd}}"),
+      h1("4. Verificação de Desempenho & Segurança"),
+      callout(
+        "theorem",
+        p(bold("Índice de Utilização: "), txt("η = 0,78 ≤ 1,00 — Critério normativo ATENDIDO com folga de segurança de 22%."))
+      ),
+      h1("5. Checklist de Revisão Técnica"),
+      taskList([
+        { text: "Unidades do Sistema Internacional (SI) conferidas em todas as etapas" },
+        { text: "Combinações críticas e estados-limite de serviço verificados" },
+        { text: "Compatibilizado com os desenhos/esquemáticos executivos" },
+      ])
+    ),
+  },
+  {
+    id: "builtin-tech-rfc",
+    name: "RFC — Arquitetura Técnica de Software",
+    description:
+      "Proposta técnica para times de engenharia: motivação, diagrama Mermaid de arquitetura, contratos de dados, segurança e rollout.",
+    category: "engineering",
+    icon: "cpu",
+    defaultTitle: "RFC — [Nome do Serviço ou Mudança Arquitetural]",
+    tags: ["rfc", "arquitetura", "engenharia"],
+    features: ["Mermaid", "Tabela", "Callout", "Checklist"],
+    builtIn: true,
+    body: doc(
+      table(
+        ["Autor(es)", "Status", "Revisores", "Data"],
+        [["Time de Engenharia", "Em Revisão", "Arquitetura, SRE, Segurança", "{{hoje}}"]]
+      ),
+      h1("1. Contexto & Motivação"),
+      p("Qual gargalo técnico, dívida arquitetural ou novo requisito de escala motiva esta mudança? O que acontece se não fizermos nada?"),
+      h1("2. Desenho da Solução Proposta"),
+      mermaid(
+        `sequenceDiagram
+  participant C as Cliente / App
+  participant API as Serviço Principal
+  participant DB as Banco Primário
+  participant Q as Fila Assíncrona
+  C->>API: Requisição autenticada
+  API->>DB: Transação atômica
+  API-->>Q: Publica evento de domínio
+  API-->>C: 200 OK (baixa latência)`,
+        "Fluxo de comunicação entre componentes"
+      ),
+      h1("3. Modelo de Dados & Contratos de Interface"),
+      table(
+        ["Operação / Recurso", "Entrada", "Saída / Efeito", "Idempotência / SLA"],
+        [
+          ["POST /v1/recurso", "Payload validado", "201 Created + ID", "Chave idempotente · p99 < 150ms"],
+          ["GET /v1/recurso/:id", "ID do recurso", "200 OK + Snapshot", "Leitura consistente · p99 < 60ms"],
+        ]
+      ),
+      h1("4. Segurança, Observabilidade & Resiliência"),
+      callout(
+        "warning",
+        p(bold("Pontos Críticos: "), txt("Autenticação/autorização, criptografia de dados sensíveis, limites de rate-limit, métricas, logs estruturados e plano de rollback imediato."))
+      ),
+      h1("5. Plano de Migração & Rollout"),
+      taskList([
+        { text: "Fase 1: Deploy atrás de feature flag em homologação" },
+        { text: "Fase 2: Canary release para 5% do tráfego com monitoramento de erros" },
+        { text: "Fase 3: Disponibilidade geral (100%) e remoção do código legado" },
+      ])
+    ),
+  },
+
+  // ======================== JURÍDICO & NEGÓCIOS ========================
+  {
+    id: "builtin-legal-opinion",
+    name: "Parecer Jurídico & Análise Contratual",
+    description:
+      "Estruture pareceres consultivos ou revisões de contratos com ementa, fatos, fundamentação legal, matriz de riscos e conclusão.",
+    category: "legal",
+    icon: "gavel",
+    defaultTitle: "Parecer Jurídico — [Assunto / Contrato]",
+    tags: ["juridico", "parecer", "contratos"],
+    features: ["Callout", "Tabela", "Checklist"],
+    builtIn: true,
+    body: doc(
+      callout(
+        "info",
+        p(bold("EMENTA / SÍNTESE EXECUTIVA: "), txt("Direito Contratual / Empresarial. Análise de minuta e alocação de responsabilidades. Viabilidade condicionada às ressalvas indicadas na seção 4."))
+      ),
+      table(
+        ["Consulente / Área", "Objeto da Análise", "Data", "Responsável"],
+        [["Diretoria / Compras", "Contrato de Prestação de Serviços", "{{hoje}}", "Jurídico"]]
+      ),
+      h1("1. Relatório dos Fatos & Escopo"),
+      p("Síntese objetiva da consulta formulada, documentos analisados e premissas fáticas informadas pela área solicitante."),
+      h1("2. Fundamentação Jurídica"),
+      p("Análise técnica das disposições legais, regulatórias (ex.: Código Civil, LGPD, normas setoriais) e jurisprudenciais aplicáveis:"),
+      blockquote(
+        p("Insira aqui transcrição literal de cláusula contratual, dispositivo legal ou entendimento jurisprudencial relevante.")
+      ),
+      h1("3. Matriz de Riscos Contratuais"),
+      table(
+        ["Cláusula / Tema", "Risco Identificado", "Grau", "Redação / Mitigação Recomendada"],
+        [
+          ["Limitação de Responsabilidade", "Ausência de teto indenizatório (cap)", "Alto", "Incluir limite equivalente a 12 meses de contrato"],
+          ["Rescisão Imotivada", "Multa desproporcional ou aviso curto", "Médio", "Ajustar aviso prévio para 60 dias sem multa"],
+          ["Proteção de Dados (LGPD)", "Papéis de controlador/operador indefinidos", "Médio", "Anexar aditivo de tratamento de dados (DPA)"],
+        ]
+      ),
+      h1("4. Conclusão & Recomendações"),
+      taskList([
+        { text: "Solicitar revisão das cláusulas de risco alto à contraparte" },
+        { text: "Validar garantias e certidões de regularidade antes da assinatura" },
+      ])
+    ),
+  },
+  {
+    id: "builtin-business-case",
+    name: "Business Case & Viabilidade Financeira",
+    description:
+      "Avalie novos investimentos ou projetos corporativos com problema de negócio, projeção de custos × retorno, SWOT e recomendação.",
+    category: "legal",
+    icon: "trending-up",
+    defaultTitle: "Business Case — [Iniciativa / Investimento]",
+    tags: ["businesscase", "financas", "estrategia"],
+    features: ["Tabela", "Callout", "Checklist"],
+    builtIn: true,
+    body: doc(
+      callout(
+        "info",
+        p(bold("Recomendação Executiva: "), txt("Investimento estimado de R$ [X] com payback projetado em [N] meses e ganho anual recorrente de R$ [Y]."))
+      ),
+      h1("1. Oportunidade & Alinhamento Estratégico"),
+      p("Qual dor financeira, perda de receita ou oportunidade de expansão justifica alocar capital e equipe nesta iniciativa agora?"),
+      h1("2. Estimativa Financeira (Custos × Benefícios)"),
+      table(
+        ["Categoria", "Ano 1 (Implantação)", "Ano 2 (Escala)", "Premissa de Cálculo"],
+        [
+          ["Investimento Inicial (CAPEX)", "R$ 0,00", "R$ 0,00", "Licenças, setup, equipamentos"],
+          ["Custo Operacional (OPEX)", "R$ 0,00", "R$ 0,00", "Manutenção, equipe, infraestrutura"],
+          ["Receita / Economia Gerada", "R$ 0,00", "R$ 0,00", "Aumento de conversão / redução de custo"],
+          ["Resultado Líquido", "R$ 0,00", "R$ 0,00", "Benefício menos dispêndio total"],
+        ]
+      ),
+      h1("3. Análise Estratégica (SWOT)"),
+      table(
+        ["Forças (Internas)", "Fraquezas (Internas)", "Oportunidades (Externas)", "Ameaças (Externas)"],
+        [
+          ["Base de clientes consolidada", "Equipe enxuta no curto prazo", "Demanda crescente no setor", "Entrada de novos concorrentes"],
+        ]
+      ),
+      h1("4. Condições para Aprovação"),
+      taskList([
+        { text: "Validar premissas de receita com Comercial e Controladoria" },
+        { text: "Definir gatilho de revisão (Stage-Gate) aos 90 dias" },
+      ])
+    ),
+  },
+  {
+    id: "builtin-sales-discovery",
+    name: "Reunião Comercial Consultiva (SPIN / BANT)",
+    description:
+      "Conduza descobertas de vendas B2B mapeando cenário, dores, orçamento, decisores e contorno de objeções.",
+    category: "legal",
+    icon: "handshake",
+    defaultTitle: "Descoberta Comercial — [Empresa / Conta]",
+    tags: ["vendas", "comercial", "b2b"],
+    features: ["Tabela", "Toggle", "Checklist"],
+    builtIn: true,
+    body: doc(
+      table(
+        ["Empresa / Conta", "Interlocutor & Cargo", "Data", "Estágio do Funil"],
+        [["Nome da Empresa", "Nome (Diretor / Gestor)", "{{hoje}}", "Qualificação / Diagnóstico"]]
+      ),
+      h1("1. Qualificação Rápida (BANT)"),
+      bulletList([
+        [bold("Budget (Orçamento): "), txt("Existe verba aprovada ou faixa de investimento prevista?")],
+        [bold("Authority (Decisores): "), txt("Quem assina, quem avalia tecnicamente e quem pode vetar?")],
+        [bold("Need (Necessidade): "), txt("Qual problema urgente precisa ser resolvido?")],
+        [bold("Timeline (Prazo): "), txt("Existe evento crítico ou data-limite para entrar em produção?")],
+      ]),
+      h1("2. Diagnóstico Consultivo (SPIN)"),
+      bulletList([
+        [bold("Situação atual: "), txt("Como o processo funciona hoje e quais ferramentas utilizam?")],
+        [bold("Problemas identificados: "), txt("Onde ocorrem retrabalho, lentidão ou perda de receita?")],
+        [bold("Implicação do problema: "), txt("Qual o custo financeiro ou operacional de manter esse cenário nos próximos 6 meses?")],
+        [bold("Necessidade de solução: "), txt("Qual resultado concreto define sucesso para o cliente?")],
+      ]),
+      h1("3. Objeções Levantadas & Contorno"),
+      toggle(
+        "Objeção mapeada (ex.: prazo de migração, integração ou preço)",
+        true,
+        p("Registre o receio exato do cliente e o caso de sucesso / argumento de mitigação apresentado.")
+      ),
+      h1("4. Próximos Passos Acordados"),
+      taskList([
+        { text: "Enviar resumo executivo da reunião em até 24h" },
+        { text: "Agendar demonstração técnica / apresentação de proposta com decisores" },
+      ])
+    ),
+  },
+
+  // ======================== EDUCAÇÃO & ENSINO ========================
+  {
+    id: "builtin-lesson-plan",
+    name: "Plano de Aula & Workshop Didático",
+    description:
+      "Planeje aulas, palestras ou treinamentos corporativos com objetivos pedagógicos, roteiro minuto a minuto e avaliação.",
+    category: "education",
+    icon: "presentation",
+    defaultTitle: "Plano de Aula — [Tema / Módulo]",
+    tags: ["educacao", "aula", "treinamento"],
+    features: ["Callout", "Tabela", "Checklist"],
+    builtIn: true,
+    body: doc(
+      callout(
+        "info",
+        p(bold("Objetivo de Aprendizagem: "), txt("Ao final deste encontro, os participantes serão capazes de [verbo de ação: analisar, construir, resolver...] aplicando [conceito/ferramenta]."))
+      ),
+      table(
+        ["Disciplina / Curso", "Público / Turma", "Duração Total", "Data"],
+        [["Nome do Curso", "Turma / Nível", "60 a 90 min", "{{hoje}}"]]
+      ),
+      h1("1. Roteiro Didático Cronometrado"),
+      table(
+        ["Tempo", "Etapa", "Conteúdo & Dinâmica", "Recurso"],
+        [
+          ["00–10 min", "Quebra-gelo & Gancho", "Pergunta provocadora ou problema real do cotidiano", "Quadro / Slides"],
+          ["10–35 min", "Exposição Dialogada", "Apresentação dos conceitos fundamentais com exemplos", "Demonstração"],
+          ["35–50 min", "Prática Guiada", "Exercício mão na massa individual ou em duplas", "Estudo de caso"],
+          ["50–60 min", "Síntese & Fechamento", "Revisão dos pontos-chave e tira-dúvidas", "Quiz rápido"],
+        ]
+      ),
+      h1("2. Materiais & Preparação Prévia"),
+      taskList([
+        { text: "Slides, exemplos práticos e material de apoio revisados" },
+        { text: "Atividade prática testada previamente" },
+        { text: "Referências complementares separadas para envio pós-aula" },
+      ]),
+      h1("3. Avaliação & Observações Pós-Aula"),
+      p("Registre após o encontro quais exemplos funcionaram melhor e quais dúvidas merecem reforço na próxima aula.")
+    ),
+  },
+  {
+    id: "builtin-quiz-practice",
+    name: "Simulado & Questões Comentadas",
+    description:
+      "Monte listas de exercícios e simulados para concursos, vestibulares ou certificações com gabarito oculto em Toggle.",
+    category: "education",
+    icon: "help-circle",
+    defaultTitle: "Caderno de Questões — [Disciplina / Banca]",
+    tags: ["simulado", "questoes", "estudo"],
+    features: ["Toggle", "KaTeX", "Callout"],
+    builtIn: true,
+    body: doc(
+      callout(
+        "example",
+        p(bold("Modo Simulado: "), txt("Use o botão 'Modo Auto-teste' na barra de ferramentas acima para recolher todos os gabaritos antes de iniciar a resolução."))
+      ),
+      h1("Questão 01 — [Tema / Assunto]"),
+      p("Enunciado completo da questão contextualizando o problema proposto pela banca examinadora..."),
+      bulletList([
+        "(A) Alternativa A",
+        "(B) Alternativa B",
+        "(C) Alternativa C",
+        "(D) Alternativa D",
+      ]),
+      toggle(
+        "Ver Gabarito e Resolução Comentada — Questão 01",
+        false,
+        p(bold("Gabarito Oficial: "), highlight("Alternativa (C)")),
+        p(bold("Resolução passo a passo: "), txt("Explique por que a alternativa correta é verdadeira e aponte a pegadinha das demais opções.")),
+        mathBlock("\\Delta = b^2 - 4ac")
+      ),
+      h1("Questão 02 — [Tema / Assunto]"),
+      p("Enunciado completo da segunda questão para prática dirigida..."),
+      bulletList([
+        "(A) Alternativa A",
+        "(B) Alternativa B",
+        "(C) Alternativa C",
+        "(D) Alternativa D",
+      ]),
+      toggle(
+        "Ver Gabarito e Resolução Comentada — Questão 02",
+        false,
+        p(bold("Gabarito Oficial: "), highlight("Alternativa (A)")),
+        p(bold("Comentário: "), txt("Fundamentação teórica resumida para revisão rápida."))
+      )
+    ),
+  },
+
+  // ======================== CRIATIVO & MÍDIA ========================
+  {
+    id: "builtin-video-script",
+    name: "Roteiro de Vídeo, Podcast ou Aula",
+    description:
+      "Planeje produções audiovisuais com gancho de retenção, tabela de duas colunas (Áudio × Visual), CTA e checklist de gravação.",
+    category: "creative",
+    icon: "clapperboard",
+    defaultTitle: "Roteiro — [Título do Episódio ou Vídeo]",
+    tags: ["roteiro", "video", "conteudo"],
+    features: ["Tabela", "Callout", "Checklist"],
+    builtIn: true,
+    body: doc(
+      table(
+        ["Canal / Formato", "Duração Alvo", "Objetivo", "Data de Gravação"],
+        [["YouTube / Podcast / Aula", "08–12 min", "Educar / Engajar / Converter", "{{hoje}}"]]
+      ),
+      callout(
+        "example",
+        p(bold("Gancho Inicial (00:00 – 00:20): "), txt("Comece com uma promessa clara, dado surpreendente ou pergunta direta que prenda a atenção nos primeiros segundos."))
+      ),
+      h1("1. Roteiro Decupado (Áudio × Visual)"),
+      table(
+        ["Tempo", "Áudio / Fala (Locução)", "Cena / Apoio Visual (B-Roll & Tela)"],
+        [
+          ["00:00 – 00:20", "Texto de abertura e promessa central do vídeo...", "Câmera principal + título animado na tela"],
+          ["00:20 – 03:00", "Bloco 1: Contextualização do problema e exemplo real...", "Gravação de tela / gráficos ilustrativos"],
+          ["03:00 – 07:30", "Bloco 2: Passo a passo prático e demonstração...", "Zoom nos detalhes importantes + tópicos em texto"],
+          ["07:30 – 08:30", "Resumo rápido e Chamada para Ação (CTA)...", "Tela final com link / próximo episódio"],
+        ]
+      ),
+      h1("2. Checklist de Produção & Publicação"),
+      taskList([
+        { text: "Áudio, iluminação e enquadramento testados antes de gravar" },
+        { text: "Gravar 2 variações de título e ideia de miniatura (thumbnail)" },
+        { text: "Inserir capítulos (timestamps) e links citados na descrição" },
+      ])
+    ),
+  },
+  {
+    id: "builtin-ux-interview",
+    name: "Roteiro de Entrevista (UX Research)",
+    description:
+      "Conduza entrevistas com usuários sem viés: consentimento, perguntas exploratórias abertas, tarefas observadas e síntese.",
+    category: "creative",
+    icon: "user-check",
+    defaultTitle: "Entrevista UX — [Participante / Perfil] ({{hoje}})",
+    tags: ["ux", "pesquisa", "entrevista"],
+    features: ["Callout", "Tabela", "Checklist"],
+    builtIn: true,
+    body: doc(
+      callout(
+        "info",
+        p(bold("Lembrete ao Moderador: "), txt("Avaliamos o produto, nunca a pessoa participante. Priorize histórias reais do passado ('Conte a última vez em que...') em vez de opiniões hipotéticas."))
+      ),
+      table(
+        ["Participante", "Perfil / Segmento", "Moderador(a)", "Data"],
+        [["P01 (Anônimo)", "Usuário ativo / Novo", "Nome", "{{hoje}}"]]
+      ),
+      h1("1. Aquecimento & Contexto (5 min)"),
+      bulletList([
+        "Agradecer a disponibilidade e confirmar permissão para anotações/gravação.",
+        "Como é um dia típico no seu trabalho/estudo quando você precisa lidar com [tema]?",
+      ]),
+      h1("2. Perguntas Exploratórias (15 min)"),
+      orderedList([
+        "Conte sobre a última vez em que você precisou realizar [atividade]. Como fez do início ao fim?",
+        "Qual foi a parte mais demorada ou frustrante desse processo?",
+        "Você chegou a criar alguma planilha, atalho ou solução improvisada para contornar isso?",
+      ]),
+      h1("3. Observação de Tarefas no Protótipo (15 min)"),
+      table(
+        ["Tarefa Solicitada", "Comportamento Observado", "Sucesso / Atrito"],
+        [
+          ["Tarefa 1: Encontrar e iniciar...", "Caminho percorrido e hesitações...", "Concluiu sem ajuda"],
+          ["Tarefa 2: Configurar e salvar...", "Comentários em voz alta (think-aloud)...", "Dúvida no rótulo X"],
+        ]
+      ),
+      h1("4. Principais Achados (Pós-sessão)"),
+      taskList([
+        { text: "Destacar 3 citações literais marcantes da entrevista" },
+        { text: "Vincular esta nota ao documento de Discovery usando [[" },
       ])
     ),
   },

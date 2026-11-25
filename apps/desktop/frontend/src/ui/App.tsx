@@ -3096,7 +3096,7 @@ export function App() {
                           onClick={() => setTemplatesModalOpen(true)}
                         >
                           <LayoutTemplate size={14} aria-hidden="true" />
-                          <span>Usar um template pronto</span>
+                          <span>Usar um template</span>
                         </button>
                         <div className="empty-note-template-quick-chips">
                           {BUILTIN_NOTE_TEMPLATES.filter((t) =>

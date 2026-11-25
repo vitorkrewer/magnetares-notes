@@ -51,7 +51,7 @@ O frontend fica em `apps/desktop/frontend` e é construído por Vite/React.
 - `StructuredEditor.tsx`: Tiptap, autocompletar `[[` de vínculos entre notas e toolbar de formatação.
 - `NoteLinkNode.tsx`: nó inline clicável `[[Nota]]` com navegação direta ou abertura em modal de janela separada.
 - `ConnectionsGraphView.tsx` e `connectionsLayout.ts`: mapa de grafos interativo orientado a forças, explorador lateral retrátil e inspetor de nós/backlinks.
-- `NoteTemplatesModal.tsx` e `noteTemplates.ts`: galeria de 13 templates nativos TipTap, pré-visualização estruturada ao vivo e gestão de **Meus Templates**.
+- `NoteTemplatesModal.tsx` e `noteTemplates.ts`: galeria em 3 colunas com 26 templates nativos TipTap em 10 áreas do conhecimento, pré-visualização estruturada ao vivo e gestão de **Meus Templates**.
 - `IdeaFlowsView.tsx` e `IdeaFlowCanvas.tsx`: hub e canvas vetorial do módulo **Fluxo de Ideias** com referências cruzadas e exportação PNG.
 - `FocusStandaloneWindow.tsx`: janela independente de Modo Foco (Picture-in-Picture com Always-on-Top).
 - `CustomSelect.tsx`: componente de dropdown estilizado e acessível renderizado via portal em toda a interface.

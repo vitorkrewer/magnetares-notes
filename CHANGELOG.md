@@ -7,13 +7,18 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 ### Added
 
 - **Galeria de Templates de Notas (Exclusiva para Notas Estruturadas):**
-  - **Catálogo de 13 Modelos Nativos TipTap (`noteTemplates.ts`):** Templates prontos construídos diretamente com os blocos ricos do editor (**Tabelas**, **Checklists**, **Callouts**, **Toggles**, **Diagramas Mermaid** e **Fórmulas KaTeX**) e interpolação automática de data (`{{hoje}}` e `{{mes_ano}}`), organizados em 5 categorias:
+  - **Catálogo de 26 Modelos Nativos TipTap (`noteTemplates.ts`):** Templates prontos construídos diretamente com os blocos ricos do editor (**Tabelas**, **Checklists**, **Callouts**, **Toggles**, **Diagramas Mermaid** e **Fórmulas KaTeX/mhchem**) e interpolação automática de data (`{{hoje}}` e `{{mes_ano}}`), organizados em 10 áreas do conhecimento:
     - *Corporativo & Reuniões:* Pauta & Ata de Reunião Executiva, Reunião 1:1 (Liderança & Feedback) e Registro de Decisão (Decision Log / ADR).
     - *Produto & PO:* PRD — Requisitos de Produto, Product Discovery & Hipótese e Planning & Refinamento de Sprint.
     - *Briefings & Projetos:* Briefing de Projeto / Campanha, Kickoff & Plano de Projeto e Post-Mortem & Análise de Incidente.
+    - *Saúde & Clínica:* Prontuário / Evolução Clínica SOAP, Estudo de Caso Clínico (Residência / Discussão) e Registro de Sessão (Psicologia & Terapia).
+    - *Exatas & Engenharia:* Relatório de Prática de Laboratório (KaTeX + `mhchem`), Memorial de Cálculo de Engenharia e RFC — Arquitetura Técnica de Software.
+    - *Jurídico & Negócios:* Parecer Jurídico & Análise Contratual, Business Case & Viabilidade Financeira e Reunião Comercial Consultiva (SPIN / BANT).
+    - *Educação & Ensino:* Plano de Aula & Workshop Didático e Simulado & Questões Comentadas (com gabaritos em Toggle).
+    - *Criativo & Mídia:* Roteiro de Vídeo, Podcast ou Aula e Roteiro de Entrevista (UX Research).
     - *Acadêmico & Pesquisa:* Artigo Acadêmico (Pronto para ABNT) e Fichamento & Estudo Ativo.
     - *Pessoal & Diário:* Diário Pessoal & Reflexão Diária e Planejamento Semanal Pessoal.
-  - **Modal de Galeria com Pré-visualização Estruturada (`NoteTemplatesModal.tsx`):** Busca instantânea, filtros por categoria, pré-visualização visual dos blocos antes da aplicação, opção de aplicar etiquetas sugeridas e aplicação segura em notas já preenchidas (*Inserir ao final*, *Substituir nota* ou *Criar nova nota*).
+  - **Modal Ampliado em 3 Colunas com Pré-visualização Estruturada (`NoteTemplatesModal.tsx`):** Navegação lateral por área do conhecimento com contadores, catálogo central com busca instantânea, pré-visualização visual dos blocos antes da aplicação, opção de aplicar etiquetas sugeridas e aplicação segura em notas já preenchidas (*Inserir ao final*, *Substituir nota* ou *Criar nova nota*).
   - **Acesso Rápido em Notas Novas/Vazias:** Botão dedicado de **Templates** no cabeçalho de notas não-`code` e barra discreta de acesso rápido em notas vazias com chips para os modelos mais utilizados.
   - **Templates Personalizados no SQLite (`0017_note_templates.sql`, `note_templates.go`, `app.go`):** Nova tabela `note_templates` e APIs Wails (`ListNoteTemplates`, `SaveNoteTemplate`, `DeleteNoteTemplate`) permitindo salvar qualquer nota estruturada como modelo reutilizável na aba **Meus Templates**.
 

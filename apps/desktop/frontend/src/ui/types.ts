@@ -345,6 +345,11 @@ export type NoteTemplateCategory =
   | "corporate"
   | "product"
   | "briefings"
+  | "health"
+  | "engineering"
+  | "legal"
+  | "education"
+  | "creative"
   | "academic"
   | "personal"
   | "custom";

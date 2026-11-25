@@ -2,28 +2,41 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import type { JSONContent } from "@tiptap/react";
 import {
   BookOpen,
+  Brain,
   Briefcase,
+  Calculator,
   Calendar,
   Check,
   CheckSquare,
+  Clapperboard,
   ClipboardList,
   Compass,
+  Cpu,
   FilePlus2,
   FileText,
+  FlaskConical,
+  Gavel,
   GraduationCap,
+  Handshake,
   Hash,
+  HeartPulse,
+  HelpCircle,
   Kanban,
   Layers,
   LayoutTemplate,
   MessageSquare,
   Plus,
+  Presentation,
   Rocket,
   Scale,
   Search,
   ShieldAlert,
   Sparkles,
+  Stethoscope,
   Sun,
   Trash2,
+  TrendingUp,
+  UserCheck,
   Users,
   X,
 } from "lucide-react";
@@ -63,6 +76,8 @@ type NoteTemplatesModalProps = {
 
 export function renderTemplateIcon(iconName: string, size = 16) {
   switch (iconName) {
+    case "layout-template":
+      return <LayoutTemplate size={size} aria-hidden="true" />;
     case "users":
       return <Users size={size} aria-hidden="true" />;
     case "message-square":
@@ -81,6 +96,32 @@ export function renderTemplateIcon(iconName: string, size = 16) {
       return <Rocket size={size} aria-hidden="true" />;
     case "shield-alert":
       return <ShieldAlert size={size} aria-hidden="true" />;
+    case "stethoscope":
+      return <Stethoscope size={size} aria-hidden="true" />;
+    case "heart-pulse":
+      return <HeartPulse size={size} aria-hidden="true" />;
+    case "brain":
+      return <Brain size={size} aria-hidden="true" />;
+    case "flask-conical":
+      return <FlaskConical size={size} aria-hidden="true" />;
+    case "calculator":
+      return <Calculator size={size} aria-hidden="true" />;
+    case "cpu":
+      return <Cpu size={size} aria-hidden="true" />;
+    case "gavel":
+      return <Gavel size={size} aria-hidden="true" />;
+    case "trending-up":
+      return <TrendingUp size={size} aria-hidden="true" />;
+    case "handshake":
+      return <Handshake size={size} aria-hidden="true" />;
+    case "presentation":
+      return <Presentation size={size} aria-hidden="true" />;
+    case "help-circle":
+      return <HelpCircle size={size} aria-hidden="true" />;
+    case "clapperboard":
+      return <Clapperboard size={size} aria-hidden="true" />;
+    case "user-check":
+      return <UserCheck size={size} aria-hidden="true" />;
     case "graduation-cap":
       return <GraduationCap size={size} aria-hidden="true" />;
     case "book-open":
@@ -311,6 +352,11 @@ export function NoteTemplatesModal({
     [filteredTemplates, selectedId]
   );
 
+  const activeCategoryMeta = useMemo(
+    () => TEMPLATE_CATEGORIES.find((c) => c.id === category) || TEMPLATE_CATEGORIES[0],
+    [category]
+  );
+
   useEffect(() => {
     if (!open) return;
     setCreateMode(false);
@@ -371,6 +417,12 @@ export function NoteTemplatesModal({
 
   if (!open) return null;
 
+  const domainCategories = TEMPLATE_CATEGORIES.filter(
+    (c) => c.id !== "all" && c.id !== "custom"
+  );
+  const allCatMeta = TEMPLATE_CATEGORIES.find((c) => c.id === "all")!;
+  const customCatMeta = TEMPLATE_CATEGORIES.find((c) => c.id === "custom")!;
+
   return (
     <div
       className="dialog-backdrop templates-modal-backdrop"
@@ -392,7 +444,9 @@ export function NoteTemplatesModal({
             </div>
             <div>
               <h2>Galeria de Templates</h2>
-              <p>Modelos prontos para reuniões, produto, briefings, estudos e rotina pessoal</p>
+              <p>
+                {BUILTIN_NOTE_TEMPLATES.length} modelos prontos em 10 áreas do conhecimento + biblioteca pessoal
+              </p>
             </div>
           </div>
 
@@ -445,13 +499,18 @@ export function NoteTemplatesModal({
               </label>
 
               <label className="templates-form-field">
-                <span>Categoria</span>
+                <span>Área do conhecimento / Categoria</span>
                 <CustomSelect
                   value={tplCategory}
                   options={[
                     { value: "corporate", label: "Corporativo & Reuniões" },
                     { value: "product", label: "Produto & PO" },
                     { value: "briefings", label: "Briefings & Projetos" },
+                    { value: "health", label: "Saúde & Clínica" },
+                    { value: "engineering", label: "Exatas & Engenharia" },
+                    { value: "legal", label: "Jurídico & Negócios" },
+                    { value: "education", label: "Educação & Ensino" },
+                    { value: "creative", label: "Criativo & Mídia" },
                     { value: "academic", label: "Acadêmico & Pesquisa" },
                     { value: "personal", label: "Pessoal & Diário" },
                     { value: "custom", label: "Meus Templates" },
@@ -504,56 +563,90 @@ export function NoteTemplatesModal({
             </footer>
           </form>
         ) : (
-          <>
-            <div className="templates-toolbar">
-              <div className="templates-search-box">
-                <Search size={14} aria-hidden="true" />
-                <input
-                  type="search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar por nome, cenário (ex.: reunião, PRD, briefing, ABNT, diário)..."
-                  aria-label="Buscar templates"
-                  autoFocus
-                />
-                {search && (
+          <div className="templates-body">
+            {/* Coluna 1: Navegação vertical organizada por área do conhecimento */}
+            <nav className="templates-sidebar-nav" aria-label="Categorias de templates">
+              <button
+                type="button"
+                className={`templates-nav-item ${category === "all" ? "active" : ""}`}
+                onClick={() => setCategory("all")}
+              >
+                <span className="templates-nav-icon">
+                  {renderTemplateIcon(allCatMeta.icon, 14)}
+                </span>
+                <span className="templates-nav-label">{allCatMeta.label}</span>
+                <span className="templates-nav-count">{allTemplates.length}</span>
+              </button>
+
+              <div className="templates-nav-section-label">ÁREAS DO CONHECIMENTO</div>
+
+              {domainCategories.map((cat) => {
+                const count = allTemplates.filter((t) => t.category === cat.id).length;
+                return (
                   <button
+                    key={cat.id}
                     type="button"
-                    className="templates-search-clear"
-                    onClick={() => setSearch("")}
-                    aria-label="Limpar busca"
+                    className={`templates-nav-item ${category === cat.id ? "active" : ""}`}
+                    onClick={() => setCategory(cat.id)}
                   >
-                    <X size={12} aria-hidden="true" />
+                    <span className="templates-nav-icon">
+                      {renderTemplateIcon(cat.icon, 14)}
+                    </span>
+                    <span className="templates-nav-label">{cat.shortLabel}</span>
+                    <span className="templates-nav-count">{count}</span>
                   </button>
-                )}
-              </div>
+                );
+              })}
 
-              <div className="templates-categories" role="tablist" aria-label="Categorias de templates">
-                {TEMPLATE_CATEGORIES.map((cat) => {
-                  const count =
-                    cat.id === "all"
-                      ? allTemplates.length
-                      : cat.id === "custom"
-                        ? customTemplates.length
-                        : allTemplates.filter((t) => t.category === cat.id).length;
-                  return (
+              <div className="templates-nav-section-label">PESSOAL</div>
+
+              <button
+                type="button"
+                className={`templates-nav-item ${category === "custom" ? "active" : ""}`}
+                onClick={() => setCategory("custom")}
+              >
+                <span className="templates-nav-icon">
+                  {renderTemplateIcon(customCatMeta.icon, 14)}
+                </span>
+                <span className="templates-nav-label">{customCatMeta.label}</span>
+                <span className="templates-nav-count">{customTemplates.length}</span>
+              </button>
+            </nav>
+
+            {/* Coluna 2: Busca + Grade de Modelos */}
+            <div className="templates-catalog-pane">
+              <div className="templates-catalog-topbar">
+                <div className="templates-search-box">
+                  <Search size={14} aria-hidden="true" />
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Buscar modelo por título, área ou tag (ex.: SOAP, laboratório, PRD, parecer, aula, roteiro)..."
+                    aria-label="Buscar templates"
+                    autoFocus
+                  />
+                  {search && (
                     <button
-                      key={cat.id}
                       type="button"
-                      role="tab"
-                      aria-selected={category === cat.id}
-                      className={`templates-cat-pill ${category === cat.id ? "active" : ""}`}
-                      onClick={() => setCategory(cat.id)}
+                      className="templates-search-clear"
+                      onClick={() => setSearch("")}
+                      aria-label="Limpar busca"
                     >
-                      <span>{cat.shortLabel}</span>
-                      <span className="templates-cat-count">{count}</span>
+                      <X size={12} aria-hidden="true" />
                     </button>
-                  );
-                })}
-              </div>
-            </div>
+                  )}
+                </div>
 
-            <div className="templates-body">
+                <div className="templates-catalog-heading">
+                  <strong>{activeCategoryMeta.label}</strong>
+                  <span>
+                    {filteredTemplates.length}{" "}
+                    {filteredTemplates.length === 1 ? "modelo disponível" : "modelos disponíveis"}
+                  </span>
+                </div>
+              </div>
+
               <div className="templates-grid-pane">
                 {filteredTemplates.length === 0 ? (
                   <div className="templates-empty-state">
@@ -566,7 +659,7 @@ export function NoteTemplatesModal({
                     <p>
                       {category === "custom"
                         ? "Escreva uma nota estruturada e clique em \"Salvar nota como template\" para reutilizá-la sempre que precisar."
-                        : "Tente buscar por outro termo ou selecione outra categoria."}
+                        : "Tente buscar por outro termo ou selecione outra área na barra lateral."}
                     </p>
                   </div>
                 ) : (
@@ -615,145 +708,146 @@ export function NoteTemplatesModal({
                   </div>
                 )}
               </div>
-
-              <aside className="templates-preview-pane" aria-label="Pré-visualização do template">
-                {selectedTemplate ? (
-                  <>
-                    <div className="templates-preview-head">
-                      <div className="templates-preview-title-row">
-                        <span className={`template-card-icon cat-${selectedTemplate.category}`}>
-                          {renderTemplateIcon(selectedTemplate.icon, 16)}
-                        </span>
-                        <div className="templates-preview-title-meta">
-                          <h3>{selectedTemplate.name}</h3>
-                          <span>
-                            {TEMPLATE_CATEGORY_LABELS[selectedTemplate.category] || "Personalizado"}
-                          </span>
-                        </div>
-                        {!selectedTemplate.builtIn && (
-                          confirmDeleteId === selectedTemplate.id ? (
-                            <button
-                              type="button"
-                              className="templates-delete-confirm-btn"
-                              onClick={() => {
-                                void onDeleteCustomTemplate(selectedTemplate.id);
-                                setConfirmDeleteId(null);
-                              }}
-                            >
-                              Confirmar exclusão
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              className="icon-button danger-button"
-                              onClick={() => setConfirmDeleteId(selectedTemplate.id)}
-                              title="Excluir template personalizado"
-                              aria-label="Excluir template personalizado"
-                            >
-                              <Trash2 size={14} aria-hidden="true" />
-                            </button>
-                          )
-                        )}
-                      </div>
-                      <p className="templates-preview-desc">{selectedTemplate.description}</p>
-                      {selectedTemplate.tags && selectedTemplate.tags.length > 0 && (
-                        <div className="templates-preview-tags">
-                          {selectedTemplate.tags.map((tag) => (
-                            <span key={tag} className="templates-preview-tag">
-                              <Hash size={10} aria-hidden="true" />
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="templates-preview-scroll">
-                      <div className="templates-preview-paper">
-                        <div className="templates-preview-doc-title">
-                          {interpolateTemplatePlaceholders(
-                            selectedTemplate.defaultTitle || selectedTemplate.name
-                          )}
-                        </div>
-                        <TemplateDocPreview body={selectedTemplate.body} />
-                      </div>
-                    </div>
-
-                    <footer className="templates-preview-footer">
-                      {selectedTemplate.tags && selectedTemplate.tags.length > 0 && (
-                        <label className="templates-apply-tags-check">
-                          <input
-                            type="checkbox"
-                            checked={applyTags}
-                            onChange={(e) => setApplyTags(e.target.checked)}
-                          />
-                          <span>Adicionar etiquetas sugeridas à nota</span>
-                        </label>
-                      )}
-
-                      <div className="templates-apply-actions">
-                        {activeNoteHasContent ? (
-                          <>
-                            <button
-                              type="button"
-                              className="templates-btn-primary"
-                              onClick={() => onApplyTemplate(selectedTemplate, "append", applyTags)}
-                              title="Adiciona o template ao final do texto atual sem apagar nada"
-                            >
-                              <Plus size={14} aria-hidden="true" />
-                              <span>Inserir ao final</span>
-                            </button>
-                            <button
-                              type="button"
-                              className="templates-btn-secondary"
-                              onClick={() => onApplyTemplate(selectedTemplate, "replace", applyTags)}
-                              title="Substitui o conteúdo da nota atual por este template"
-                            >
-                              Substituir nota
-                            </button>
-                            <button
-                              type="button"
-                              className="templates-btn-ghost"
-                              onClick={() => onApplyTemplate(selectedTemplate, "new-note", applyTags)}
-                              title="Cria uma nova nota na pasta atual usando este template"
-                            >
-                              <FilePlus2 size={14} aria-hidden="true" />
-                              <span>Nova nota</span>
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              className="templates-btn-primary"
-                              onClick={() => onApplyTemplate(selectedTemplate, "replace", applyTags)}
-                            >
-                              <Check size={14} aria-hidden="true" />
-                              <span>Usar este template</span>
-                            </button>
-                            <button
-                              type="button"
-                              className="templates-btn-ghost"
-                              onClick={() => onApplyTemplate(selectedTemplate, "new-note", applyTags)}
-                              title="Criar uma nova nota separada com este template"
-                            >
-                              <FilePlus2 size={14} aria-hidden="true" />
-                              <span>Criar nova nota</span>
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </footer>
-                  </>
-                ) : (
-                  <div className="templates-empty-state">
-                    <LayoutTemplate size={26} aria-hidden="true" />
-                    <p>Selecione um template à esquerda para pré-visualizar sua estrutura.</p>
-                  </div>
-                )}
-              </aside>
             </div>
-          </>
+
+            {/* Coluna 3: Pré-visualização Estruturada + Ações */}
+            <aside className="templates-preview-pane" aria-label="Pré-visualização do template">
+              {selectedTemplate ? (
+                <>
+                  <div className="templates-preview-head">
+                    <div className="templates-preview-title-row">
+                      <span className={`template-card-icon cat-${selectedTemplate.category}`}>
+                        {renderTemplateIcon(selectedTemplate.icon, 16)}
+                      </span>
+                      <div className="templates-preview-title-meta">
+                        <h3>{selectedTemplate.name}</h3>
+                        <span>
+                          {TEMPLATE_CATEGORY_LABELS[selectedTemplate.category] || "Personalizado"}
+                        </span>
+                      </div>
+                      {!selectedTemplate.builtIn && (
+                        confirmDeleteId === selectedTemplate.id ? (
+                          <button
+                            type="button"
+                            className="templates-delete-confirm-btn"
+                            onClick={() => {
+                              void onDeleteCustomTemplate(selectedTemplate.id);
+                              setConfirmDeleteId(null);
+                            }}
+                          >
+                            Confirmar exclusão
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="icon-button danger-button"
+                            onClick={() => setConfirmDeleteId(selectedTemplate.id)}
+                            title="Excluir template personalizado"
+                            aria-label="Excluir template personalizado"
+                          >
+                            <Trash2 size={14} aria-hidden="true" />
+                          </button>
+                        )
+                      )}
+                    </div>
+                    <p className="templates-preview-desc">{selectedTemplate.description}</p>
+                    {selectedTemplate.tags && selectedTemplate.tags.length > 0 && (
+                      <div className="templates-preview-tags">
+                        {selectedTemplate.tags.map((tag) => (
+                          <span key={tag} className="templates-preview-tag">
+                            <Hash size={10} aria-hidden="true" />
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="templates-preview-scroll">
+                    <div className="templates-preview-paper">
+                      <div className="templates-preview-doc-title">
+                        {interpolateTemplatePlaceholders(
+                          selectedTemplate.defaultTitle || selectedTemplate.name
+                        )}
+                      </div>
+                      <TemplateDocPreview body={selectedTemplate.body} />
+                    </div>
+                  </div>
+
+                  <footer className="templates-preview-footer">
+                    {selectedTemplate.tags && selectedTemplate.tags.length > 0 && (
+                      <label className="templates-apply-tags-check">
+                        <input
+                          type="checkbox"
+                          checked={applyTags}
+                          onChange={(e) => setApplyTags(e.target.checked)}
+                        />
+                        <span>Adicionar etiquetas sugeridas à nota</span>
+                      </label>
+                    )}
+
+                    <div className="templates-apply-actions">
+                      {activeNoteHasContent ? (
+                        <>
+                          <button
+                            type="button"
+                            className="templates-btn-primary"
+                            onClick={() => onApplyTemplate(selectedTemplate, "append", applyTags)}
+                            title="Adiciona o template ao final do texto atual sem apagar nada"
+                          >
+                            <Plus size={14} aria-hidden="true" />
+                            <span>Inserir ao final</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="templates-btn-secondary"
+                            onClick={() => onApplyTemplate(selectedTemplate, "replace", applyTags)}
+                            title="Substitui o conteúdo da nota atual por este template"
+                          >
+                            Substituir nota
+                          </button>
+                          <button
+                            type="button"
+                            className="templates-btn-ghost"
+                            onClick={() => onApplyTemplate(selectedTemplate, "new-note", applyTags)}
+                            title="Cria uma nova nota na pasta atual usando este template"
+                          >
+                            <FilePlus2 size={14} aria-hidden="true" />
+                            <span>Nova nota</span>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="templates-btn-primary"
+                            onClick={() => onApplyTemplate(selectedTemplate, "replace", applyTags)}
+                          >
+                            <Check size={14} aria-hidden="true" />
+                            <span>Usar este template</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="templates-btn-ghost"
+                            onClick={() => onApplyTemplate(selectedTemplate, "new-note", applyTags)}
+                            title="Criar uma nova nota separada com este template"
+                          >
+                            <FilePlus2 size={14} aria-hidden="true" />
+                            <span>Criar nova nota</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </footer>
+                </>
+              ) : (
+                <div className="templates-empty-state">
+                  <LayoutTemplate size={26} aria-hidden="true" />
+                  <p>Selecione um template ao centro para pré-visualizar sua estrutura.</p>
+                </div>
+              )}
+            </aside>
+          </div>
         )}
       </div>
     </div>

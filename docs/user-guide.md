@@ -24,8 +24,8 @@ O botão de recolher a barra lateral amplia a área de trabalho. A rolagem fica 
 
 Disponível exclusivamente para notas estruturadas (não-`code`), a **Galeria de Templates** acelera a criação de documentos corporativos, de produto, acadêmicos e pessoais:
 
-- **Como abrir:** clique no ícone de **Templates** no cabeçalho superior da nota ou use a barra rápida **"Usar um template pronto"** exibida automaticamente em notas vazias.
-- **13 Modelos Nativos Prontos:** organizados em 5 categorias (*Corporativo & Reuniões*, *Produto & PO*, *Briefings & Projetos*, *Acadêmico & Pesquisa* e *Pessoal & Diário*), aproveitando nativamente tabelas, checklists, callouts, toggles, diagramas Mermaid e fórmulas KaTeX, com preenchimento automático da data atual (`{{hoje}}`).
+- **Como abrir:** clique no ícone de **Templates** no cabeçalho superior da nota ou use a barra rápida **"Usar um template"** exibida automaticamente em notas vazias.
+- **26 Modelos Nativos em 10 Áreas do Conhecimento:** organizados em barra lateral dedicada (*Corporativo & Reuniões*, *Produto & PO*, *Briefings & Projetos*, *Saúde & Clínica*, *Exatas & Engenharia*, *Jurídico & Negócios*, *Educação & Ensino*, *Criativo & Mídia*, *Acadêmico & Pesquisa* e *Pessoal & Diário*), aproveitando nativamente tabelas, checklists, callouts, toggles, diagramas Mermaid e fórmulas KaTeX/`mhchem`, com preenchimento automático da data atual (`{{hoje}}`).
 - **Pré-visualização & Aplicação Segura:** visualize a estrutura do modelo antes de aplicar. Em notas já preenchidas, escolha entre **Inserir ao final**, **Substituir nota** ou **Criar nova nota**.
 - **Meus Templates:** clique em **Salvar nota como template** dentro da galeria para transformar qualquer nota sua em um modelo reutilizável salvo localmente no SQLite.
 
