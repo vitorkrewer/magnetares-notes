@@ -357,3 +357,87 @@ export function computeVisibleSubgraphIds(
   return visible;
 }
 
+
+export function buildDemoConnectionsPayload(
+  notes: Array<{
+    id: string;
+    title: string;
+    body: string;
+    type?: string;
+    language?: string;
+    folderId?: string;
+    folder?: string;
+    pinnedAt?: string | null;
+    tags?: string[];
+    updatedAt?: string;
+  }>,
+  tags: Array<{ id: string; name: string; icon?: string; noteCount?: number }>,
+  folders: Array<{ id: string; name: string; parentId?: string | null; color?: string; icon?: string; noteCount?: number }>
+): ConnectionsGraphPayload {
+  const activeNoteIds = new Set(notes.map((n) => n.id));
+  const links: ConnectionsGraphPayload["links"] = [];
+  const seen = new Set<string>();
+
+  const walkBody = (sourceId: string, node: any) => {
+    if (!node || typeof node !== "object") return;
+    if (node.type === "noteLink" && node.attrs?.noteId) {
+      const targetId = String(node.attrs.noteId).trim();
+      if (targetId && targetId !== sourceId && activeNoteIds.has(targetId)) {
+        const key = `${sourceId}->${targetId}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          links.push({
+            sourceNoteId: sourceId,
+            targetNoteId: targetId,
+            label: String(node.attrs.title || ""),
+          });
+        }
+      }
+    }
+    if (Array.isArray(node.content)) {
+      for (const child of node.content) {
+        walkBody(sourceId, child);
+      }
+    }
+  };
+
+  for (const n of notes) {
+    if (n.body && n.body.includes('"noteLink"')) {
+      try {
+        walkBody(n.id, JSON.parse(n.body));
+      } catch {
+        // Ignora
+      }
+    }
+  }
+
+  return {
+    notes: notes.map((n) => ({
+      id: n.id,
+      title: n.title,
+      noteType: n.type || "rtf",
+      language: n.language || "plaintext",
+      folderId: n.folderId || "folder-default",
+      folder: n.folder || "Notas",
+      pinned: Boolean(n.pinnedAt),
+      tags: n.tags || [],
+      updatedAt: n.updatedAt || "",
+    })),
+    links,
+    tags: tags.map((t) => ({
+      id: t.id,
+      name: t.name,
+      normalizedName: t.name.toLocaleLowerCase(),
+      icon: t.icon || "tag",
+      noteCount: t.noteCount || 0,
+    })),
+    folders: folders.map((f) => ({
+      id: f.id,
+      name: f.name,
+      parentId: f.parentId ?? null,
+      color: f.color || "#6366f1",
+      icon: f.icon || "folder",
+      noteCount: f.noteCount || 0,
+    })),
+  };
+}

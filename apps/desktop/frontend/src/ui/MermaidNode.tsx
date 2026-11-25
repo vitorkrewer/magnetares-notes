@@ -14,7 +14,15 @@ import {
   AlertCircle,
   Sparkles
 } from "lucide-react";
-import mermaid from "mermaid";
+import DOMPurify from "dompurify";
+
+let mermaidModulePromise: Promise<typeof import("mermaid")> | null = null;
+function loadMermaid() {
+  if (!mermaidModulePromise) {
+    mermaidModulePromise = import("mermaid");
+  }
+  return mermaidModulePromise;
+}
 
 export const MERMAID_TEMPLATES = [
   {
@@ -151,13 +159,14 @@ function MermaidView({ node, updateAttributes, deleteNode, selected }: NodeViewP
     const renderId = `mermaid_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
     try {
+      const { default: mermaid } = await loadMermaid();
       const isDark =
         document.documentElement.getAttribute("data-theme") === "dark" ||
         document.body.getAttribute("data-theme") === "dark";
 
       mermaid.initialize({
         startOnLoad: false,
-        securityLevel: "loose",
+        securityLevel: "strict",
         fontFamily: "inherit",
         theme: isDark ? "dark" : "neutral",
         themeVariables: isDark
@@ -184,7 +193,12 @@ function MermaidView({ node, updateAttributes, deleteNode, selected }: NodeViewP
       });
 
       const { svg } = await mermaid.render(renderId, mermaidCode);
-      setSvgHtml(svg);
+      const safeSvg = DOMPurify.sanitize(svg, {
+        USE_PROFILES: { svg: true, svgFilters: true, html: true },
+        ADD_TAGS: ["foreignObject"],
+        FORBID_TAGS: ["script", "iframe", "object", "embed"],
+      });
+      setSvgHtml(safeSvg);
       setRenderError(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro de sintaxe no diagrama Mermaid.";

@@ -128,14 +128,43 @@ func loadEnvFile(path string) {
 	}
 }
 
-func enableCORS(next http.Handler) http.Handler {
+const maxSyncRequestBodyBytes = 16 << 20 // 16 MB
+
+func enableCORSAndSecurity(next http.Handler) http.Handler {
+	rawOrigins := strings.TrimSpace(os.Getenv("CORS_ALLOWED_ORIGINS"))
+	var allowedOrigins []string
+	for _, part := range strings.Split(rawOrigins, ",") {
+		if trimmed := strings.TrimSpace(part); trimmed != "" {
+			allowedOrigins = append(allowedOrigins, trimmed)
+		}
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Referrer-Policy", "no-referrer")
+
+		reqOrigin := r.Header.Get("Origin")
+		if len(allowedOrigins) == 0 {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		} else {
+			w.Header().Add("Vary", "Origin")
+			for _, allowed := range allowedOrigins {
+				if allowed == "*" || strings.EqualFold(allowed, reqOrigin) {
+					w.Header().Set("Access-Control-Allow-Origin", reqOrigin)
+					break
+				}
+			}
+		}
+
 		w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Magnetares-Profile, X-Magnetares-Turso-URL, X-Magnetares-Turso-Token")
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusNoContent)
 			return
+		}
+
+		if r.Body != nil {
+			r.Body = http.MaxBytesReader(w, r.Body, maxSyncRequestBodyBytes)
 		}
 		next.ServeHTTP(w, r)
 	})
@@ -170,8 +199,16 @@ func main() {
 	if addr == "" {
 		addr = "8080"
 	}
+	server := &http.Server{
+		Addr:              ":" + addr,
+		Handler:           enableCORSAndSecurity(mux),
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
 	log.Printf("Magnetares API listening on :%s", addr)
-	log.Fatal(http.ListenAndServe(":"+addr, enableCORS(mux)))
+	log.Fatal(server.ListenAndServe())
 }
 
 func (s *syncService) handleChanges(w http.ResponseWriter, r *http.Request) {

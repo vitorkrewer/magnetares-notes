@@ -170,12 +170,8 @@ export function CodePreviewModal({
     : (code || "<div style='font-family:sans-serif;padding:20px;color:#888;'>Protótipo vazio</div>");
 
   const openInNewWindow = () => {
-    const win = window.open("", "_blank");
-    if (win) {
-      win.document.open();
-      win.document.write(srcDoc);
-      win.document.close();
-    }
+    const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(srcDoc)}`;
+    window.open(dataUrl, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -438,7 +434,8 @@ export function CodePreviewModal({
               key={reloadKey}
               title="Live Prototype Preview"
               srcDoc={srcDoc}
-              sandbox="allow-scripts allow-modals allow-forms allow-same-origin"
+              sandbox="allow-scripts allow-modals allow-forms"
+              referrerPolicy="no-referrer"
               style={{
                 width: "100%",
                 height: "100%",

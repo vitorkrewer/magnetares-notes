@@ -664,6 +664,7 @@ export function StructuredEditor({
   triggerIndexRef.current = triggerIndex;
 
   const insertTriggeredNoteRef = useRef<(item: NoteLinkMeta) => void>(() => {});
+  const lastEmittedValueRef = useRef<string>(value);
 
   const editor = useEditor({
     extensions: editorExtensions,
@@ -733,8 +734,10 @@ export function StructuredEditor({
       const nextTrigger = detectNoteLinkTrigger(currentEditor);
       setLinkTrigger(nextTrigger);
       setTriggerIndex(0);
+      const serialized = JSON.stringify(currentEditor.getJSON());
+      lastEmittedValueRef.current = serialized;
       onChangeRef.current(
-        JSON.stringify(currentEditor.getJSON()),
+        serialized,
         currentEditor.getText({ blockSeparator: "\n" })
       );
     },
@@ -780,6 +783,8 @@ export function StructuredEditor({
 
   useEffect(() => {
     if (!editor) return;
+    if (value === lastEmittedValueRef.current) return;
+    lastEmittedValueRef.current = value;
     const nextDocument = parseDocument(value);
     if (JSON.stringify(editor.getJSON()) === JSON.stringify(nextDocument)) return;
 

@@ -26,7 +26,10 @@ func main() {
 	focusNoteID := ""
 	for _, arg := range os.Args[1:] {
 		if strings.HasPrefix(arg, "--focus-note=") {
-			focusNoteID = strings.TrimPrefix(arg, "--focus-note=")
+			candidate := strings.TrimSpace(strings.TrimPrefix(arg, "--focus-note="))
+			if isValidSafeEntityID(candidate) {
+				focusNoteID = candidate
+			}
 			break
 		}
 	}

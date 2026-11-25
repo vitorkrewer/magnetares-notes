@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { lazy, Suspense, useEffect, useRef, useState, useCallback } from "react";
 import { 
   ArrowLeft, 
   Check, 
@@ -15,8 +15,11 @@ import {
 } from "lucide-react";
 import { Note, NoteConnectionSummary } from "./types";
 import { StructuredEditor } from "./StructuredEditor";
-import { CodeEditor } from "./CodeEditor";
 import type { NoteLinkMeta } from "./NoteLinkNode";
+
+const CodeEditor = lazy(() =>
+  import("./CodeEditor").then((m) => ({ default: m.CodeEditor }))
+);
 
 type FocusStandaloneWindowProps = {
   noteId: string;
@@ -422,16 +425,18 @@ export function FocusStandaloneWindow({ noteId }: FocusStandaloneWindowProps) {
 
           <div className="focus-editor-content-wrapper">
             {note.type === "code" ? (
-              <CodeEditor
-                key={`focus-standalone-code-${note.id}`}
-                value={note.body}
-                language={note.language || "plaintext"}
-                title={note.title || "Protótipo"}
-                readOnly={false}
-                onChange={(text) => handlePatch({ body: text, bodyText: text })}
-                onLanguageChange={(lang) => handlePatch({ language: lang })}
-                onBlur={() => void flushSave()}
-              />
+              <Suspense fallback={null}>
+                <CodeEditor
+                  key={`focus-standalone-code-${note.id}`}
+                  value={note.body}
+                  language={note.language || "plaintext"}
+                  title={note.title || "Protótipo"}
+                  readOnly={false}
+                  onChange={(text) => handlePatch({ body: text, bodyText: text })}
+                  onLanguageChange={(lang) => handlePatch({ language: lang })}
+                  onBlur={() => void flushSave()}
+                />
+              </Suspense>
             ) : (
               <StructuredEditor
                 key={`focus-standalone-rtf-${note.id}`}

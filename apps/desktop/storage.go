@@ -50,19 +50,19 @@ func openNoteStore(databasePath string) (*noteStore, error) {
 		return nil, fmt.Errorf("create data directory: %w", err)
 	}
 
-	db, err := sql.Open("sqlite", databasePath)
+	dsn := databasePath + "?_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)&_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)&_pragma=temp_store(MEMORY)&_pragma=cache_size(-16000)"
+	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open local database: %w", err)
 	}
-	db.SetMaxOpenConns(10)
-	db.SetMaxIdleConns(5)
+	db.SetMaxOpenConns(4)
+	db.SetMaxIdleConns(2)
 
 	store := &noteStore{db: db, path: databasePath}
 	if err := store.prepare(); err != nil {
 		db.Close()
 		return nil, err
 	}
-	_, _ = store.EnsureDataCompliance()
 	return store, nil
 }
 

@@ -1,27 +1,29 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { Archive, ArchiveRestore, Check, ChevronDown, ChevronLeft, ChevronRight, Cloud, Download, ExternalLink, FileCode, FileCode2, FileDown, FilePenLine, FileText, Folder, GitBranch, Globe, Hash, LayoutTemplate, Link2, List, Minimize2, Moon, Network, PictureInPicture2, Pin, Plus, Printer, RotateCcw, Search, Settings, Sparkles, StickyNote, Sun, Trash2, Upload, X } from "lucide-react";
 import { StructuredEditor } from "./StructuredEditor";
-import { CodeEditor } from "./CodeEditor";
 import { CustomSelect } from "./CustomSelect";
 import { TitleBar } from "./TitleBar";
 import { OrganizationDialog, getFolderIconComponent, getTagIconComponent } from "./OrganizationDialog";
-import { SettingsDialog, type SettingsTab, type ThemeOption } from "./SettingsDialog";
-import { ConflictDialog } from "./ConflictDialog";
+import type { SettingsTab, ThemeOption } from "./SettingsDialog";
 import { StickerBoardDialog, STICKER_PALETTE, DelicateStickerIcon } from "./StickerBoardDialog";
-import { StickerBoardView } from "./StickerBoardView";
 import { TaskListDialog, TASK_LIST_PALETTE, getTaskListIconComponent } from "./TaskListDialog";
-import { TaskListView } from "./TaskListView";
 import { IdeaFlowDialog } from "./IdeaFlowDialog";
-import { IdeaFlowsView } from "./IdeaFlowsView";
 import type { IdeaReferenceKind } from "./IdeaNodeLinkModal";
-import { ConnectionsGraphView, buildDemoConnectionsPayload } from "./ConnectionsGraphView";
+import { buildDemoConnectionsPayload } from "./connectionsLayout";
 import type { NoteLinkMeta } from "./NoteLinkNode";
-import { NoteTemplatesModal, type TemplateApplyMode } from "./NoteTemplatesModal";
+import type { TemplateApplyMode } from "./NoteTemplatesModal";
 import { BUILTIN_NOTE_TEMPLATES, appendTemplateToNoteBody, buildTemplateApplication } from "./noteTemplates";
 import { AppInfoRecord, ConnectionsGraphPayload, DatabaseMigrationMode, FolderRecord, IdeaFlowGraphRecord, IdeaFlowRecord, NavigationRecord, Note, NoteConnectionSummary, NoteQuery, NoteTemplateCategory, NoteTemplateRecord, SaveIdeaFlowGraphInput, SaveIdeaFlowInput, SmartFolderRecord, StickerBoardRecord, SyncConfiguration, SyncConflict, SyncResult, TagRecord, TaskListRecord, UpdateCheckResultRecord } from "./types";
 import { downloadBlob, downloadFile, exportToHTML, exportToMarkdown, parseImportedFile } from "./exportUtils";
-import { exportToAbntDocxBase64, exportToAbntDocxBlob } from "./abntExport";
-import { exportToPdfBase64, exportToPdfBlob } from "./pdfExport";
+
+const CodeEditor = lazy(() => import("./CodeEditor").then((m) => ({ default: m.CodeEditor })));
+const SettingsDialog = lazy(() => import("./SettingsDialog").then((m) => ({ default: m.SettingsDialog })));
+const ConflictDialog = lazy(() => import("./ConflictDialog").then((m) => ({ default: m.ConflictDialog })));
+const StickerBoardView = lazy(() => import("./StickerBoardView").then((m) => ({ default: m.StickerBoardView })));
+const TaskListView = lazy(() => import("./TaskListView").then((m) => ({ default: m.TaskListView })));
+const IdeaFlowsView = lazy(() => import("./IdeaFlowsView").then((m) => ({ default: m.IdeaFlowsView })));
+const ConnectionsGraphView = lazy(() => import("./ConnectionsGraphView").then((m) => ({ default: m.ConnectionsGraphView })));
+const NoteTemplatesModal = lazy(() => import("./NoteTemplatesModal").then((m) => ({ default: m.NoteTemplatesModal })));
 
 type SaveState = "saved" | "saving" | "error";
 type LibraryView = "notes" | "deleted" | "stickers" | "tasks" | "ideas" | "connections";
@@ -477,13 +479,14 @@ export function App() {
   const saveVersions = useRef(new Map<string, number>());
 
   activeIdRef.current = activeId;
+  const deferredQuery = useDeferredValue(query);
   const currentNotes = view === "deleted" ? deletedNotes : notes;
   const active = currentNotes.find((note) => note.id === activeId) ?? currentNotes[0];
   const visible = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase();
+    const normalizedQuery = deferredQuery.trim().toLocaleLowerCase();
     if (!normalizedQuery) return currentNotes;
     return currentNotes.filter((note) => `${note.title} ${note.bodyText ?? note.body}`.toLocaleLowerCase().includes(normalizedQuery));
-  }, [currentNotes, query]);
+  }, [currentNotes, deferredQuery]);
   const folderOptions = navigation.folders.length > 0
     ? navigation.folders
     : [{ id: "folder-default", name: "Notas", parentId: null, noteCount: notes.length }];
@@ -750,8 +753,11 @@ export function App() {
       isPdf = true;
       filename = `${cleanTitle}.pdf`;
       mimeType = "application/pdf";
-      const base64Pdf = await exportToPdfBase64(active);
-      content = `base64:${base64Pdf}`;
+      if (window.go?.main?.App?.ExportNoteFile) {
+        const { exportToPdfBase64 } = await import("./pdfExport");
+        const base64Pdf = await exportToPdfBase64(active);
+        content = `base64:${base64Pdf}`;
+      }
     } else if (format === "code" || (active.type === "code" && format !== "txt")) {
       let ext = ".txt";
       switch (active.language) {
@@ -775,8 +781,11 @@ export function App() {
       isDocx = true;
       filename = `${cleanTitle} (ABNT).docx`;
       mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-      const base64Doc = await exportToAbntDocxBase64(active.title, active.body);
-      content = `base64:${base64Doc}`;
+      if (window.go?.main?.App?.ExportNoteFile) {
+        const { exportToAbntDocxBase64 } = await import("./abntExport");
+        const base64Doc = await exportToAbntDocxBase64(active.title, active.body);
+        content = `base64:${base64Doc}`;
+      }
     } else if (format === "md") {
       filename = `${cleanTitle}.md`;
       content = exportToMarkdown(active.title, active.body, active.bodyText);
@@ -814,9 +823,11 @@ export function App() {
       }
     } else {
       if (isPdf) {
+        const { exportToPdfBlob } = await import("./pdfExport");
         const blob = await exportToPdfBlob(active);
         downloadBlob(filename, blob);
       } else if (isDocx) {
+        const { exportToAbntDocxBlob } = await import("./abntExport");
         const blob = await exportToAbntDocxBlob(active.title, active.body);
         downloadBlob(filename, blob);
       } else {
@@ -1529,12 +1540,21 @@ export function App() {
     }
   }, [activeId, view, connectionsGraph.links]);
 
+  const noteHeadersSignature = useMemo(
+    () =>
+      notes
+        .map((n) => `${n.id}\x1f${n.title}\x1f${n.folder || ""}\x1f${(n.tags || []).join("\x1d")}`)
+        .join("\x1e"),
+    [notes]
+  );
+
   const availableLinkNotes = useMemo<NoteLinkMeta[]>(() => {
     if (connectionsGraph.notes.length > 0) {
       return connectionsGraph.notes.map((n) => ({ id: n.id, title: n.title, folder: n.folder }));
     }
     return notes.map((n) => ({ id: n.id, title: n.title, folder: n.folder }));
-  }, [connectionsGraph.notes, notes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connectionsGraph.notes, noteHeadersSignature]);
 
   // Mapa rápido de indicadores de conexão para todas as notas (links diretos + etiquetas compartilhadas)
   const noteConnectionsMetaMap = useMemo(() => {
@@ -1615,12 +1635,16 @@ export function App() {
     }
 
     return map;
-  }, [connectionsGraph.notes, connectionsGraph.links, notes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connectionsGraph.notes, connectionsGraph.links, noteHeadersSignature]);
 
   const floatingModalNote = useMemo(
     () => (floatingModalNoteId ? notes.find((n) => n.id === floatingModalNoteId) ?? null : null),
     [floatingModalNoteId, notes]
   );
+
+  const createNoteShortcutRef = useRef(createNote);
+  createNoteShortcutRef.current = createNote;
 
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
@@ -1631,13 +1655,13 @@ export function App() {
       }
       if (event.key.toLocaleLowerCase() === "n") {
         event.preventDefault();
-        createNote();
+        createNoteShortcutRef.current();
       }
     };
 
     window.addEventListener("keydown", handleShortcut);
     return () => window.removeEventListener("keydown", handleShortcut);
-  });
+  }, []);
 
   useEffect(() => {
     const flushPendingNotes = () => {
@@ -2667,6 +2691,7 @@ export function App() {
         </div>
       </aside>
 
+      <Suspense fallback={null}>
       {view === "stickers" ? (
         <StickerBoardView
           key={`stickers-${selectedQuery.id ?? "default"}-${taskSyncNonce}`}
@@ -2814,7 +2839,7 @@ export function App() {
                   {note.type === "code" && <LanguageBadge language={note.language} />}
                   {note.title || "Nova nota"}
                 </strong>
-                <span className="note-preview"><time>{dateLabel(note.updatedAt)}</time> {(note.bodyText ?? note.body).replace(/\s+/g, " ") || "Nenhum texto adicional"}</span>
+                <span className="note-preview"><time>{dateLabel(note.updatedAt)}</time> {(note.bodyText ?? note.body).slice(0, 220).replace(/\s+/g, " ") || "Nenhum texto adicional"}</span>
                 {(directCount > 0 || tagsCount > 0) && (
                   <span className="note-row-conn-indicators">
                     {directCount > 0 && (
@@ -3987,16 +4012,19 @@ export function App() {
         </div>
       )}
 
-      <NoteTemplatesModal
-        open={templatesModalOpen}
-        activeNote={active ?? null}
-        activeNoteHasContent={Boolean(active && (active.bodyText ?? "").trim().length > 0)}
-        customTemplates={customTemplates}
-        onClose={() => setTemplatesModalOpen(false)}
-        onApplyTemplate={(tpl, mode, applyTags) => void handleApplyNoteTemplate(tpl, mode, applyTags)}
-        onSaveCustomTemplate={handleSaveCustomTemplate}
-        onDeleteCustomTemplate={handleDeleteCustomTemplate}
-      />
+      {templatesModalOpen && (
+        <NoteTemplatesModal
+          open={templatesModalOpen}
+          activeNote={active ?? null}
+          activeNoteHasContent={Boolean(active && (active.bodyText ?? "").trim().length > 0)}
+          customTemplates={customTemplates}
+          onClose={() => setTemplatesModalOpen(false)}
+          onApplyTemplate={(tpl, mode, applyTags) => void handleApplyNoteTemplate(tpl, mode, applyTags)}
+          onSaveCustomTemplate={handleSaveCustomTemplate}
+          onDeleteCustomTemplate={handleDeleteCustomTemplate}
+        />
+      )}
+      </Suspense>
 
     </main>
     </div>

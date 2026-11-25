@@ -163,22 +163,39 @@ function inlineToMarkdown(node: JSONContent): string {
   return text;
 }
 
+function escapeHtml(raw: string): string {
+  return raw
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function sanitizeSafeUrl(raw: string): string {
+  const trimmed = raw.trim();
+  if (/^(https?:\/\/|mailto:|#)/i.test(trimmed)) {
+    return escapeHtml(trimmed);
+  }
+  return "#";
+}
+
 export function exportToHTML(title: string, body: string, bodyText?: string): string {
-  const cleanTitle = title.trim() || "Sem título";
+  const safeTitle = escapeHtml(title.trim() || "Sem título");
   let contentHtml = "";
 
   try {
     const json = JSON.parse(body) as JSONContent;
     contentHtml = jsonToHTML(json);
   } catch {
-    contentHtml = `<p>${(bodyText || body).replace(/\n/g, "<br/>")}</p>`;
+    contentHtml = `<p>${escapeHtml(bodyText || body).replace(/\n/g, "<br/>")}</p>`;
   }
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>${cleanTitle}</title>
+  <title>${safeTitle}</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 20px; color: #252522; line-height: 1.6; }
@@ -199,7 +216,7 @@ export function exportToHTML(title: string, body: string, bodyText?: string): st
   </style>
 </head>
 <body>
-  <h1>${cleanTitle}</h1>
+  <h1>${safeTitle}</h1>
   ${contentHtml}
 </body>
 </html>`;
@@ -218,14 +235,14 @@ function jsonToHTML(node: JSONContent): string {
     }
 
     case "heading": {
-      const level = node.attrs?.level || 1;
+      const level = Math.min(6, Math.max(1, Number(node.attrs?.level) || 1));
       const inner = (node.content || []).map(inlineToHTML).join("");
       return `<h${level}>${inner}</h${level}>`;
     }
 
     case "codeBlock": {
-      const lang = node.attrs?.language || "plaintext";
-      const code = (node.content || []).map((c) => c.text || "").join("");
+      const lang = escapeHtml(String(node.attrs?.language || "plaintext").replace(/[^a-zA-Z0-9_-]/g, ""));
+      const code = escapeHtml((node.content || []).map((c) => c.text || "").join(""));
       return `<pre><code class="language-${lang}">${code}</code></pre>`;
     }
 
@@ -248,29 +265,31 @@ function jsonToHTML(node: JSONContent): string {
       return `<blockquote>${(node.content || []).map(jsonToHTML).join("")}</blockquote>`;
 
     case "calculation":
-      return `<span class="calc">${node.attrs?.expression || ""} = ${node.attrs?.result || ""}</span>`;
+      return `<span class="calc">${escapeHtml(String(node.attrs?.expression || ""))} = ${escapeHtml(String(node.attrs?.result || ""))}</span>`;
 
     case "mathBlock": {
-      const latex = node.attrs?.latex || "";
+      const latex = String(node.attrs?.latex || "");
       const mathHtml = katex.renderToString(latex, { displayMode: true, throwOnError: false });
       return `<div class="math-block" data-latex="${encodeURIComponent(latex)}">${mathHtml}</div>`;
     }
 
     case "callout": {
-      const type = node.attrs?.type || "info";
+      const rawType = String(node.attrs?.type || "info").replace(/[^a-zA-Z0-9_-]/g, "");
+      const type = rawType || "info";
       const inner = (node.content || []).map(jsonToHTML).join("");
       return `<div class="academic-callout callout-${type}" data-callout="" data-callout-type="${type}"><div class="callout-content">${inner}</div></div>`;
     }
 
     case "toggle": {
-      const title = node.attrs?.title || "Pergunta / Tópico";
+      const rawTitle = String(node.attrs?.title || "Pergunta / Tópico");
+      const safeSummary = escapeHtml(rawTitle);
       const inner = (node.content || []).map(jsonToHTML).join("");
-      return `<details class="study-toggle" ${node.attrs?.open ? "open" : ""} data-toggle="" data-title="${encodeURIComponent(title)}"><summary>${title}</summary><div class="study-toggle-content">${inner}</div></details>`;
+      return `<details class="study-toggle" ${node.attrs?.open ? "open" : ""} data-toggle="" data-title="${encodeURIComponent(rawTitle)}"><summary>${safeSummary}</summary><div class="study-toggle-content">${inner}</div></details>`;
     }
 
     case "mermaid": {
-      const code = (node.attrs?.code || "").trim();
-      const caption = node.attrs?.caption ? `<figcaption style="margin-top:8px;font-style:italic;color:#78716c;text-align:center;">${node.attrs.caption}</figcaption>` : "";
+      const code = escapeHtml(String(node.attrs?.code || "").trim());
+      const caption = node.attrs?.caption ? `<figcaption style="margin-top:8px;font-style:italic;color:#78716c;text-align:center;">${escapeHtml(String(node.attrs.caption))}</figcaption>` : "";
       return `<figure class="mermaid-diagram-export" style="margin:16px 0;text-align:center;"><pre class="mermaid">${code}</pre>${caption}</figure>`;
     }
 
@@ -293,22 +312,19 @@ function jsonToHTML(node: JSONContent): string {
 
 function inlineToHTML(node: JSONContent): string {
   if (node.type === "calculation") {
-    return `<span class="calc">${node.attrs?.expression || ""} = ${node.attrs?.result || ""}</span>`;
+    return `<span class="calc">${escapeHtml(String(node.attrs?.expression || ""))} = ${escapeHtml(String(node.attrs?.result || ""))}</span>`;
   }
   if (node.type === "mathInline") {
-    const latex = node.attrs?.latex || "";
+    const latex = String(node.attrs?.latex || "");
     const mathHtml = katex.renderToString(latex, { displayMode: false, throwOnError: false });
-    return `<span class="math-inline" data-latex="${encodeURIComponent(latex)}">${mathHtml}</span>`;
+    return `<span class="math-inline" data-latex="${encodeURIComponent(latex)}">${mathHtml}</div>`.replace("</div>", "</span>");
   }
   if (node.type === "noteLink") {
-    const safeTitle = String(node.attrs?.title || "Nota")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+    const safeTitle = escapeHtml(String(node.attrs?.title || "Nota"));
     return `<span class="note-link-export">[[${safeTitle}]]</span>`;
   }
 
-  let text = node.text || "";
+  let text = escapeHtml(node.text || "");
   if (!text) return "";
 
   const marks = node.marks || [];
@@ -318,7 +334,7 @@ function inlineToHTML(node: JSONContent): string {
     else if (mark.type === "strike") text = `<del>${text}</del>`;
     else if (mark.type === "code") text = `<code>${text}</code>`;
     else if (mark.type === "highlight") text = `<mark>${text}</mark>`;
-    else if (mark.type === "link") text = `<a href="${mark.attrs?.href || ""}">${text}</a>`;
+    else if (mark.type === "link") text = `<a href="${sanitizeSafeUrl(String(mark.attrs?.href || ""))}" rel="noopener noreferrer">${text}</a>`;
   });
 
   return text;

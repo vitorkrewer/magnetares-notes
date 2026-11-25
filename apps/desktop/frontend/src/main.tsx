@@ -1,9 +1,12 @@
-import { StrictMode, useEffect, useState } from "react";
+import { lazy, StrictMode, Suspense, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "katex/dist/katex.min.css";
 import "./styles.css";
-import { App } from "./ui/App";
-import { FocusStandaloneWindow } from "./ui/FocusStandaloneWindow";
+
+const App = lazy(() => import("./ui/App").then((m) => ({ default: m.App })));
+const FocusStandaloneWindow = lazy(() =>
+  import("./ui/FocusStandaloneWindow").then((m) => ({ default: m.FocusStandaloneWindow }))
+);
 
 function Root() {
   const [focusNoteId, setFocusNoteId] = useState<string | null>(null);
@@ -43,10 +46,18 @@ function Root() {
   }
 
   if (focusNoteId) {
-    return <FocusStandaloneWindow noteId={focusNoteId} />;
+    return (
+      <Suspense fallback={null}>
+        <FocusStandaloneWindow noteId={focusNoteId} />
+      </Suspense>
+    );
   }
 
-  return <App />;
+  return (
+    <Suspense fallback={null}>
+      <App />
+    </Suspense>
+  );
 }
 
 createRoot(document.getElementById("root")!).render(

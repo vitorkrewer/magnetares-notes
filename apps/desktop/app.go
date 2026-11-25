@@ -35,11 +35,28 @@ type Note struct {
 }
 
 type App struct {
-	ctx            context.Context
-	store          *noteStore
-	focusNoteID    string
-	focusProcesses map[string]*exec.Cmd
-	focusMu        sync.Mutex
+	ctx             context.Context
+	store           *noteStore
+	focusNoteID     string
+	focusProcesses  map[string]*exec.Cmd
+	focusMu         sync.Mutex
+	taskSyncMu      sync.Mutex
+	taskSyncRunning bool
+	taskSyncQueued  bool
+	closingMu       sync.RWMutex
+	closed          bool
+}
+
+func isValidSafeEntityID(id string) bool {
+	if len(id) == 0 || len(id) > 96 {
+		return false
+	}
+	for _, r := range id {
+		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' || r == '_') {
+			return false
+		}
+	}
+	return true
 }
 
 func NewApp(databasePath string) (*App, error) {
@@ -53,9 +70,30 @@ func NewApp(databasePath string) (*App, error) {
 	}, nil
 }
 
-func (a *App) startup(ctx context.Context) { a.ctx = ctx }
+func (a *App) startup(ctx context.Context) {
+	a.ctx = ctx
+	if a.focusNoteID == "" {
+		go func() {
+			timer := time.NewTimer(1500 * time.Millisecond)
+			defer timer.Stop()
+			select {
+			case <-ctx.Done():
+				return
+			case <-timer.C:
+				a.closingMu.RLock()
+				defer a.closingMu.RUnlock()
+				if !a.closed && a.store != nil {
+					_, _ = a.store.EnsureDataCompliance()
+				}
+			}
+		}()
+	}
+}
 
 func (a *App) Close() error {
+	a.closingMu.Lock()
+	a.closed = true
+	a.closingMu.Unlock()
 	return a.store.close()
 }
 
@@ -252,7 +290,7 @@ func (a *App) ExportIdeaFlowPNG(suggestedName string, base64PNG string) (string,
 		return "", fmt.Errorf("decodificar imagem PNG base64: %w", err)
 	}
 
-	if err := os.WriteFile(selectedPath, decoded, 0644); err != nil {
+	if err := os.WriteFile(selectedPath, decoded, 0o600); err != nil {
 		return "", fmt.Errorf("salvar imagem PNG: %w", err)
 	}
 
@@ -307,20 +345,41 @@ func (a *App) trySyncTaskEntitiesImmediately() {
 	if a.ctx == nil {
 		return
 	}
-	databaseURL, authToken, err := a.syncCredentials()
-	if err != nil || strings.TrimSpace(databaseURL) == "" || strings.TrimSpace(authToken) == "" {
+	a.taskSyncMu.Lock()
+	if a.taskSyncRunning {
+		a.taskSyncQueued = true
+		a.taskSyncMu.Unlock()
 		return
 	}
-	turso := NewTursoClient(databaseURL, authToken)
-	if turso == nil {
-		return
-	}
-	cfg := loadAppConfig()
-	res, err := a.store.resolveSyncProfile(databaseURL, cfg.SyncProfileID)
-	if err != nil || res.ProfileID == "" {
-		return
-	}
-	_ = a.store.syncTaskEntities(turso, res.ProfileID)
+	a.taskSyncRunning = true
+	a.taskSyncMu.Unlock()
+
+	go func() {
+		for {
+			a.closingMu.RLock()
+			if !a.closed && a.store != nil {
+				databaseURL, authToken, err := a.syncCredentials()
+				if err == nil && strings.TrimSpace(databaseURL) != "" && strings.TrimSpace(authToken) != "" {
+					if turso := NewTursoClient(databaseURL, authToken); turso != nil {
+						cfg := loadAppConfig()
+						if res, err := a.store.resolveSyncProfile(databaseURL, cfg.SyncProfileID); err == nil && res.ProfileID != "" {
+							_ = a.store.syncTaskEntities(turso, res.ProfileID)
+						}
+					}
+				}
+			}
+			a.closingMu.RUnlock()
+
+			a.taskSyncMu.Lock()
+			if !a.taskSyncQueued {
+				a.taskSyncRunning = false
+				a.taskSyncMu.Unlock()
+				return
+			}
+			a.taskSyncQueued = false
+			a.taskSyncMu.Unlock()
+		}
+	}()
 }
 
 func (a *App) ListTasks(listID string, includeCompleted bool) ([]Task, error) {
@@ -470,6 +529,10 @@ func (a *App) SetAlwaysOnTop(b bool) {
 }
 
 func (a *App) LaunchFocusWindow(noteID string) error {
+	noteID = strings.TrimSpace(noteID)
+	if !isValidSafeEntityID(noteID) {
+		return errors.New("identificador de nota inválido para Modo Foco")
+	}
 	exe, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("obter executável: %w", err)
@@ -587,7 +650,7 @@ func (a *App) ExportNoteFile(defaultFilename, content string) (string, error) {
 		dataToWrite = []byte(content)
 	}
 
-	if err := os.WriteFile(selectedPath, dataToWrite, 0644); err != nil {
+	if err := os.WriteFile(selectedPath, dataToWrite, 0o600); err != nil {
 		return "", fmt.Errorf("salvar arquivo exportado: %w", err)
 	}
 
