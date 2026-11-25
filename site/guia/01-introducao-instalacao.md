@@ -11,7 +11,7 @@ O **Magnetares Notes** é um aplicativo desktop projetado sob o paradigma **Loca
 - **100% Offline por padrão:** Tudo o que você escreve é gravado instantaneamente no seu computador em um banco de dados **SQLite** com *Write-Ahead Logging* (WAL).
 - **Sem login obrigatório:** Você baixa, abre e começa a redigir na mesma hora.
 - **Nuvem Opcional e Segura:** Se desejar sincronizar suas anotações com outros computadores, pode conectar seu próprio banco remoto via **Turso (libSQL)** sem abrir mão da cópia local.
-- **Suíte Técnica Completa:** Editor de texto rico com tabelas, equações matemáticas (LaTeX/KaTeX), reações químicas (`mhchem`), diagramas (Mermaid.js), notas de código com motor do VS Code (Monaco Editor), checklists de tarefas e mural de post-its visuais.
+- **Suíte Técnica & Corporativa Completa:** Editor de texto rico com **Galeria de 26 Templates prontos em 10 áreas** (+ *Meus Templates*), tabelas, equações matemáticas (LaTeX/KaTeX), reações químicas (`mhchem`), diagramas (Mermaid.js), **Minhas Conexões** com grafo interativo e links `[[Nota]]`, **Fluxo de Ideias**, notas de código com motor do VS Code (Monaco Editor), listas de tarefas e mural de post-its visuais.
 
 ---
 
@@ -21,7 +21,7 @@ O Magnetares Notes é extremamente leve e consome uma fração da memória de su
 
 | Plataforma | Requisitos Mínimos | Formatos Disponíveis |
 | :--- | :--- | :--- |
-| **Windows** | Windows 10 (64-bit) ou superior, com runtime WebView2 (nativo no Windows 10/11) | Executável Standalone (`.exe`) e Versão Portátil (`.zip`) |
+| **Windows** | Windows 10 (64-bit) ou superior, com runtime WebView2 (nativo no Windows 10/11) | Instalador (`Setup .exe`), Corporativo (`.msi`), Executável Direto (`.exe`) e Portátil (`.zip`) |
 | **Linux** | Distribuições modernas de 64-bit (Ubuntu, Fedora, Debian, Arch, Mint com glibc 2.31+) | AppImage universal, Pacote Debian (`.deb`) e Tarball (`.tar.gz`) |
 | **macOS** | macOS 12 Monterey ou superior (Apple Silicon M1/M2/M3/M4 e Intel) | Binário Universal (`.zip`) |
 
@@ -31,8 +31,8 @@ O Magnetares Notes é extremamente leve e consome uma fração da memória de su
 
 ### Windows
 1. Acesse a seção de downloads no site ou as [Releases no GitHub](https://github.com/vitorkrewer/magnetares-notes/releases).
-2. Baixe o instalador direto `Magnetares-Notes-Windows-x64.exe` ou a versão portátil `.zip`.
-3. Para o executável direto: basta dar duplo clique para iniciar. O banco de dados e preferências serão salvos de forma isolada na pasta do seu usuário em `%LOCALAPPDATA%\Magnetares Notes\`.
+2. Escolha entre o **Instalador Windows (`Setup .exe`)**, o **Instalador Corporativo (`.msi`)**, o **Executável Direto (`.exe`)** ou a **Versão Portátil (`.zip`)**.
+3. Com o instalador `Setup .exe` ou `.msi`, atalhos no Menu Iniciar e desinstalador padrão do Windows são configurados automaticamente. No executável direto, basta dar duplo clique para iniciar. O banco de dados e preferências ficam isolados na pasta do seu usuário em `%LOCALAPPDATA%\Magnetares Notes\`.
 
 > [!NOTE]
 > Se o Windows Defender exibir a mensagem de tela azul *"O Windows protegeu o seu computador"*, clique em **Mais informações** e em seguida em **Executar assim mesmo**. Isso ocorre porque o executável é open-source e compilado diretamente via GitHub Actions.

@@ -1,6 +1,6 @@
 {
   "title": "Guia de Uso — Magnetares Notes",
-  "version": "v2.0.0",
+  "version": "v2.1.0",
   "groups": [
     {
       "name": "Começando",
@@ -24,10 +24,17 @@
           "summary": "Títulos, checklists, tabelas com colagem do Excel, citações e cálculos aritméticos."
         },
         {
+          "id": "13-templates-de-notas",
+          "title": "Galeria de Templates de Notas",
+          "icon": "layout",
+          "badge": "Novo v2.1.0",
+          "summary": "26 modelos prontos em 10 áreas do conhecimento, pré-visualização em 3 colunas e biblioteca pessoal Meus Templates."
+        },
+        {
           "id": "03-ciencias-formulas-mermaid",
           "title": "Fórmulas, Ciências & Diagramas",
           "icon": "activity",
-          "badge": "Novo v1.9.0",
+          "badge": "v1.9.0",
           "summary": "LaTeX KaTeX offline, química com mhchem, callouts semânticos, toggles de estudo ativo e Mermaid.js."
         },
         {
@@ -39,8 +46,22 @@
       ]
     },
     {
-      "name": "Produtividade & Foco",
+      "name": "Produtividade & Conexões",
       "chapters": [
+        {
+          "id": "14-minhas-conexoes",
+          "title": "Minhas Conexões & Vínculos",
+          "icon": "share-2",
+          "badge": "Novo v2.1.0",
+          "summary": "Links bidirecionais [[Nota]], backlinks automáticos, grafo interativo de notas/etiquetas e edição em modal."
+        },
+        {
+          "id": "12-fluxo-de-ideias",
+          "title": "Fluxo de Ideias (Mapas Mentais)",
+          "icon": "git-branch",
+          "badge": "v2.0.0",
+          "summary": "Canvas vetorial HD para mapas mentais e fluxogramas, links diretos para notas/listas/stickers e exportação PNG."
+        },
         {
           "id": "05-listas-e-tarefas",
           "title": "Listas & Tarefas",
@@ -58,15 +79,8 @@
           "id": "07-modo-foco-pip",
           "title": "Modo Foco (Janela Independente)",
           "icon": "maximize-2",
-          "badge": "Novo v1.9.0",
+          "badge": "v1.9.0",
           "summary": "Destaque notas em janelas nativas com fixação no topo enquanto continua navegando no app."
-        },
-        {
-          "id": "12-fluxo-de-ideias",
-          "title": "Fluxo de Ideias (Mapas Mentais)",
-          "icon": "git-branch",
-          "badge": "Novo v2.0.0",
-          "summary": "Canvas vetorial HD para mapas mentais e fluxogramas, links diretos para notas/listas/stickers e exportação PNG."
         }
       ]
     },
@@ -83,7 +97,7 @@
           "id": "09-exportacao-abnt-pdf",
           "title": "Exportação ABNT (.docx) & PDF",
           "icon": "file-text",
-          "badge": "Novo v1.9.0",
+          "badge": "v1.9.0",
           "summary": "Emissão de artigos acadêmicos normatizados no Word, impressão em papel branco puro e Markdown."
         }
       ]
@@ -95,7 +109,7 @@
           "id": "10-nuvem-backup-compliance",
           "title": "Configurações, Nuvem & Backup",
           "icon": "shield",
-          "badge": "Atualizado v2.0.0",
+          "badge": "v2.0.0",
           "summary": "Tema claro/escuro, troca segura do local do banco SQLite, sincronização Turso, backups, auditoria e atualizações."
         },
         {

@@ -63,7 +63,7 @@ Criamos um bloco estruturado com 5 categorias temáticas projetadas para caderno
 4. ⚠️ **Atenção / Alerta Clínico:** Contraindicações farmacológicas, cuidados em bancada e diagnósticos diferenciais.
 5. ⚡ **Exemplo Prático:** Exercícios resolvidos e dimensionamento de componentes.
 
-O tipo de destaque pode ser alternado a qualquer instante com um clique no cabeçalho do bloco, e a sintaxe é exportada com total compatibilidade para GitHub e Obsidian (`> [!NOTE]`, `> [!THEOREM]`).
+O tipo de destaque pode ser alternado a qualquer instante com um clique no cabeçalho do bloco, e a sintaxe é exportada com total compatibilidade para GitHub Flavored Markdown (`> [!NOTE]`, `> [!THEOREM]`).
 
 ### Blocos Expansíveis (*Toggles* para Active Recall)
 Para provas, simulados e fixação de fórmulas, nada supera a prática de **recuperação ativa** (*active recall*). Os novos blocos sanfonados permitem que o estudante coloque a pergunta ou problema no título e oculte a dedução, resolução ou resposta dentro do corpo expansível.

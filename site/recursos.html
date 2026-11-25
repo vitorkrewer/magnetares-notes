@@ -60,7 +60,7 @@
     <div class="header-actions">
       <a class="header-download-btn" href="index.html#downloads">
         <span>Baixar</span>
-        <span id="header-version-badge">v2.0.0</span>
+        <span id="header-version-badge">v2.1.0</span>
       </a>
       <button class="menu-toggle-btn" id="mobile-menu-toggle" type="button" aria-label="Abrir menu de navegação"
         aria-expanded="false">
@@ -92,7 +92,7 @@
         </svg>
         <span>Baixar Magnetares</span>
       </a>
-      <span class="drawer-version-tag">Versão mais recente: v2.0.0</span>
+      <span class="drawer-version-tag">Versão mais recente: v2.1.0</span>
     </div>
   </aside>
 
@@ -102,13 +102,16 @@
       <div class="starfield" aria-hidden="true"></div>
       <p class="kicker">Funcionalidades & Detalhes Técnicos</p>
       <h1>Tudo o que você precisa.<br /><em>Nada que te distraia.</em></h1>
-      <p>Explore a lista completa de funcionalidades do Magnetares Notes: do editor de escrita estruturada ao banco
-        local, árvores de pastas infinitas e sincronização em nuvem resiliente.</p>
+      <p>Explore a lista completa de funcionalidades do Magnetares Notes: do editor de escrita estruturada e galeria de
+        templates ao grafo de conexões, árvores de pastas infinitas e sincronização em nuvem resiliente.</p>
 
       <!-- BARRA DE CATEGORIAS RÁPIDAS -->
       <div class="category-nav-bar" aria-label="Navegação por categorias de recursos">
+        <a class="category-nav-btn" href="#templates">Templates de Notas</a>
+        <a class="category-nav-btn" href="#conexoes">Minhas Conexões</a>
         <a class="category-nav-btn" href="#editor">Editor Estruturado</a>
         <a class="category-nav-btn" href="#ciencias-abnt">Ciências & ABNT</a>
+        <a class="category-nav-btn" href="#fluxo-ideias">Fluxo de Ideias</a>
         <a class="category-nav-btn" href="#listas">Listas & Tarefas</a>
         <a class="category-nav-btn" href="#organizacao">Organização & Pastas</a>
         <a class="category-nav-btn" href="#local-first">Local-First & Segurança</a>
@@ -341,7 +344,7 @@
               <li>5 categorias: 💡 Notas, 📐 Teoremas, 🔬 Experimentos de Laboratório, ⚠️ Alertas Clínicos e ⚡ Exemplos
                 Práticos</li>
               <li>Alternância de categoria em 1 clique e design adaptado aos temas claro e escuro</li>
-              <li>Compatibilidade bidirecional com Markdown GFM e Obsidian (&gt; [!THEOREM])</li>
+              <li>Compatibilidade bidirecional com Markdown GFM estendido (&gt; [!THEOREM])</li>
             </ul>
           </article>
 
@@ -383,6 +386,161 @@
               <li>Normas NBR 14724 (Estrutura), NBR 6024 (Numeração), NBR 10520 (Citações) e NBR 6023 (Referências)</li>
               <li>Margens 3-3-2-2 cm, fonte Arial 12/10 pt, entrelinhas 1,5 e recuo de parágrafo de 1,25 cm</li>
               <li>Capa institucional, sumário com numeração automática de páginas e conversão de tabelas e equações</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+
+      <!-- GRUPO: GALERIA DE TEMPLATES DE NOTAS (NOVO v2.1.0) -->
+      <div class="feature-group" id="templates">
+        <div class="feature-group-header">
+          <div>
+            <p class="kicker">Produtividade &amp; Estrutura · Novo v2.1.0</p>
+            <h2>Galeria de Templates de Notas</h2>
+            <p>26 modelos profissionais prontos em 10 áreas do conhecimento e biblioteca pessoal local para criar
+              documentos estruturados em segundos (exclusivo para notas ricas).</p>
+          </div>
+          <span class="feature-tag-status">v2.1.0 Estável</span>
+        </div>
+
+        <div class="feature-detail-grid">
+          <article class="feature-detail-card">
+            <div class="feature-card-header">
+              <div class="feature-icon-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="14" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                </svg>
+              </div>
+              <span class="feature-tag-status">26 Modelos</span>
+            </div>
+            <h3>10 Áreas do Conhecimento</h3>
+            <p>Estruturas nativas do Tiptap com tabelas, callouts semânticos, checklists, fórmulas KaTeX, toggles e
+              diagramas Mermaid prontos para preencher.</p>
+            <ul>
+              <li>Corporativo: Atas Executivas, 1:1, ADRs, PRDs, Discovery, Sprints, Briefings, Kickoff e Post-Mortem</li>
+              <li>Especialidades: Prontuário SOAP, Caso Clínico, Memorial de Cálculo, Lab Report, Parecer Jurídico e SWOT</li>
+              <li>Ensino, Mídia, Acadêmico e Pessoal: Plano de Aula, Cornell, Roteiro A/V, Artigo ABNT e Diário</li>
+            </ul>
+          </article>
+
+          <article class="feature-detail-card">
+            <div class="feature-card-header">
+              <div class="feature-icon-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                </svg>
+              </div>
+              <span class="feature-tag-status">3 Colunas</span>
+            </div>
+            <h3>Pré-visualização ao Vivo &amp; Aplicação Segura</h3>
+            <p>Navegue por categorias, pesquise por título ou tag e inspecione a estrutura real renderizada antes de
+              aplicar na nota.</p>
+            <ul>
+              <li>Substituição automática de variáveis dinâmicas como <code>{{hoje}}</code> e <code>{{mes_ano}}</code></li>
+              <li>Modos seguros: <strong>Inserir ao final</strong>, <strong>Substituir nota</strong> ou criar <strong>Nova nota</strong></li>
+              <li>Barra rápida contextual ao abrir notas em branco + opção de incluir etiquetas sugeridas</li>
+            </ul>
+          </article>
+
+          <article class="feature-detail-card">
+            <div class="feature-card-header">
+              <div class="feature-icon-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                  <polyline points="17 21 17 13 7 13 7 21" />
+                  <polyline points="7 3 7 8 15 8" />
+                </svg>
+              </div>
+              <span class="feature-tag-status">SQLite Local</span>
+            </div>
+            <h3>Biblioteca Pessoal "Meus Templates"</h3>
+            <p>Transforme qualquer nota estruturada que você montou em um template reutilizável salvo diretamente no seu
+              banco SQLite.</p>
+            <ul>
+              <li>Botão <strong>+ Salvar nota como template</strong> integrado ao topo da galeria</li>
+              <li>Personalização de título, descrição, ícone, etiquetas sugeridas e título padrão</li>
+              <li>Edição de metadados e exclusão com confirmação, 100% offline</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+
+      <!-- GRUPO: MINHAS CONEXÕES & GRAFO DE CONHECIMENTO (NOVO v2.1.0) -->
+      <div class="feature-group" id="conexoes">
+        <div class="feature-group-header">
+          <div>
+            <p class="kicker">Conhecimento Conectado · Novo v2.1.0</p>
+            <h2>Minhas Conexões &amp; Vínculos Bidirecionais</h2>
+            <p>Conecte notas por menções diretas e etiquetas compartilhadas e navegue pela sua base de conhecimento em
+              um mapa de grafos interativo.</p>
+          </div>
+          <span class="feature-tag-status">v2.1.0 Estável</span>
+        </div>
+
+        <div class="feature-detail-grid">
+          <article class="feature-detail-card">
+            <div class="feature-card-header">
+              <div class="feature-icon-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                </svg>
+              </div>
+              <span class="feature-tag-status">Grafo Interativo</span>
+            </div>
+            <h3>Mapa de Grafos &amp; Explorador Retrátil</h3>
+            <p>Acesse <strong>CONEXÕES → Minhas Conexões</strong> na barra lateral para explorar visualmente todas as
+              relações entre seus estudos e projetos.</p>
+            <ul>
+              <li>Ícones vetoriais distintos para <strong>Nota</strong>, <strong>Código (<code>&lt;/&gt;</code>)</strong> e <strong>Etiqueta (<code>#</code>)</strong> com selo numérico de grau</li>
+              <li>Barra lateral retrátil com catálogo pesquisável de todas as notas e etiquetas da base</li>
+              <li>Filtros por pasta, etiqueta, nós isolados e profundidade de <strong>1 a 3 saltos</strong></li>
+            </ul>
+          </article>
+
+          <article class="feature-detail-card">
+            <div class="feature-card-header">
+              <div class="feature-icon-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+              </div>
+              <span class="feature-tag-status">Links [[Nota]]</span>
+            </div>
+            <h3>Autocompletar Inline &amp; Backlinks Automáticos</h3>
+            <p>Crie vínculos diretos enquanto escreve sem tirar as mãos do teclado e descubra quais outras notas citam o
+              documento atual.</p>
+            <ul>
+              <li>Digite <code>[[</code> no editor para buscar e inserir pílulas clicáveis de referência</li>
+              <li>Painel Lateral de <strong>Vínculos &amp; Etiquetas</strong> acionado no cabeçalho da nota</li>
+              <li>Listagem automática de links de saída, <em>backlinks</em> (quem cita esta nota) e notas relacionadas por tag</li>
+            </ul>
+          </article>
+
+          <article class="feature-detail-card">
+            <div class="feature-card-header">
+              <div class="feature-icon-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M9 3v18" />
+                </svg>
+              </div>
+              <span class="feature-tag-status">Editor Flutuante</span>
+            </div>
+            <h3>Indicadores Visuais &amp; Edição Direta do Mapa</h3>
+            <p>Saiba quantas conexões cada nota possui em qualquer tela e edite documentos sem sair do grafo.</p>
+            <ul>
+              <li>Selos e pílulas de contagem nos cartões da lista, no cabeçalho e no rodapé do editor</li>
+              <li>Duplo clique em qualquer nó do grafo abre o <strong>Editor Completo em Modal</strong> separado</li>
+              <li>Suporte integral a notas ricas e notas de código Monaco diretamente sobre o mapa</li>
             </ul>
           </article>
         </div>

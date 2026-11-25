@@ -33,6 +33,7 @@ O Magnetares Notes foi desenvolvido para permitir que você realize quase todas 
 | **Inserir Título H1** | Digitar `# ` + `<kbd>Espaço` | Digitar `# ` + `<kbd>Espaço` |
 | **Inserir Título H2** | Digitar `## ` + `<kbd>Espaço` | Digitar `## ` + `<kbd>Espaço` |
 | **Inserir Título H3** | Digitar `### ` + `<kbd>Espaço` | Digitar `### ` + `<kbd>Espaço` |
+| **Vincular Outra Nota (Autocompletar)** | Digitar `[[` + título da nota | Digitar `[[` + título da nota |
 
 ---
 
@@ -92,3 +93,14 @@ O Magnetares Notes foi desenvolvido para permitir que você realize quase todas 
 | **Editar Conteúdo do Nó** | `Duplo clique` no nó | `Duplo clique` no nó |
 | **Excluir Nó ou Conexão** | `<kbd>Delete` ou `<kbd>Backspace` | `<kbd>Delete` ou `<kbd>Backspace` |
 | **Ajustar Zoom (15% a 350%)** | `Scroll` ou botões `+` / `-` | `Scroll` ou botões `+` / `-` |
+
+---
+
+## 8. Minhas Conexões (Grafo de Conhecimento)
+
+| Ação | Gatilho | Descrição |
+| :--- | :--- | :--- |
+| **Inspecionar Nó e Arestas** | `Clique simples` no nó | Destaca todas as conexões diretas da nota ou etiqueta |
+| **Abrir Editor Completo em Modal** | `Duplo clique` em nó de nota | Abre a nota (rica ou código) para edição completa sem sair do mapa |
+| **Mover Posição do Nó** | `Arrastar` o nó no grafo | Reposiciona o nó na simulação física e reorganiza a vizinhança |
+| **Zoom e Pan no Mapa** | `Scroll` / `Arrastar fundo` | Aproxima, afasta ou navega livremente pelo grafo de conexões |

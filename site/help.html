@@ -460,7 +460,7 @@
     <div class="header-actions">
       <a class="header-download-btn" href="index.html#downloads">
         <span>Baixar</span>
-        <span id="header-version-badge">v2.0.0</span>
+        <span id="header-version-badge">v2.1.0</span>
       </a>
       <button class="menu-toggle-btn" id="mobile-menu-toggle" type="button" aria-label="Abrir menu de navegação"
         aria-expanded="false">
@@ -492,7 +492,7 @@
         </svg>
         <span>Baixar Magnetares</span>
       </a>
-      <span class="drawer-version-tag">Versão mais recente: v2.0.0</span>
+      <span class="drawer-version-tag">Versão mais recente: v2.1.0</span>
     </div>
   </aside>
 
@@ -1361,7 +1361,7 @@
                 </ul>
                 <div class="help-callout">
                   <strong>Compatibilidade garantida:</strong> Ao exportar suas notas em Markdown, os Callouts
-                  convertem-se perfeitamente para a sintaxe padrão do GitHub e Obsidian (<code>&gt; [!THEOREM]</code>,
+                  convertem-se perfeitamente para a sintaxe padrão do GitHub Flavored Markdown (<code>&gt; [!THEOREM]</code>,
                   <code>&gt; [!WARNING]</code>).
                 </div>
               </template>
@@ -1424,6 +1424,94 @@
                   <li>O arquivo formatado é gerado instantaneamente no seu computador, pronto para abrir no Microsoft
                     Word, LibreOffice Writer, Google Docs ou Apple Pages.</li>
                 </ol>
+              </template>
+            </div>
+
+            <!-- Card: Galeria de Templates & Meus Templates (v2.1.0) -->
+            <div class="help-card" data-category="Templates v2.1" data-icon="📋"
+              data-text="Galeria de Templates modelos prontos ata reuniao briefing prd soap memorial parecer aula diario meus templates salvar nota modelo v2.1.0">
+              <div>
+                <div class="help-card-header">
+                  <div class="help-card-icon">📋</div>
+                  <span class="help-card-badge">Templates v2.1</span>
+                </div>
+                <h3 class="help-card-title">Como usar a Galeria de Templates e salvar Meus Templates? (v2.1.0)</h3>
+                <p class="help-card-snippet">Escolha entre 26 modelos prontos em 10 áreas do conhecimento ou transforme
+                  qualquer nota estruturada em um modelo pessoal reutilizável.</p>
+              </div>
+              <div class="help-card-btn">
+                <span>Ver resposta completa</span>
+                <svg viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </div>
+              <template class="help-card-full">
+                <p>A <strong>Galeria de Templates</strong> está disponível em todas as notas de texto rico (notas do
+                  tipo Código permanecem dedicadas ao Monaco Editor).</p>
+
+                <h4>1. Como Abrir e Aplicar um Modelo</h4>
+                <ul>
+                  <li>Clique no ícone de <strong>Galeria de Templates</strong> (grade de 4 quadrados no cabeçalho
+                    superior da nota) ou utilize a <strong>barra rápida</strong> exibida em notas recém-criadas.</li>
+                  <li>Filtre pelas <strong>10 áreas do conhecimento</strong> (Reuniões, Produto &amp; PO, Briefings,
+                    Saúde &amp; Clínica, Exatas &amp; Engenharia, Jurídico &amp; Negócios, Educação, Criativo &amp;
+                    Mídia, Acadêmico e Pessoal) ou pesquise por palavra-chave.</li>
+                  <li>Confira a estrutura real renderizada na coluna da direita e escolha entre <strong>Inserir ao
+                      final</strong>, <strong>Substituir nota</strong> ou criar uma <strong>Nova nota</strong>.</li>
+                </ul>
+
+                <h4>2. Como Criar Seus Próprios Templates</h4>
+                <ul>
+                  <li>Monte uma nota estruturada com tabelas, checklists, callouts ou fórmulas que deseja reutilizar.</li>
+                  <li>Abra a Galeria de Templates e clique em <strong>+ Salvar nota como template</strong> no canto
+                    superior direito.</li>
+                  <li>Preencha nome, descrição, ícone e etiquetas sugeridas. O modelo ficará salvo localmente em
+                    <strong>Meus Templates</strong> no seu banco SQLite!</li>
+                </ul>
+              </template>
+            </div>
+
+            <!-- Card: Minhas Conexões & Vínculos [[Nota]] (v2.1.0) -->
+            <div class="help-card" data-category="Conexões v2.1" data-icon="🕸️"
+              data-text="Minhas Conexões grafo mapa vínculos backlinks [[Nota]] colchetes etiquetas rede conhecimento editor modal v2.1.0">
+              <div>
+                <div class="help-card-header">
+                  <div class="help-card-icon">🕸️</div>
+                  <span class="help-card-badge">Conexões v2.1</span>
+                </div>
+                <h3 class="help-card-title">Como conectar notas com [[Nota]] e usar Minhas Conexões? (v2.1.0)</h3>
+                <p class="help-card-snippet">Crie vínculos bidirecionais digitando [[ no editor, consulte backlinks
+                  automáticos e navegue pelo grafo interativo da sua base de conhecimento.</p>
+              </div>
+              <div class="help-card-btn">
+                <span>Ver resposta completa</span>
+                <svg viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </div>
+              <template class="help-card-full">
+                <p>O Magnetares Notes permite conectar suas notas tanto por <strong>menções diretas</strong> quanto por
+                  <strong>etiquetas compartilhadas</strong>:</p>
+
+                <h4>1. Vínculos Rápidos no Editor</h4>
+                <ul>
+                  <li>Digite <code>[[</code> em qualquer ponto do texto rico para abrir o autocompletar de notas e
+                    inserir uma pílula clicável de referência.</li>
+                  <li>Clique no botão de <strong>Vínculos</strong> no cabeçalho da nota (ou na pílula de resumo abaixo
+                    do título) para abrir o <strong>Painel Lateral de Vínculos &amp; Etiquetas</strong>, onde você vê
+                    links de saída, <em>backlinks</em> (quem cita a nota atual) e notas relacionadas por tag.</li>
+                </ul>
+
+                <h4>2. Mapa Interativo em Minhas Conexões</h4>
+                <ul>
+                  <li>Na barra lateral esquerda, clique em <strong>CONEXÕES → Minhas Conexões</strong>.</li>
+                  <li>O grafo diferencia visualmente <strong>Notas</strong>, <strong>Notas de Código
+                      (<code>&lt;/&gt;</code>)</strong> e <strong>Etiquetas (<code>#</code>)</strong>, exibindo um selo
+                    com o total de conexões em cada nó.</li>
+                  <li>Use a barra lateral retrátil para filtrar seu catálogo, clique uma vez para inspecionar conexões
+                    ou dê <strong>duplo clique</strong> em qualquer nota para abri-la e editá-la por completo em uma
+                    janela modal sem sair do mapa!</li>
+                </ul>
               </template>
             </div>
 

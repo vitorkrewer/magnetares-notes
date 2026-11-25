@@ -568,7 +568,7 @@
     <div class="header-actions">
       <a class="header-download-btn" href="index.html#downloads">
         <span>Baixar</span>
-        <span id="header-version-badge">v2.0.0</span>
+        <span id="header-version-badge">v2.1.0</span>
       </a>
       <button class="menu-toggle-btn" id="mobile-menu-toggle" type="button" aria-label="Abrir menu de navegação"
         aria-expanded="false">
@@ -600,7 +600,7 @@
         </svg>
         <span>Baixar Magnetares</span>
       </a>
-      <span class="drawer-version-tag">Versão mais recente: v2.0.0</span>
+      <span class="drawer-version-tag">Versão mais recente: v2.1.0</span>
     </div>
   </aside>
 
@@ -649,7 +649,8 @@
         <!-- PÍLULAS DE NAVEGAÇÃO RÁPIDA -->
         <div class="release-pills-bar" aria-label="Navegação rápida de versões">
           <span class="pill-label">Versões:</span>
-          <a class="version-pill latest" href="#v2.0.0">v2.0.0 (Estável)</a>
+          <a class="version-pill latest" href="#v2.1.0">v2.1.0 (Estável)</a>
+          <a class="version-pill" href="#v2.0.0">v2.0.0</a>
           <a class="version-pill" href="#v1.9.0">v1.9.0</a>
           <a class="version-pill" href="#v1.8.0">v1.8.0</a>
           <a class="version-pill" href="#v1.7.0">v1.7.0</a>
@@ -666,14 +667,89 @@
     <div class="releases-container">
 
       <!-- =========================================================
-           RELEASE v2.0.0 (ÚLTIMA ESTÁVEL)
+           RELEASE v2.1.0 (ÚLTIMA ESTÁVEL)
            ========================================================= -->
-      <article class="release-card latest-card" id="v2.0.0">
+      <article class="release-card latest-card" id="v2.1.0">
+        <header class="release-header">
+          <div class="release-title-group">
+            <div class="release-version-row">
+              <span class="release-version-tag">v2.1.0</span>
+              <span class="badge-latest">⭐ Última Versão Estável</span>
+            </div>
+            <p class="release-headline">
+              Galeria de Templates (26 Modelos em 10 Áreas + Biblioteca Pessoal), Módulo "Minhas Conexões" com Grafo
+              Interativo e Vínculos [[Nota]], Ciclo de Segurança &amp; Desempenho (-93% no Bundle Inicial) e Novos
+              Instaladores Windows Setup .exe / .msi
+            </p>
+            <div class="release-date">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>25 de Novembro de 2026 · Versão de Produção</span>
+            </div>
+          </div>
+          <div class="release-actions">
+            <a class="btn-download-version" href="https://github.com/vitorkrewer/magnetares-notes/releases/tag/v2.1.0"
+              target="_blank" rel="noreferrer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Baixar v2.1.0
+            </a>
+          </div>
+        </header>
+
+        <div class="highlights-grid">
+          <div class="highlight-card">
+            <span class="highlight-icon">📋</span>
+            <h4>Galeria com 26 Templates em 10 Áreas</h4>
+            <p>Modelos nativos Tiptap para Reuniões, Produto &amp; PO, Briefings, Saúde (SOAP), Engenharia, Jurídico,
+              Educação, Mídia, Acadêmico e Diário em modal amplo de 3 colunas com live preview.</p>
+          </div>
+          <div class="highlight-card">
+            <span class="highlight-icon">⭐</span>
+            <h4>Biblioteca Pessoal "Meus Templates"</h4>
+            <p>Salve qualquer nota estruturada como modelo reutilizável no SQLite local, com modos seguros Inserir ao
+              final, Substituir ou Criar nova nota e variáveis dinâmicas <code>{{hoje}}</code>.</p>
+          </div>
+          <div class="highlight-card">
+            <span class="highlight-icon">🕸️</span>
+            <h4>Minhas Conexões &amp; Grafo Interativo</h4>
+            <p>Mapa orientado a forças em CONEXÕES → Minhas Conexões com ícones vetoriais para Notas, Código e
+              Etiquetas, selos de grau de conexão, catálogo lateral retrátil e filtros de 1 a 3 saltos.</p>
+          </div>
+          <div class="highlight-card">
+            <span class="highlight-icon">🔗</span>
+            <h4>Vínculos [[Nota]] &amp; Editor em Modal</h4>
+            <p>Autocompletar inline digitando <code>[[</code>, Painel Lateral de Vínculos &amp; Etiquetas com backlinks
+              automáticos e edição completa de notas diretamente em modal flutuante sobre o mapa.</p>
+          </div>
+          <div class="highlight-card">
+            <span class="highlight-icon">⚡</span>
+            <h4>Salto de Desempenho &amp; Segurança</h4>
+            <p>Code-splitting sob demanda reduzindo o chunk inicial em 93% (de 2,9 MB para 185 KB), PRAGMAs SQLite em
+              todo o pool, novos índices locais, inicialização assíncrona e hardening de iframes/Mermaid.</p>
+          </div>
+          <div class="highlight-card">
+            <span class="highlight-icon">📦</span>
+            <h4>Instaladores Windows .exe &amp; .msi</h4>
+            <p>Novos instaladores nativos NSIS Setup (.exe) e Windows Installer corporativo (.msi via WiX) somados às
+              edições executável direto, portátil, macOS universal e pacotes Linux.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- =========================================================
+           RELEASE v2.0.0
+           ========================================================= -->
+      <article class="release-card" id="v2.0.0">
         <header class="release-header">
           <div class="release-title-group">
             <div class="release-version-row">
               <span class="release-version-tag">v2.0.0</span>
-              <span class="badge-latest">⭐ Última Versão Estável</span>
             </div>
             <p class="release-headline">
               Novo Módulo "Fluxo de Ideias", Referências Cruzadas com Hyperlinks, Exportação PNG 2.5x,
@@ -867,7 +943,7 @@
             <li>
               <strong>Caixas de Destaque Semânticas (<em>Callouts</em> Acadêmicos):</strong> novo nó estruturado com 5
               categorias (<em>Nota, Teorema/Definição, Experimento/Laboratório, Atenção/Alerta Clínico e Exemplo
-              Prático</em>) e compatibilidade com sintaxe GFM/Obsidian (<code>&gt; [!NOTE]</code>,
+              Prático</em>) e compatibilidade com sintaxe GFM estendida (<code>&gt; [!NOTE]</code>,
               <code>&gt; [!THEOREM]</code>).
             </li>
             <li>
